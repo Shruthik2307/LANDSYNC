@@ -1,0 +1,53 @@
+# Agent Rules — Project Constraints
+
+## Allowed File Modifications
+You are ONLY allowed to modify files inside the following directories:
+- engine/
+- data/sample/
+- tests/
+
+## Forbidden Directories (DO NOT TOUCH)
+- frontend/
+- src/
+- backend/
+
+---
+
+## Coordinate System Normalization
+Always normalize coordinate systems to **EPSG:3857** before measuring metric area.
+All spatial measurements (area, distance) must use EPSG:3857 as the working projection.
+
+---
+
+## Reconciliation Output Format
+Reconciliation output MUST match the following exact dictionary format:
+
+```python
+{
+    'parcel_id':        str,
+    'confidence':       int,
+    'priority':         'HIGH' | 'MEDIUM' | 'LOW',
+    'area_difference':  float,
+    'geometry_conflict': bool,
+    'attribute_conflict': bool,
+    'recommendation':   str
+}
+```
+
+### Field Definitions
+| Field               | Type              | Description                                                   |
+|---------------------|-------------------|---------------------------------------------------------------|
+| `parcel_id`         | `str`             | Unique identifier for the parcel                              |
+| `confidence`        | `int`             | Confidence score (e.g., 0-100)                                |
+| `priority`          | `'HIGH'|'MEDIUM'|'LOW'` | Reconciliation priority level                          |
+| `area_difference`   | `float`           | Signed difference in area (m2) between datasets               |
+| `geometry_conflict` | `bool`            | Whether a geometry-level conflict exists                      |
+| `attribute_conflict`| `bool`            | Whether an attribute-level conflict exists                    |
+| `recommendation`    | `str`             | Human-readable recommended action                             |
+
+---
+
+## General Guidelines
+- Do not alter any files outside the permitted directories above.
+- All spatial data must be validated against EPSG:3857 before processing.
+- Reconciliation records that deviate from the format above are invalid and must be rejected.
