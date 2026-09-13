@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: LANDSYNC Reconciliation API
+  version: 0.1.0
+  description: Contract for SIH26013 multi-source land and cadastral reconciliation.
+servers:
+  - url: http://localhost:8000
+paths:
+  /api/upload:
+    post:
+      summary: Upload a source dataset
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Dataset accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+  /api/process:
+    post:
+      summary: Start reconciliation processing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessRequest'
+      responses:
+        '200':
+          description: Processing status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+  /api/parcels:
+    get:
+      summary: List all reconciled parcels
+      responses:
+        '200':
+          description: All parcels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Parcel'
+  /api/conflicts:
+    get:
+      summary: List conflicts sorted by priority then confidence
+      responses:
+        '200':
+          description: Conflicting parcels only
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Parcel'
+  /api/parcels/{id}:
+    get:
+      summary: Get full parcel detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Parcel detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Parcel'
+        '404':
+          description: Parcel not found
+  /api/satellite-tile/{z}/{x}/{y}:
+    get:
+      summary: Proxy request for satellite tile imagery
+      parameters:
+        - name: z
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: x
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - name: y
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Satellite image bytes
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '204':
+          description: No image available for this tile
+        '404':
+          description: Not found or upstream error
+components:
+  schemas:
+    UploadResponse:
+      type: object
+      required: [dataset_id]
+      properties:
+        dataset_id: { type: string }
+    ProcessRequest:
+      type: object
+      required: [dataset_id]
+      properties:
+        dataset_id: { type: string }
+    ProcessResponse:
+      type: object
+      required: [job_status]
+      properties:
+        job_status:
+          type: string
+          enum: [queued, processing, complete, failed]
+    GeoJSONPolygon:
+      type: object
+      required: [type, coordinates]
+      properties:
+        type: { type: string, enum: [Polygon] }
+        coordinates:
+          type: array
+          items:
+            type: array
+            items:
+              type: array
+              minItems: 2
+              maxItems: 2
+              items: { type: number }
+    Parcel:
+      type: object
+      required: [parcel_id, confidence, priority, area_difference, geometry_conflict, attribute_conflict, recommendation, boundaries]
+      properties:
+        parcel_id: { type: string }
+        confidence: { type: integer, minimum: 0, maximum: 100 }
+        priority: { type: string, enum: [HIGH, MEDIUM, LOW] }
+        area_difference: { type: number }
+        geometry_conflict: { type: boolean }
+        attribute_conflict: { type: boolean }
+        duplicate_id:
+          type: boolean
+          description: Added on Day 2; true when this parcel ID occurs more than once in the reconciled dataset.
+        recommendation: { type: string }
+        boundaries:
+          type: object
+          required: [cadastral]
+          properties:
+            cadastral: { $ref: '#/components/schemas/GeoJSONPolygon' }
+            drone_ori: { $ref: '#/components/schemas/GeoJSONPolygon' }
