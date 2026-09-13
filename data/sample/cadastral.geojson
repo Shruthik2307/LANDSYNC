@@ -1,0 +1,33 @@
+{
+  "type": "FeatureCollection",
+  "name": "cadastral",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "urn:ogc:def:crs:EPSG::3857"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "parcel_id": "1042",
+        "source": "cadastral",
+        "area_m2": 10000.0,
+        "crs": "EPSG:3857"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [0.0, 0.0],
+            [100.0, 0.0],
+            [100.0, 100.0],
+            [0.0, 100.0],
+            [0.0, 0.0]
+          ]
+        ]
+      }
+    }
+  ]
+}
