@@ -172,3 +172,21 @@ components:
           properties:
             cadastral: { $ref: '#/components/schemas/GeoJSONPolygon' }
             drone_ori: { $ref: '#/components/schemas/GeoJSONPolygon' }
+        attributes:
+          type: object
+          description: Per-source attributes for side-by-side comparison when attribute_conflict is true
+          properties:
+            cadastral:
+              type: object
+              properties:
+                owner: { type: string }
+                area: { type: number }
+                land_use: { type: string }
+                survey_date: { type: string }
+            drone:
+              type: object
+              properties:
+                owner: { type: string }
+                area: { type: number }
+                land_use: { type: string }
+                survey_date: { type: string }
