@@ -1,9 +1,43 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { CircleMarker, Polygon } from 'react-leaflet'
 import { priorityOf } from '../../validation'
+import difference from '@turf/difference'
+import { polygon } from '@turf/helpers'
 
 export default function ParcelShape({ parcel, selected, dimmed, onSelect, boundaryMode }) {
   const coordinates = parcel?.boundaries?.cadastral?.coordinates?.[0]
+  const droneCoordinates = parcel?.boundaries?.drone_ori?.coordinates?.[0]
+
+  // Compute disputed area (geometry difference) for geometry_conflict parcels
+  const disputedArea = useMemo(() => {
+    if (!selected || !parcel?.geometry_conflict || !droneCoordinates) return null
+
+    try {
+      const cadastralPoly = polygon(parcel.boundaries.cadastral.coordinates)
+      const dronePoly = polygon(parcel.boundaries.drone_ori.coordinates)
+
+      // Compute symmetric difference (areas that don't overlap)
+      const diff1 = difference(cadastralPoly, dronePoly)
+      const diff2 = difference(dronePoly, cadastralPoly)
+
+      const disputed = []
+      if (diff1?.geometry?.coordinates) {
+        diff1.geometry.coordinates.forEach(ring => {
+          disputed.push(ring[0].map(([lng, lat]) => [lat, lng]))
+        })
+      }
+      if (diff2?.geometry?.coordinates) {
+        diff2.geometry.coordinates.forEach(ring => {
+          disputed.push(ring[0].map(([lng, lat]) => [lat, lng]))
+        })
+      }
+
+      return disputed.length > 0 ? disputed : null
+    } catch {
+      return null
+    }
+  }, [selected, parcel, droneCoordinates])
+
   if (!Array.isArray(coordinates) || coordinates.length < 4) return null
 
   const points = coordinates.map((coordinate) => {
@@ -17,7 +51,6 @@ export default function ParcelShape({ parcel, selected, dimmed, onSelect, bounda
   const opacity = dimmed ? 0.05 : selected ? 0.55 : 0.25
   const strokeColor = selected ? '#FFFFFF' : fill
 
-  const droneCoordinates = parcel?.boundaries?.drone_ori?.coordinates?.[0]
   const dronePoints = Array.isArray(droneCoordinates) && droneCoordinates.length >= 4
     ? droneCoordinates.map(([lng, lat]) => [lat, lng])
     : null
@@ -43,16 +76,31 @@ export default function ParcelShape({ parcel, selected, dimmed, onSelect, bounda
       {/* Discrepancy Comparison Overlays when Selected */}
       {selected && parcel.geometry_conflict && (
         <>
+          {/* Disputed Area Highlight - Areas that don't overlap between sources */}
+          {disputedArea && disputedArea.map((area, idx) => (
+            <Polygon
+              key={`disputed-${idx}`}
+              positions={area}
+              pathOptions={{
+                color: '#FF4C4C',
+                fillColor: '#FF4C4C',
+                fillOpacity: 0.4,
+                opacity: 0,
+                weight: 0
+              }}
+            />
+          ))}
+
           {/* Cadastral RoR Boundary in Cyan */}
           {(boundaryMode === 'cadastral' || boundaryMode === 'both') && (
             <Polygon
               positions={points}
-              pathOptions={{ 
-                color: '#00F0FF', 
-                fill: false, 
-                weight: 3, 
+              pathOptions={{
+                color: '#00F0FF',
+                fill: false,
+                weight: 3,
                 dashArray: '6 4',
-                opacity: 0.95 
+                opacity: 0.95
               }}
             />
           )}
@@ -61,12 +109,12 @@ export default function ParcelShape({ parcel, selected, dimmed, onSelect, bounda
           {dronePoints && (boundaryMode === 'drone' || boundaryMode === 'both') && (
             <Polygon
               positions={dronePoints}
-              pathOptions={{ 
-                color: '#FFB800', 
-                fill: false, 
-                weight: 3.5, 
+              pathOptions={{
+                color: '#FFB800',
+                fill: false,
+                weight: 3.5,
                 dashArray: '8 8',
-                opacity: 1 
+                opacity: 1
               }}
             />
           )}
