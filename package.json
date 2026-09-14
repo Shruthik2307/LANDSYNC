@@ -13,6 +13,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@turf/difference": "^7.4.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.45.0",
     "react": "^19.3.0",
