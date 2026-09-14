@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react'
+import PropTypes from 'prop-types'
 import ConfidenceDial from '../ui/ConfidenceDial'
 import { priorityOf } from '../../validation'
 import { X, FileSearch } from 'lucide-react'
@@ -245,4 +246,28 @@ export default function DetailPanel({ parcel, onClose }) {
       </div>
     </section>
   )
+}
+
+DetailPanel.propTypes = {
+  parcel: PropTypes.shape({
+    parcel_id: PropTypes.string.isRequired,
+    confidence: PropTypes.number.isRequired,
+    priority: PropTypes.oneOf(['HIGH', 'MEDIUM', 'LOW']).isRequired,
+    geometry_conflict: PropTypes.bool.isRequired,
+    attribute_conflict: PropTypes.bool.isRequired,
+    duplicate_id: PropTypes.bool,
+    area_difference: PropTypes.number,
+    recommendation: PropTypes.string,
+    attributes: PropTypes.shape({
+      cadastral: PropTypes.object,
+      drone: PropTypes.object,
+    }),
+  }),
+  onClose: PropTypes.func.isRequired,
+}
+
+AttributeRow.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+  differs: PropTypes.bool.isRequired,
 }

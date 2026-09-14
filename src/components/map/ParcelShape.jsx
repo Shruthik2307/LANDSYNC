@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import PropTypes from 'prop-types'
 import { CircleMarker, Polygon } from 'react-leaflet'
 import { priorityOf } from '../../validation'
 import difference from '@turf/difference'
@@ -136,4 +137,23 @@ export default function ParcelShape({ parcel, selected, dimmed, onSelect, bounda
       />
     </>
   )
+}
+
+ParcelShape.propTypes = {
+  parcel: PropTypes.shape({
+    parcel_id: PropTypes.string.isRequired,
+    geometry_conflict: PropTypes.bool,
+    boundaries: PropTypes.shape({
+      cadastral: PropTypes.shape({
+        coordinates: PropTypes.array.isRequired,
+      }).isRequired,
+      drone_ori: PropTypes.shape({
+        coordinates: PropTypes.array,
+      }),
+    }).isRequired,
+  }).isRequired,
+  selected: PropTypes.bool.isRequired,
+  dimmed: PropTypes.bool.isRequired,
+  onSelect: PropTypes.func.isRequired,
+  boundaryMode: PropTypes.oneOf(['cadastral', 'drone', 'both']).isRequired,
 }
