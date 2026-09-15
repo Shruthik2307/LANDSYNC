@@ -54,13 +54,15 @@ export default function QueueRow({ parcel, selected, onSelect }) {
       <div className="flex items-center justify-between text-slate-400 text-[11px]">
         <div className="flex items-center gap-2 queue-confidence">
           <ConfidenceDial value={Number(parcel.confidence) || 0} compact />
-          <span className="text-[10px] text-slate-400">confidence</span>
+          <span className="text-[10px] text-slate-400 font-mono">confidence</span>
         </div>
 
         <div className="text-right area-delta">
-          <span className="text-[10px] text-slate-400">
-            {parcel.geometry_conflict ? (
-              <span className="text-amber-400">Δ {areaDiff} m²</span>
+          <span className="text-[10px] font-mono">
+            {parcel.geometry_conflict && parcel.attribute_conflict ? (
+              <span className="text-red-400">Geom & Attr Conflict</span>
+            ) : parcel.geometry_conflict ? (
+              <span className="text-amber-400">Δ {Math.round(areaDiff * 100) / 100} m²</span>
             ) : parcel.attribute_conflict ? (
               <span className="text-purple-400">Attr Mismatch</span>
             ) : (

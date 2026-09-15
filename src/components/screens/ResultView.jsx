@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import { getConflicts, getParcels } from '../../api'
+import { getConflicts, getParcels, processDataset } from '../../api'
 import BrandHeader from '../layout/BrandHeader'
 import SummaryStrip from '../result/SummaryStrip'
 import ResultMapStage from '../result/ResultMapStage'
 import QueuePanel from '../result/QueuePanel'
 import DetailPanel from '../result/DetailPanel'
+import ExecutiveDashboard from '../analytics/ExecutiveDashboard'
 import { priorityOf } from '../../validation'
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react'
 
@@ -30,6 +31,41 @@ export default function ResultView({
   const [error, setError] = useState('')
   const [retryKey, setRetryKey] = useState(0)
   const [unavailableSatelliteParcels, setUnavailableSatelliteParcels] = useState(() => new Set())
+  const [processStatus, setProcessStatus] = useState('idle')
+  const [processError, setProcessError] = useState('')
+  const [viewMode, setViewMode] = useState('map')
+
+  async function handleRunProcess() {
+    if (processStatus === 'processing') return
+    setProcessStatus('processing')
+    setProcessError('')
+    try {
+      const res = await processDataset(datasetId || 'sample')
+      if (res.job_status === 'complete') {
+        const [allParcels, conflictParcels] = await Promise.all([
+          getParcels(),
+          getConflicts()
+        ])
+        setParcels(allParcels)
+        setConflicts(
+          [...conflictParcels].sort(
+            (a, b) => PRIORITY_ORDER[priorityOf(b)] - PRIORITY_ORDER[priorityOf(a)] || b.confidence - a.confidence
+          )
+        )
+        if (allParcels.length > 0) {
+          setSelected(allParcels[0])
+        }
+        setProcessStatus('complete')
+        setTimeout(() => setProcessStatus('idle'), 2500)
+      } else {
+        setProcessStatus('error')
+        setProcessError(`Reconciliation status: ${res.job_status}`)
+      }
+    } catch (err) {
+      setProcessStatus('error')
+      setProcessError(err.message || 'Processing failed.')
+    }
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -154,59 +190,74 @@ export default function ResultView({
       />
       
       {/* Top Telemetry KPI Summary Strip */}
-      <SummaryStrip parcels={parcels} />
+      <SummaryStrip 
+        parcels={parcels} 
+        onProcess={handleRunProcess}
+        processStatus={processStatus}
+        processError={processError}
+        viewMode={viewMode}
+        onToggleView={setViewMode}
+      />
 
-      {/* Main Analytical Workspace Layout */}
-      <main className="flex-1 min-h-0 flex flex-col lg:flex-row relative overflow-hidden">
-        {/* Hero Map Container */}
-        <div className="flex-1 min-h-0 h-full relative overflow-hidden">
-          <ResultMapStage
-            selected={selected}
-            setSelected={setSelected}
-            boundaryMode={boundaryMode}
-            setBoundaryMode={setBoundaryMode}
-            satelliteMode={satelliteMode}
-            setSatelliteMode={setSatelliteMode}
-            satelliteStatus={satelliteStatus}
-            setSatelliteStatus={setSatelliteStatus}
-            unavailableSatelliteParcels={unavailableSatelliteParcels}
-            setUnavailableSatelliteParcels={setUnavailableSatelliteParcels}
-            orderedParcels={orderedParcels}
-            matchesFilter={matchesFilter}
-            invalidParcels={invalidParcels}
-            satelliteEnabled={import.meta.env.VITE_ENABLE_SATELLITE_OVERLAY !== 'false'}
-            sentinelHubInstanceId={import.meta.env.VITE_SENTINELHUB_INSTANCE_ID}
-            cachedSatelliteUrl={(parcel) => 
-              new Set(['1042', '1078', '1250']).has(String(parcel?.parcel_id)) 
-                ? '/satellite/demo-parcel-1042.svg' 
-                : null
-            }
-          />
-
-          {/* Floating Analytical Detail Inspector */}
-          <DetailPanel 
-            parcel={selected} 
-            onClose={() => setSelected(null)} 
-          />
+      {viewMode === 'dashboard' ? (
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#030712]">
+          <ExecutiveDashboard parcels={parcels} />
         </div>
+      ) : (
+        /* Main Analytical Workspace Layout */
+        <main className="flex-1 min-h-0 flex flex-col lg:flex-row relative overflow-hidden">
+          {/* Hero Map Container */}
+          <div className="flex-1 min-h-0 h-full relative overflow-hidden">
+            <ResultMapStage
+              selected={selected}
+              setSelected={setSelected}
+              boundaryMode={boundaryMode}
+              setBoundaryMode={setBoundaryMode}
+              satelliteMode={satelliteMode}
+              setSatelliteMode={setSatelliteMode}
+              satelliteStatus={satelliteStatus}
+              setSatelliteStatus={setSatelliteStatus}
+              unavailableSatelliteParcels={unavailableSatelliteParcels}
+              setUnavailableSatelliteParcels={setUnavailableSatelliteParcels}
+              orderedParcels={orderedParcels}
+              matchesFilter={matchesFilter}
+              invalidParcels={invalidParcels}
+              satelliteEnabled={import.meta.env.VITE_ENABLE_SATELLITE_OVERLAY !== 'false'}
+              sentinelHubInstanceId={import.meta.env.VITE_SENTINELHUB_INSTANCE_ID}
+              cachedSatelliteUrl={(parcel) => 
+                new Set(['1042', '1078', '1250']).has(String(parcel?.parcel_id)) 
+                  ? '/satellite/demo-parcel-1042.svg' 
+                  : null
+              }
+            />
 
-        {/* Conflict & Reconciliation Queue (Right Side) */}
-        <div className="w-full lg:w-[360px] xl:w-[380px] h-[45vh] lg:h-full shrink-0 border-t lg:border-t-0 border-slate-800">
-          <QueuePanel
-            datasetId={datasetId}
-            parcels={parcels}
-            conflicts={conflicts}
-            selected={selected}
-            setSelected={setSelected}
-            priorityFilter={priorityFilter}
-            setPriorityFilter={setPriorityFilter}
-            search={search}
-            setSearch={setSearch}
-            onRestart={onRestart}
-            matchesFilter={matchesFilter}
-          />
-        </div>
-      </main>
+            {/* Floating Analytical Detail Inspector */}
+            <DetailPanel 
+              parcel={selected} 
+              onClose={() => setSelected(null)} 
+            />
+          </div>
+
+          {/* Conflict & Reconciliation Queue (Right Side) */}
+          <div className="w-full lg:w-[360px] xl:w-[380px] h-[45vh] lg:h-full shrink-0 border-t lg:border-t-0 border-slate-800">
+            <QueuePanel
+              datasetId={datasetId}
+              parcels={parcels}
+              conflicts={conflicts}
+              selected={selected}
+              setSelected={setSelected}
+              priorityFilter={priorityFilter}
+              setPriorityFilter={setPriorityFilter}
+              search={search}
+              setSearch={setSearch}
+              onRestart={onRestart}
+              matchesFilter={matchesFilter}
+              onProcess={handleRunProcess}
+              processStatus={processStatus}
+            />
+          </div>
+        </main>
+      )}
     </div>
   )
 }

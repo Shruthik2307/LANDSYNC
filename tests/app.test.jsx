@@ -13,6 +13,7 @@ vi.mock('react-leaflet', () => ({
 vi.mock('../src/api.js', () => ({
   getConflicts: vi.fn(async () => [{ parcel_id: '<safe>', confidence: 80, priority: 'HIGH', area_difference: 3, geometry_conflict: false, attribute_conflict: true, duplicate_id: true, recommendation: '<verify>', boundaries: { cadastral: { type: 'Polygon', coordinates: [[[77.59, 12.97], [77.591, 12.97], [77.591, 12.971], [77.59, 12.971], [77.59, 12.97]]] } } }]),
   getParcels: vi.fn(async () => [{ parcel_id: '<safe>', confidence: 80, priority: 'HIGH', area_difference: 3, geometry_conflict: false, attribute_conflict: true, duplicate_id: true, recommendation: '<verify>', boundaries: { cadastral: { type: 'Polygon', coordinates: [[[77.59, 12.97], [77.591, 12.97], [77.591, 12.971], [77.59, 12.971], [77.59, 12.97]]] } } }]),
+  getHealth: vi.fn(async () => ({ status: 'ok', engine: 'loaded', parcel_count: 25 })),
   isDemoMode: vi.fn(() => true),
   processDataset: vi.fn(async () => ({ job_status: 'complete' })),
   setDemoMode: vi.fn(),

@@ -102,7 +102,7 @@ export default function ResultMapStage({
           >
             {[
               { id: 'cadastral', label: 'Cadastral (RoR)' },
-              { id: 'drone', label: 'Drone/ORI' },
+              { id: 'drone', label: 'Municipal (Survey)' },
               { id: 'both', label: 'Consensus (Both)' },
             ].map((mode) => (
               <button
@@ -164,7 +164,7 @@ export default function ResultMapStage({
 
       {/* Map Canvas (Centerpiece of the Application) */}
       <MapContainer 
-        center={[12.975, 77.599]} 
+        center={[17.388, 78.510]} 
         zoom={16} 
         zoomControl={false} 
         className="w-full h-full"
@@ -213,11 +213,11 @@ export default function ResultMapStage({
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-0.5 bg-cyan-400 inline-block shadow-[0_0_6px_rgba(0,240,255,0.8)]" />
-          <span>Cadastral RoR (Title Boundary)</span>
+          <span>Cadastral RoR (Source A)</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-3 h-0.5 bg-amber-400 inline-block border-t border-dashed border-amber-400 shadow-[0_0_6px_rgba(255,184,0,0.8)]" />
-          <span>Drone / ORI (Ground Survey)</span>
+          <span>Municipal Survey (Source B)</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />

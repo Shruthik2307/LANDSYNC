@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { Upload, FileUp, X, AlertCircle, FileText, Shield, ArrowRight } from 'lucide-react'
+import { Upload, FileUp, X, AlertCircle, FileText, Shield, ArrowRight, CheckCircle2 } from 'lucide-react'
 import { uploadDataset } from '../../api'
 import BrandHeader from '../layout/BrandHeader'
 
@@ -7,6 +7,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
   const [files, setFiles] = useState([])
   const [isDragging, setIsDragging] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [uploadSuccess, setUploadSuccess] = useState(null)
   const [error, setError] = useState('')
   const fileInputRef = useRef(null)
 
@@ -19,10 +20,12 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
       return [...current, ...deduplicated]
     })
     setError('')
+    setUploadSuccess(null)
   }
 
   function removeFile(indexToRemove) {
     setFiles(current => current.filter((_, idx) => idx !== indexToRemove))
+    setUploadSuccess(null)
   }
 
   function handleSubmit(event) {
@@ -33,6 +36,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
 
     uploadDataset(files)
       .then(({ dataset_id }) => {
+        setSubmitting(false)
         onComplete(dataset_id)
       })
       .catch((requestError) => {
@@ -108,7 +112,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                   <Upload size={16} />
                 </div>
                 <div>
-                  <h2 className="text-xs font-semibold text-slate-200">Orthorectified Drone Surveys</h2>
+                  <h2 className="text-xs font-semibold text-slate-200">Municipal Survey Records</h2>
                   <p className="text-[11px] text-slate-400">High-resolution spatial boundary vectors (GeoJSON, GeoTIFF)</p>
                 </div>
               </div>
@@ -247,6 +251,27 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                   )}
                 </button>
               </div>
+
+              {/* Upload Success Banner */}
+              {uploadSuccess && (
+                <div className="mt-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn" role="status">
+                  <div className="flex items-center gap-2.5">
+                    <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+                    <div>
+                      <strong className="font-semibold text-emerald-200 block">Upload Successful!</strong>
+                      <span className="font-mono text-[11px] text-slate-300">Dataset ID: {uploadSuccess.dataset_id}</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onComplete(uploadSuccess.dataset_id)}
+                    className="px-3.5 py-1.5 rounded-lg bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(0,240,255,0.4)] hover:bg-white transition-all shrink-0"
+                  >
+                    <span>Proceed to Reconciliation</span>
+                    <ArrowRight size={13} />
+                  </button>
+                </div>
+              )}
 
               {/* Error Banner */}
               {error && (

@@ -1,14 +1,41 @@
-import React from 'react'
-import { Info, Settings2, Globe } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Info, Settings2, Globe, Activity } from 'lucide-react'
+import { getHealth } from '../../api'
 
 export default function BrandHeader({ 
   step = 'Workspace', 
-  demoMode = true, 
+  demoMode = false, 
   onToggleDemo, 
   onArchitecture, 
   architectureOpen = false,
   onNavigateLanding,
 }) {
+  const [health, setHealth] = useState(null)
+  const [healthError, setHealthError] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function checkHealth() {
+      try {
+        const h = await getHealth()
+        if (!cancelled) {
+          setHealth(h)
+          setHealthError(false)
+        }
+      } catch {
+        if (!cancelled) {
+          setHealth(null)
+          setHealthError(true)
+        }
+      }
+    }
+    checkHealth()
+    const interval = setInterval(checkHealth, 10000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [demoMode])
   return (
     <header className="sticky top-0 z-[1000] h-[58px] px-4 md:px-6 bg-[#030712]/80 backdrop-blur-xl border-b border-cyan-500/15 flex items-center justify-between shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
       {/* Brand & Mission Title */}
@@ -50,6 +77,31 @@ export default function BrandHeader({
 
       {/* Navigation and System Telemetry */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* System Health Status Indicator */}
+        <div 
+          className={`system-status-indicator flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono border ${
+            healthError
+              ? 'bg-red-500/10 text-red-300 border-red-500/30'
+              : health?.status === 'ok'
+              ? 'bg-slate-900/90 text-slate-300 border-slate-800'
+              : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+          }`}
+          title={health ? `Engine: ${health.engine} | CRS: ${health.engine_crs || 'EPSG:3857'}` : 'Backend unreachable'}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${healthError ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'}`} />
+          {healthError ? (
+            <span className="text-red-300">Backend: Offline</span>
+          ) : (
+            <span className="flex items-center gap-1.5">
+              <span className="text-emerald-400 font-semibold">Backend: Connected</span>
+              <span className="text-slate-500">·</span>
+              <span className="text-cyan-400">Engine: {health?.engine ? health.engine.charAt(0).toUpperCase() + health.engine.slice(1) : 'Loaded'}</span>
+              <span className="text-slate-500">·</span>
+              <span className="text-slate-200">Parcels: {health?.parcel_count ?? 25}</span>
+            </span>
+          )}
+        </div>
+
         {/* Step Badge */}
         <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-800 text-xs font-mono">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />

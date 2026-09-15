@@ -31,9 +31,9 @@ export default function DetailPanel({ parcel, onClose }) {
     : 'Sources agree'
 
   const priority = priorityOf(parcel)
-  const area = Number(parcel.area_difference) || 0
-  const reason = parcel.geometry_conflict && area > 0 
-    ? `Lowered by a ${area} m² boundary mismatch between cadastral and drone sources.` 
+  const area = Math.round((Number(parcel.area_difference) || 0) * 100) / 100
+  const reason = parcel.geometry_conflict && area !== 0 
+    ? `Lowered by a ${Math.abs(area)} m² boundary mismatch between cadastral and municipal sources.` 
     : parcel.attribute_conflict 
     ? 'Lowered by a mismatch in the source attributes.' 
     : parcel.duplicate_id 

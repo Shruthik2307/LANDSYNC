@@ -4,41 +4,78 @@ import conflictsFixture from '../contract/mock/conflicts.json'
 const configuredApiBaseUrl = import.meta.env.DEV
   ? import.meta.env.VITE_API_BASE_URL
   : globalThis.__LANDSYNC_API_BASE_URL__
-const API_BASE_URL = configuredApiBaseUrl?.replace(/\/$/, '')
+export const API_BASE_URL = (configuredApiBaseUrl || 'http://localhost:8000').replace(/\/$/, '')
 let forceDemoMode = false
 
 export function isDemoMode() {
-  return forceDemoMode || !API_BASE_URL
+  return forceDemoMode
 }
 
 export function setDemoMode(enabled) {
-  forceDemoMode = enabled
+  forceDemoMode = Boolean(enabled)
 }
 
 async function request(path, options = {}, timeoutMs = 15000) {
   if (isDemoMode()) {
     if (path === '/api/parcels') return structuredClone(parcelsFixture)
     if (path === '/api/conflicts') return structuredClone(conflictsFixture)
+    if (path === '/api/health') return { status: 'ok', engine: 'loaded (demo)', parcel_count: parcelsFixture.length }
     throw new Error('The demo fixture does not cover this request.')
   }
 
   const controller = new AbortController()
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs)
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
   let response
   try {
     response = await fetch(`${API_BASE_URL}${path}`, { ...options, signal: controller.signal })
   } catch (error) {
-    if (error.name === 'AbortError') throw new Error('This is taking longer than expected — retry?')
-    throw new Error('The live backend could not be reached. Check that FastAPI is running, then retry.')
+    if (error.name === 'AbortError') {
+      throw new Error('This request timed out. Check that the backend is responding, then retry.')
+    }
+    throw new Error(`The live backend at ${API_BASE_URL} could not be reached. Ensure FastAPI is running on port 8000.`)
   } finally {
-    window.clearTimeout(timeout)
+    clearTimeout(timeout)
   }
-  if (!response.ok) throw new Error(`LANDSYNC request failed: ${response.status}`)
+
+  if (response.status === 404) {
+    throw new Error(`Resource not found (404) at ${path}.`)
+  }
+
+  if (response.status === 500) {
+    let detail = ''
+    try {
+      const errJson = await response.json()
+      detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
+    } catch {}
+    throw new Error(`Server error (500): ${detail || 'Internal server error while processing request.'}`)
+  }
+
+  if (!response.ok) {
+    let detail = ''
+    try {
+      const errJson = await response.json()
+      detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
+    } catch {}
+    throw new Error(`LANDSYNC request failed (${response.status}): ${detail || response.statusText}`)
+  }
+
   try {
     return await response.json()
   } catch {
-    throw new Error('The backend returned data in an unexpected format. Check the API response and retry.')
+    throw new Error('The backend returned data in an unexpected format (malformed JSON).')
   }
+}
+
+/** @returns {Promise<{status: string, engine: string, parcel_count: number, cadastral_crs?: string, municipal_crs?: string}>} */
+export function getHealth() {
+  if (isDemoMode()) {
+    return Promise.resolve({
+      status: 'ok',
+      engine: 'loaded',
+      parcel_count: parcelsFixture.length,
+    })
+  }
+  return request('/api/health')
 }
 
 /** @returns {Promise<Parcel[]>} */
@@ -66,16 +103,28 @@ export function getParcelById(id) {
 export function uploadDataset(files) {
   if (!isDemoMode()) {
     const body = new FormData()
-    files.forEach((file) => body.append('file', file))
+    if (files && files.length > 0) {
+      body.append('file', files[0], files[0]?.name || 'source.geojson')
+    }
     return request('/api/upload', { method: 'POST', body })
   }
-  return new Promise((resolve) => window.setTimeout(() => resolve({ dataset_id: `mock-${Date.now()}-${files.length}` }), 700))
+  return new Promise((resolve) => setTimeout(() => resolve({ dataset_id: `mock-${Date.now()}-${files.length}` }), 700))
 }
 
-/** @param {string} datasetId @returns {Promise<{job_status: string}>} */
+/** @param {string} [datasetId] @returns {Promise<{job_status: string}>} */
 export function processDataset(datasetId) {
-  if (!isDemoMode()) return request('/api/process', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataset_id: datasetId }) }, 30000)
-  return new Promise((resolve) => window.setTimeout(() => resolve({ job_status: 'complete' }), 3400))
+  if (!isDemoMode()) {
+    return request(
+      '/api/process',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dataset_id: datasetId || 'sample' })
+      },
+      30000
+    )
+  }
+  return new Promise((resolve) => setTimeout(() => resolve({ job_status: 'complete' }), 3400))
 }
 
 /**

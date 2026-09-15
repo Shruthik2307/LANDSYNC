@@ -9,3 +9,13 @@ playwright-report/
 *.log
 .DS_Store
 .vite/
+
+data/sample/hyd_cadastral_raw.geojson
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Runtime data
+backend/tile_cache/
+backend/uploads/

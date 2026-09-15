@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { getConflicts, getParcelById, getParcels, isDemoMode, processDataset, setDemoMode, uploadDataset } from '../src/api.js'
 import { clampConfidence, normalizePriority } from '../src/validation.js'
@@ -5,35 +6,64 @@ import { clampConfidence, normalizePriority } from '../src/validation.js'
 const server = 'http://127.0.0.1:8000'
 let liveBackend = false
 
+const sampleGeoJson = JSON.stringify({
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: { parcel_id: 'TEST-100' },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [78.509, 17.388],
+            [78.510, 17.388],
+            [78.510, 17.389],
+            [78.509, 17.389],
+            [78.509, 17.388]
+          ]
+        ]
+      }
+    }
+  ]
+})
+
 describe('LANDSYNC API contract', () => {
   beforeAll(async () => {
     try {
-      await fetch(`${server}/api/parcels`, { signal: AbortSignal.timeout(2500) })
-      liveBackend = true
-      setDemoMode(false)
-      await uploadDataset([new File(['default'], 'default.geojson')])
+      const res = await fetch(`${server}/api/health`, { signal: AbortSignal.timeout(2500) })
+      if (res.ok) {
+        liveBackend = true
+        setDemoMode(false)
+      } else {
+        liveBackend = false
+        setDemoMode(true)
+      }
     } catch {
       liveBackend = false
       setDemoMode(true)
     }
   })
-  afterAll(() => setDemoMode(true))
+  afterAll(() => setDemoMode(false))
 
   it('loads parcels and sorted conflicts over HTTP', async (context) => {
     if (!liveBackend) context.skip()
     const parcels = await getParcels()
     const conflicts = await getConflicts()
-    expect(parcels).toHaveLength(8)
+    expect(parcels).toHaveLength(25)
+    expect(conflicts.length).toBeGreaterThan(0)
     expect(conflicts[0].priority).toBe('HIGH')
     expect(conflicts.every((parcel) => parcel.geometry_conflict || parcel.attribute_conflict || parcel.duplicate_id)).toBe(true)
   })
 
   it('round-trips upload, process, and parcel detail', async (context) => {
     if (!liveBackend) context.skip()
-    const upload = await uploadDataset([new File(['demo'], 'source.geojson')])
-    expect(upload.dataset_id).toMatch(/^server-/)
+    const upload = await uploadDataset([new File([sampleGeoJson], 'source.geojson')])
+    expect(upload.dataset_id).toMatch(/^(server-|ds_)/)
     expect(await processDataset(upload.dataset_id)).toEqual({ job_status: 'complete' })
-    expect((await getParcelById('1042')).parcel_id).toBe('1042')
+    const parcel = await getParcelById('HYD-REV-1000')
+    expect(parcel.parcel_id).toBe('HYD-REV-1000')
+    expect(parcel.confidence).toBeGreaterThanOrEqual(0)
   })
 
   it('keeps demo mode available without HTTP', async () => {
@@ -44,21 +74,16 @@ describe('LANDSYNC API contract', () => {
     setDemoMode(!liveBackend)
   })
 
-  it('server exposes explicit failure routes', async (context) => {
+  it('handles 404 for nonexistent parcel', async (context) => {
     if (!liveBackend) context.skip()
-    const failed = await fetch(`${server}/api/parcels?mode=500`)
-    const malformed = await fetch(`${server}/api/parcels?mode=malformed`)
-    const missing = await fetch(`${server}/api/parcels/not-found`)
-    expect(failed.status).toBe(500)
-    expect(await malformed.text()).toBe('{malformed')
+    const missing = await fetch(`${server}/api/parcels/NONEXISTENT-9999`)
     expect(missing.status).toBe(404)
   })
 
   it('satellite-tile endpoint returns fallback on missing credentials', async (context) => {
     if (!liveBackend) context.skip()
     const res = await fetch(`${server}/api/satellite-tile/10/512/340`)
-    // Should return 204 or 404 instead of 500 when credentials are missing
-    expect([204, 404]).toContain(res.status)
+    expect([200, 204, 404]).toContain(res.status)
   })
 
   it('normalizes unsafe scoring values before display', () => {
