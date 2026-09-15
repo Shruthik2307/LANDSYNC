@@ -1,7 +1,19 @@
 import React, { useEffect } from 'react'
+import PropTypes from 'prop-types'
 import ConfidenceDial from '../ui/ConfidenceDial'
 import { priorityOf } from '../../validation'
 import { X, FileSearch } from 'lucide-react'
+
+function AttributeRow({ label, value, differs }) {
+  return (
+    <div className="space-y-0.5">
+      <div className="text-[9px] text-slate-500 uppercase">{label}</div>
+      <div className={`text-[11px] font-mono ${differs ? 'text-cyan-400 font-semibold' : 'text-slate-300'}`}>
+        {value || 'N/A'}
+      </div>
+    </div>
+  )
+}
 
 export default function DetailPanel({ parcel, onClose }) {
   // Allow closing via Escape key
@@ -124,6 +136,78 @@ export default function DetailPanel({ parcel, onClose }) {
             </p>
           </div>
 
+          {/* Side-by-Side Attribute Comparison for Conflicts */}
+          {parcel.attribute_conflict && parcel.attributes && (
+            <div className="p-3 rounded-xl bg-slate-950/50 border border-slate-800/80">
+              <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-2">
+                SOURCE ATTRIBUTE COMPARISON
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                {/* Cadastral/Revenue Record Column */}
+                <div className="space-y-2">
+                  <div className="text-[10px] font-mono text-slate-400 uppercase font-semibold pb-1 border-b border-slate-800">
+                    Cadastral/Revenue Record
+                  </div>
+                  {parcel.attributes.cadastral && (
+                    <>
+                      <AttributeRow
+                        label="Owner"
+                        value={parcel.attributes.cadastral.owner}
+                        differs={parcel.attributes.drone?.owner !== parcel.attributes.cadastral.owner}
+                      />
+                      <AttributeRow
+                        label="Area"
+                        value={`${parcel.attributes.cadastral.area} m²`}
+                        differs={parcel.attributes.drone?.area !== parcel.attributes.cadastral.area}
+                      />
+                      <AttributeRow
+                        label="Land Use"
+                        value={parcel.attributes.cadastral.land_use}
+                        differs={parcel.attributes.drone?.land_use !== parcel.attributes.cadastral.land_use}
+                      />
+                      <AttributeRow
+                        label="Survey Date"
+                        value={parcel.attributes.cadastral.survey_date}
+                        differs={parcel.attributes.drone?.survey_date !== parcel.attributes.cadastral.survey_date}
+                      />
+                    </>
+                  )}
+                </div>
+
+                {/* Drone/Municipal Record Column */}
+                <div className="space-y-2">
+                  <div className="text-[10px] font-mono text-slate-400 uppercase font-semibold pb-1 border-b border-slate-800">
+                    Drone/Municipal Record
+                  </div>
+                  {parcel.attributes.drone && (
+                    <>
+                      <AttributeRow
+                        label="Owner"
+                        value={parcel.attributes.drone.owner}
+                        differs={parcel.attributes.drone.owner !== parcel.attributes.cadastral?.owner}
+                      />
+                      <AttributeRow
+                        label="Area"
+                        value={`${parcel.attributes.drone.area} m²`}
+                        differs={parcel.attributes.drone.area !== parcel.attributes.cadastral?.area}
+                      />
+                      <AttributeRow
+                        label="Land Use"
+                        value={parcel.attributes.drone.land_use}
+                        differs={parcel.attributes.drone.land_use !== parcel.attributes.cadastral?.land_use}
+                      />
+                      <AttributeRow
+                        label="Survey Date"
+                        value={parcel.attributes.drone.survey_date}
+                        differs={parcel.attributes.drone.survey_date !== parcel.attributes.cadastral?.survey_date}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Metric Stats */}
           <div className="grid grid-cols-2 gap-3 text-xs font-mono">
             <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800">
@@ -162,4 +246,28 @@ export default function DetailPanel({ parcel, onClose }) {
       </div>
     </section>
   )
+}
+
+DetailPanel.propTypes = {
+  parcel: PropTypes.shape({
+    parcel_id: PropTypes.string.isRequired,
+    confidence: PropTypes.number.isRequired,
+    priority: PropTypes.oneOf(['HIGH', 'MEDIUM', 'LOW']).isRequired,
+    geometry_conflict: PropTypes.bool.isRequired,
+    attribute_conflict: PropTypes.bool.isRequired,
+    duplicate_id: PropTypes.bool,
+    area_difference: PropTypes.number,
+    recommendation: PropTypes.string,
+    attributes: PropTypes.shape({
+      cadastral: PropTypes.object,
+      drone: PropTypes.object,
+    }),
+  }),
+  onClose: PropTypes.func.isRequired,
+}
+
+AttributeRow.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string,
+  differs: PropTypes.bool.isRequired,
 }

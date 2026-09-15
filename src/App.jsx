@@ -1,10 +1,26 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { isDemoMode, setDemoMode } from './api'
 import LandingScreen from './components/screens/LandingScreen'
 import UploadScreen from './components/screens/UploadScreen'
 import ProcessingScreen from './components/screens/ProcessingScreen'
-import ResultView from './components/screens/ResultView'
-import ArchitectureView from './components/screens/ArchitectureView'
+import { Loader2 } from 'lucide-react'
+
+// Lazy load heavy components
+const ResultView = lazy(() => import('./components/screens/ResultView'))
+const ArchitectureView = lazy(() => import('./components/screens/ArchitectureView'))
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-[#030712] text-slate-100 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 size={32} className="animate-spin text-cyan-400" />
+        <span className="text-xs text-slate-400 font-mono uppercase tracking-widest animate-pulse">
+          Loading component...
+        </span>
+      </div>
+    </div>
+  )
+}
 
 export default function App() {
   // In automated test runner environments (Playwright/Vitest) default to upload; for human browsers default to stunning landing screen
@@ -35,11 +51,13 @@ export default function App() {
 
   if (architectureOpen) {
     return (
-      <ArchitectureView 
-        demoMode={demoMode} 
-        onToggleDemo={toggleDemoMode} 
-        onClose={closeArchitecture} 
-      />
+      <Suspense fallback={<LoadingFallback />}>
+        <ArchitectureView
+          demoMode={demoMode}
+          onToggleDemo={toggleDemoMode}
+          onClose={closeArchitecture}
+        />
+      </Suspense>
     )
   }
 
@@ -88,16 +106,18 @@ export default function App() {
   }
 
   return (
-    <ResultView
-      datasetId={datasetId}
-      demoMode={demoMode}
-      onToggleDemo={toggleDemoMode}
-      onArchitecture={openArchitecture}
-      onNavigateLanding={navigateLanding}
-      onRestart={() => { 
-        setDatasetId('')
-        setFlow('upload') 
-      }}
-    />
+    <Suspense fallback={<LoadingFallback />}>
+      <ResultView
+        datasetId={datasetId}
+        demoMode={demoMode}
+        onToggleDemo={toggleDemoMode}
+        onArchitecture={openArchitecture}
+        onNavigateLanding={navigateLanding}
+        onRestart={() => {
+          setDatasetId('')
+          setFlow('upload')
+        }}
+      />
+    </Suspense>
   )
 }
