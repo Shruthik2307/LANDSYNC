@@ -14,7 +14,9 @@ const configuredApiBaseUrl = import.meta.env.DEV
   ? import.meta.env.VITE_API_BASE_URL
   : globalThis.__LANDSYNC_API_BASE_URL__
 export const API_BASE_URL = (configuredApiBaseUrl || 'http://localhost:8000').replace(/\/$/, '')
-let forceDemoMode = false
+// Static deployments without a backend (e.g. GitHub Pages) can build with
+// VITE_DEFAULT_DEMO_MODE=true so the site boots straight into the demo fixture.
+let forceDemoMode = import.meta.env.VITE_DEFAULT_DEMO_MODE === 'true'
 
 
 export function isDemoMode() {

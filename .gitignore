@@ -19,3 +19,6 @@ __pycache__/
 # Runtime data
 backend/tile_cache/
 backend/uploads/
+backend/*.db
+.vercel/
+*.geojson.tmp
