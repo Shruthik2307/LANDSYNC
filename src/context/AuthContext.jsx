@@ -5,25 +5,27 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem('fleetpulse_user');
-    return saved ? JSON.parse(saved) : INITIAL_USERS[0]; // Default: Admin (Rajesh Sharma)
+    const saved = localStorage.getItem('landsync_session_token');
+    return saved ? null : null; // Start unauthenticated
   });
 
   const [company, setCompany] = useState(() => {
-    const saved = localStorage.getItem('fleetpulse_company');
-    return saved ? JSON.parse(saved) : INITIAL_COMPANY;
+    return INITIAL_COMPANY;
   });
 
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('fleetpulse_theme') || 'dark');
+
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
-    localStorage.setItem('fleetpulse_user', JSON.stringify(currentUser));
+    // Token-based auth handled via secure cookies/headers now
   }, [currentUser]);
 
   useEffect(() => {
-    localStorage.setItem('fleetpulse_company', JSON.stringify(company));
+    // Company state managed via session/API
   }, [company]);
 
   useEffect(() => {
@@ -46,32 +48,69 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const login = (email, password) => {
-    const user = INITIAL_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase()) || {
-      id: 'USR-TEMP',
-      name: email.split('@')[0].toUpperCase(),
-      email,
-      role: 'Fleet Manager',
-      companyId: company.id
-    };
-    setCurrentUser(user);
-    setIsAuthenticated(true);
-    return { success: true, user };
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      }).then(res => res.json());
+
+      if (response.mfa_required) {
+        setMfaRequired(true);
+        return { success: true, mfaRequired: true };
+      }
+
+      if (response.token) {
+        setCurrentUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true, user: response.user };
+      }
+
+      return { success: false, error: response.detail || 'Login failed' };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   };
 
-  const registerCompany = (compDetails, adminUser) => {
-    const newComp = { id: `COMP-${Date.now()}`, ...compDetails };
-    const newUser = {
-      id: `USR-${Date.now()}`,
-      name: adminUser.name,
-      email: adminUser.email,
-      role: 'Admin',
-      companyId: newComp.id
-    };
-    setCompany(newComp);
-    setCurrentUser(newUser);
-    setIsAuthenticated(true);
-    return { success: true };
+  const verifyMFA = async (email, token) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/mfa-verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, token })
+      }).then(res => res.json());
+
+      if (response.token) {
+        setIsAuthenticated(true);
+        setMfaRequired(false);
+        return { success: true };
+      }
+      return { success: false, error: response.detail || 'Invalid OTP' };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+
+  const registerCompany = async (compDetails, adminUser) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register-company`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ compDetails, adminUser })
+      }).then(res => res.json());
+
+      if (response.success) {
+        setCompany(response.company);
+        setCurrentUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      }
+      return { success: false, error: response.detail || 'Registration failed' };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
   };
 
   const logout = () => {
@@ -101,9 +140,11 @@ export const AuthProvider = ({ children }) => {
         currentUser,
         company,
         isAuthenticated,
+        mfaRequired,
         theme,
         isOffline,
         login,
+        verifyMFA,
         registerCompany,
         logout,
         switchRole,

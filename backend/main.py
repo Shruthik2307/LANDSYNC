@@ -40,6 +40,7 @@ for _p in (_PROJECT_ROOT, _BACKEND_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
+from config import settings, CORS_ORIGINS_LIST
 from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -49,6 +50,11 @@ from routes.upload import router as upload_router
 from routes.process import router as process_router
 from routes.parcels import router as parcels_router
 from routes.conflicts import router as conflicts_router
+from routes.imagery import router as imagery_router
+from routes.auth import router as auth_router
+from routes.ml import router as ml_router
+
+
 
 # ── Satellite proxy (kept from original backend) ──────────────────────────
 try:
@@ -85,7 +91,7 @@ app = FastAPI(
 # ── CORS ──────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS_LIST,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,6 +103,11 @@ app.include_router(upload_router)
 app.include_router(process_router)
 app.include_router(parcels_router)
 app.include_router(conflicts_router)
+app.include_router(imagery_router)
+app.include_router(auth_router)
+app.include_router(ml_router)
+
+
 
 
 # ---------------------------------------------------------------------------

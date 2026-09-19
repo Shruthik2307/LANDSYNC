@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useFleet } from '../../context/FleetContext';
-import { Bell, X, CheckCheck, AlertTriangle, ShieldAlert, Info } from 'lucide-react';
+import { Bell, X, CheckCheck, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 export const NotificationCenter = ({ isOpen, onClose }) => {
   const { notifications, markNotificationAsRead, markAllNotificationsAsRead } = useFleet();
-  const [filter, setFilter] = useState('All');
+  const [filter] = useState('All');
 
   if (!isOpen) return null;
 

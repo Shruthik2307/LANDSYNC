@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import ParcelShape from '../src/components/map/ParcelShape.jsx'
+import { computeDisputedRings } from '../src/components/map/disputedArea'
+
+vi.mock('../src/components/map/disputedArea', () => ({
+  computeDisputedRings: vi.fn(() => null),
+}))
 
 vi.mock('react-leaflet', () => ({
   CircleMarker: ({ children, eventHandlers }) => (
@@ -180,5 +185,42 @@ describe('ParcelShape Component', () => {
       />
     )
     expect(screen.getByTestId('circle-marker')).toBeInTheDocument()
+  })
+
+  it('renders the disputed-area overlay when selected with a geometry conflict', () => {
+    computeDisputedRings.mockReturnValueOnce([
+      [[12.9715, 77.5942], [12.9720, 77.5955], [12.9717, 77.5948]],
+    ])
+    render(
+      <ParcelShape
+        parcel={mockParcel}
+        selected={true}
+        dimmed={false}
+        onSelect={mockOnSelect}
+        boundaryMode="both"
+      />
+    )
+    // 1 cadastral base + 1 disputed overlay + 2 boundary outlines (both mode)
+    expect(screen.getAllByTestId('polygon')).toHaveLength(4)
+    // Both full Polygon coordinate arrays must be handed to the geometry module
+    expect(computeDisputedRings).toHaveBeenCalledWith(
+      mockParcel.boundaries.cadastral.coordinates,
+      mockParcel.boundaries.drone_ori.coordinates,
+    )
+  })
+
+  it('omits the disputed-area overlay when no disputed rings are computed', () => {
+    computeDisputedRings.mockReturnValueOnce(null)
+    render(
+      <ParcelShape
+        parcel={mockParcel}
+        selected={true}
+        dimmed={false}
+        onSelect={mockOnSelect}
+        boundaryMode="both"
+      />
+    )
+    // base + 2 boundary outlines only
+    expect(screen.getAllByTestId('polygon')).toHaveLength(3)
   })
 })

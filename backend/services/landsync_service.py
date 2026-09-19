@@ -48,6 +48,7 @@ for _p in (_PROJECT_ROOT, _BACKEND_DIR):
 import geopandas as gpd
 
 from engine.pipeline import run_reconciliation
+from services.ml_service import conflict_detector, topology_validator
 
 logger = logging.getLogger(__name__)
 
@@ -245,13 +246,26 @@ def load_data(
         if rec["geometry_conflict"] and mun_geom is not None:
             boundaries["drone_ori"] = mun_geom
 
+        # ------------------------------------------------------------------
+        # ML-powered conflict detection and confidence scoring
+        # ------------------------------------------------------------------
+        try:
+            has_ml_conflict, ml_confidence = conflict_detector.predict_conflict(rec)
+            # Use ML confidence if model trained, otherwise use engine confidence
+            final_confidence = ml_confidence if conflict_detector.classifier else rec["confidence"]
+            final_conflict = has_ml_conflict if conflict_detector.classifier else rec["geometry_conflict"]
+        except Exception as e:
+            logger.warning(f"ML prediction failed for {pid}: {e}, using engine values")
+            final_confidence = rec["confidence"]
+            final_conflict = rec["geometry_conflict"]
+
         parcel: dict[str, Any] = {
             # Engine fields (7 mandatory keys)
             "parcel_id": rec["parcel_id"],
-            "confidence": rec["confidence"],
+            "confidence": final_confidence,
             "priority": rec["priority"],
             "area_difference": rec["area_difference"],
-            "geometry_conflict": rec["geometry_conflict"],
+            "geometry_conflict": final_conflict,
             "attribute_conflict": rec["attribute_conflict"],
             "recommendation": rec["recommendation"],
             # Derived / frontend-only fields

@@ -48,7 +48,8 @@ describe('DetailPanel Component', () => {
 
   it('displays geometry conflict message', () => {
     render(<DetailPanel parcel={mockParcel} onClose={mockOnClose} />)
-    expect(screen.getByText('Boundary shift detected')).toBeInTheDocument()
+    // Issue text renders in both the Analysis Finding row and Recommended Action card
+    expect(screen.getAllByText('Boundary shift detected').length).toBeGreaterThan(0)
   })
 
   it('displays attribute conflict message', () => {
@@ -58,7 +59,7 @@ describe('DetailPanel Component', () => {
       attribute_conflict: true,
     }
     render(<DetailPanel parcel={attributeOnlyParcel} onClose={mockOnClose} />)
-    expect(screen.getByText('Attribute mismatch detected')).toBeInTheDocument()
+    expect(screen.getAllByText('Attribute mismatch detected').length).toBeGreaterThan(0)
   })
 
   it('displays duplicate ID badge when duplicate_id is true', () => {

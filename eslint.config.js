@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 
 export default [
-  { ignores: ['coverage/**', 'dist/**', 'node_modules/**', 'test-results/**'] },
+  { ignores: ['coverage/**', 'dist/**', 'node_modules/**', 'node_modules_old/**', 'test-results/**', '.pytest_cache/**', 'backend/**', 'engine/**', 'data/**', 'uploads/**', 'tile_cache/**'] },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx,mjs}'],
@@ -23,7 +23,7 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       ...reactHooks.configs['recommended-latest'].rules,
-      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true, allowExportNames: ['useAuth', 'useFleet'] }],
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
     settings: { react: { version: 'detect' } },

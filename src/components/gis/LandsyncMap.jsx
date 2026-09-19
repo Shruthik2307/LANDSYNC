@@ -1,14 +1,46 @@
-import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Polygon, CircleMarker, Popup, Tooltip, LayerGroup, useMap } from 'react-leaflet';
+import React, { useEffect, useState, useMemo } from 'react';
+import { MapContainer, TileLayer, Polygon, Tooltip, LayerGroup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Layers, Sliders, Sparkles } from 'lucide-react';
+import { Layers, Sliders } from 'lucide-react';
+
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+const ParcelLayer = React.memo(function ParcelLayer({ parcels, selectedParcelId, onSelectParcel, priorityColor }) {
+  return (
+    <LayerGroup>
+      {parcels.map((parcel) => {
+        const isSelected = parcel.parcel_id === selectedParcelId;
+        const color = priorityColor(parcel.priority);
+        return (
+          <Polygon
+            key={`cadastral-${parcel.parcel_id}`}
+            positions={parcel.coordinates}
+            pathOptions={{
+              color: isSelected ? '#38bdf8' : color,
+              weight: isSelected ? 4 : 2.5,
+              fillColor: color,
+              fillOpacity: isSelected ? 0.45 : 0.25
+            }}
+            eventHandlers={{ click: () => onSelectParcel(parcel.parcel_id) }}
+          >
+            <Tooltip sticky direction="top">
+              <div className="p-1">
+                <div className="font-bold text-slate-900">Parcel #{parcel.parcel_id}</div>
+                <div className="text-xs text-slate-600">Owner: {parcel.owner_name}</div>
+              </div>
+            </Tooltip>
+          </Polygon>
+        );
+      })}
+    </LayerGroup>
+  );
 });
 
 function MapRecenter({ center }) {
@@ -36,9 +68,30 @@ export default function LandsyncMap({ parcels, selectedParcelId, onSelectParcel,
     }
   };
 
+  const cadastralLayer = useMemo(() => (
+    <ParcelLayer
+      parcels={parcels}
+      selectedParcelId={selectedParcelId}
+      onSelectParcel={onSelectParcel}
+      priorityColor={getPriorityColor}
+    />
+  ), [parcels, selectedParcelId, onSelectParcel]);
+
+  const droneLayer = useMemo(() => (
+    <LayerGroup>
+      {parcels.map((parcel) => parcel.drone_coordinates && (
+        <Polygon
+          key={`drone-${parcel.parcel_id}`}
+          positions={parcel.drone_coordinates}
+          pathOptions={{ color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: droneOpacity * 0.35, dashArray: '3, 3' }}
+        />
+      ))}
+    </LayerGroup>
+  ), [parcels, droneOpacity]);
+
   return (
     <div className="relative w-full h-[620px] rounded-2xl overflow-hidden border border-slate-700/60 shadow-2xl bg-slate-900">
-      
+
       <div className="absolute top-4 left-4 z-[1000] flex flex-wrap items-center gap-2 bg-slate-900/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-slate-700/80 shadow-lg">
         <div className="flex items-center gap-2 pr-3 border-r border-slate-700">
           <Layers className="w-4 h-4 text-emerald-400" />
@@ -87,7 +140,7 @@ export default function LandsyncMap({ parcels, selectedParcelId, onSelectParcel,
         </div>
       )}
 
-      <MapContainer center={defaultCenter} zoom={16} scrollWheelZoom={true} className="w-full h-full">
+      <MapContainer center={defaultCenter} zoom={16} scrollWheelZoom={true} preferCanvas={true} className="w-full h-full">
         <MapRecenter center={mapCenter} />
         {mapTile === 'satellite' ? (
           <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
@@ -95,46 +148,8 @@ export default function LandsyncMap({ parcels, selectedParcelId, onSelectParcel,
           <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
         )}
 
-        {activeLayers.cadastral && (
-          <LayerGroup>
-            {parcels.map((parcel) => {
-              const isSelected = parcel.parcel_id === selectedParcelId;
-              const color = getPriorityColor(parcel.priority);
-              return (
-                <Polygon
-                  key={`cadastral-${parcel.parcel_id}`}
-                  positions={parcel.coordinates}
-                  pathOptions={{
-                    color: isSelected ? '#38bdf8' : color,
-                    weight: isSelected ? 4 : 2.5,
-                    fillColor: color,
-                    fillOpacity: isSelected ? 0.45 : 0.25
-                  }}
-                  eventHandlers={{ click: () => onSelectParcel(parcel.parcel_id) }}
-                >
-                  <Tooltip sticky direction="top">
-                    <div className="p-1">
-                      <div className="font-bold text-slate-900">Parcel #{parcel.parcel_id}</div>
-                      <div className="text-xs text-slate-600">Owner: {parcel.owner_name}</div>
-                    </div>
-                  </Tooltip>
-                </Polygon>
-              );
-            })}
-          </LayerGroup>
-        )}
-
-        {activeLayers.drone_ori && (
-          <LayerGroup>
-            {parcels.map((parcel) => parcel.drone_coordinates && (
-              <Polygon
-                key={`drone-${parcel.parcel_id}`}
-                positions={parcel.drone_coordinates}
-                pathOptions={{ color: '#10b981', weight: 2, fillColor: '#10b981', fillOpacity: droneOpacity * 0.35, dashArray: '3, 3' }}
-              />
-            ))}
-          </LayerGroup>
-        )}
+        {activeLayers.cadastral && cadastralLayer}
+        {activeLayers.drone_ori && droneLayer}
       </MapContainer>
     </div>
   );

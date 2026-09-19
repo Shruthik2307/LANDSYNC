@@ -43,6 +43,12 @@
 
   - Node.js (Latest LTS recommended)
   - npm or yarn
+  - Python 3.11+ (backend; see backend/requirements.txt)
+
+  > **Backend note:** the FastAPI server starts with zero configuration — it
+  > defaults to a local SQLite database (`sqlite:///./landsync.db`). For
+  > production, set `DATABASE_URL` to a PostGIS connection string (see
+  > `backend/.env.example` and `.env.example`).
 
   ### Installation
 

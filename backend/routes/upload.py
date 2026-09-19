@@ -20,18 +20,23 @@ from __future__ import annotations
 import json
 import logging
 import uuid
+import os
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
+import geopandas as gpd
+import fiona
+import os
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["upload"])
 
 # Allowed upload extensions
 _ALLOWED_EXTENSIONS = {".geojson", ".json"}
-# Max 50 MB
-_MAX_UPLOAD_BYTES = 50 * 1024 * 1024
+# Max 500 MB
+_MAX_UPLOAD_BYTES = 500 * 1024 * 1024
 
 # Upload directory (relative to backend/)
 _UPLOAD_DIR = Path(__file__).resolve().parent.parent / "uploads"
@@ -64,63 +69,40 @@ async def upload_dataset(file: UploadFile = File(...)) -> UploadResponse:
             ),
         )
 
-    # ── Read content ──────────────────────────────────────────────────────
-    content = await file.read()
-
-    if len(content) == 0:
-        raise HTTPException(status_code=400, detail="Uploaded file is empty.")
-
-    if len(content) > _MAX_UPLOAD_BYTES:
-        max_mb = _MAX_UPLOAD_BYTES // (1024 * 1024)
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large. Maximum allowed size is {max_mb} MB.",
-        )
-
-    # ── JSON validation ───────────────────────────────────────────────────
-    try:
-        geojson = json.loads(content)
-    except json.JSONDecodeError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid JSON: {exc}",
-        )
-
-    if not isinstance(geojson, dict):
-        raise HTTPException(
-            status_code=400,
-            detail="GeoJSON root must be a JSON object (FeatureCollection).",
-        )
-
-    geojson_type = geojson.get("type", "")
-    if geojson_type != "FeatureCollection":
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                f"Expected GeoJSON type 'FeatureCollection', "
-                f"got {geojson_type!r}."
-            ),
-        )
-
-    features = geojson.get("features")
-    if not isinstance(features, list) or len(features) == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="GeoJSON FeatureCollection has no features.",
-        )
-
-    # ── Save file ─────────────────────────────────────────────────────────
+    # ── Read and Save content ────────────────────────────────────────────────
     dataset_id = f"ds_{uuid.uuid4().hex[:12]}"
-    save_path = _UPLOAD_DIR / f"{dataset_id}_{filename}"
+    safe_filename = os.path.basename(filename)
+    save_path = _UPLOAD_DIR / f"{dataset_id}_{safe_filename}"
 
     try:
-        save_path.write_bytes(content)
+        # Stream directly to disk to avoid loading massive files into memory (prevent 413)
+        with open(save_path, "wb") as buffer:
+            while chunk := await file.read(1024 * 1024): # 1MB chunks
+                buffer.write(chunk)
     except OSError as exc:
         logger.error("[upload] Failed to save uploaded file: %s", exc)
-        raise HTTPException(
-            status_code=500,
-            detail="Server could not save the uploaded file.",
-        )
+        raise HTTPException(status_code=500, detail="Server could not save the uploaded file.")
+
+    # After saving, read from disk for validation to keep memory low
+    try:
+        with open(save_path, "rb") as f:
+            content = f.read()
+
+        # Basic JSON validation
+        geojson = json.loads(content)
+        if not isinstance(geojson, dict) or geojson.get("type") != "FeatureCollection":
+            os.remove(save_path)
+            raise HTTPException(status_code=400, detail="Invalid GeoJSON FeatureCollection")
+
+        features = geojson.get("features", [])
+        if not features:
+            os.remove(save_path)
+            raise HTTPException(status_code=400, detail="GeoJSON has no features")
+
+    except Exception as e:
+        if save_path.exists():
+            os.remove(save_path)
+        raise HTTPException(status_code=400, detail=f"File validation failed: {str(e)}")
 
     logger.info(
         "[upload] Saved dataset %r (%d features, %.1f KB) → %s",
@@ -131,3 +113,4 @@ async def upload_dataset(file: UploadFile = File(...)) -> UploadResponse:
     )
 
     return UploadResponse(dataset_id=dataset_id)
+

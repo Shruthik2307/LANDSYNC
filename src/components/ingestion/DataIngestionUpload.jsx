@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { UploadCloud, FileCheck, RefreshCw, Layers, CheckCircle2, AlertCircle, Cpu, Database } from 'lucide-react';
+import { UploadCloud, RefreshCw, Cpu } from 'lucide-react';
 import { SUPPORTED_DATA_SOURCES } from '../../data/landsyncData';
+import { uploadDataset, processDataset } from '../../api';
+
 
 export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData }) {
   const [selectedSource, setSelectedSource] = useState('drone_ori');
@@ -11,31 +13,57 @@ export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData 
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
+      const file = e.target.files[0];
+
+      // Basic magic number / header validation for GeoJSON
+      if (file.name.endsWith('.geojson') || file.name.endsWith('.json')) {
+        try {
+          const buffer = await file.slice(0, 1024).arrayBuffer();
+          const text = new TextDecoder().decode(buffer);
+          if (!text.includes('{') && !text.includes('[')) {
+            alert('Invalid file content: Not a valid JSON/GeoJSON file.');
+            e.target.value = '';
+            return;
+          }
+        } catch (err) {
+          console.error('Header validation failed', err);
+        }
+      }
+
+      setSelectedFile(file);
     }
   };
 
-  const handleStartIngestion = () => {
+
+  const handleStartIngestion = async () => {
     if (!selectedFile) return;
 
     setIsProcessing(true);
-    setLogs([
-      'Ingestion Started: Parsing binary GIS file header...',
-      `Source format detected: ${selectedSource.toUpperCase()}`,
-      `Evaluating native CRS projection -> Re-projecting to target ${targetCRS}...`,
-      'Running AI spatial feature extraction & topology validation...',
-      'Executing multi-source parcel matching against PostgreSQL/PostGIS backend...',
-      'Reconciliation scoring complete!'
-    ]);
+    setLogs(['Initiating secure upload to LANDSYNC backend...']);
 
-    setTimeout(() => {
+    try {
+      const uploadRes = await uploadDataset([selectedFile]);
+      setLogs(prev => [...prev, `Dataset uploaded successfully. ID: ${uploadRes.dataset_id}`]);
+
+      setLogs(prev => [...prev, 'Triggering AI spatial reconciliation...']);
+      const processRes = await processDataset(uploadRes.dataset_id);
+
+      setLogs(prev => [...prev, `Reconciliation job status: ${processRes.job_status}`]);
+      setLogs(prev => [...prev, 'Ingestion complete. Data synchronized.']);
+
+      setTimeout(() => {
+        setIsProcessing(false);
+        onProcessNewData();
+        onClose();
+      }, 1500);
+    } catch (error) {
       setIsProcessing(false);
-      onProcessNewData();
-      onClose();
-    }, 2200);
+      setLogs(prev => [...prev, `Error: ${error.message}`]);
+    }
   };
+
 
   return (
     <div className="fixed inset-0 z-[2000] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">

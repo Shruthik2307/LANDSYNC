@@ -23,10 +23,13 @@ vi.mock('../src/api.js', () => ({
 describe('LANDSYNC screens', () => {
   beforeEach(() => vi.useRealTimers())
 
-  it('keeps architecture available from upload and renders project boundaries', async () => {
+  // ArchitectureView is lazy-loaded behind Suspense; its one-time transform
+  // cost (~1.2s, large lucide tree) can exceed findByText's default 1s window,
+  // so poll generously and allow an above-default test timeout.
+  it('keeps architecture available from upload and renders project boundaries', { timeout: 15000 }, async () => {
     render(<App />)
     fireEvent.click(screen.getByRole('button', { name: 'How it works' }))
-    expect(screen.getByText('Sources')).toBeInTheDocument()
+    expect(await screen.findByText('Sources', {}, { timeout: 10000 })).toBeInTheDocument()
     expect(screen.getByText(/not a replacement for Bhuvan/)).toBeInTheDocument()
   })
 

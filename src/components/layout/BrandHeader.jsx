@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Info, Settings2, Globe, Activity } from 'lucide-react'
+import { Info, Settings2, Globe } from 'lucide-react'
 import { getHealth } from '../../api'
 
 export default function BrandHeader({ 
@@ -89,11 +89,14 @@ export default function BrandHeader({
           title={health ? `Engine: ${health.engine} | CRS: ${health.engine_crs || 'EPSG:3857'}` : 'Backend unreachable'}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${healthError ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'}`} />
-          {healthError ? (
+          {healthError || demoMode ? (
             <span className="text-red-300">Backend: Offline</span>
           ) : (
             <span className="flex items-center gap-1.5">
-              <span className="text-emerald-400 font-semibold">Backend: Connected</span>
+              <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_15px_rgba(74,222,128,1)] ring-1 ring-white/20" />
+                Backend: Connected
+              </span>
               <span className="text-slate-500">·</span>
               <span className="text-cyan-400">Engine: {health?.engine ? health.engine.charAt(0).toUpperCase() + health.engine.slice(1) : 'Loaded'}</span>
               <span className="text-slate-500">·</span>

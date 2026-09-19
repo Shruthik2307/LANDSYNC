@@ -1,11 +1,21 @@
 import parcelsFixture from '../contract/mock/parcels.json'
 import conflictsFixture from '../contract/mock/conflicts.json'
 
+class ApiError extends Error {
+  constructor(message, status, detail) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.detail = detail;
+  }
+}
+
 const configuredApiBaseUrl = import.meta.env.DEV
   ? import.meta.env.VITE_API_BASE_URL
   : globalThis.__LANDSYNC_API_BASE_URL__
 export const API_BASE_URL = (configuredApiBaseUrl || 'http://localhost:8000').replace(/\/$/, '')
 let forceDemoMode = false
+
 
 export function isDemoMode() {
   return forceDemoMode
@@ -46,24 +56,41 @@ async function request(path, options = {}, timeoutMs = 15000) {
     try {
       const errJson = await response.json()
       detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
-    } catch {}
+    } catch {
+      // Non-JSON 500 body; fall back to the generic message below.
+    }
     throw new Error(`Server error (500): ${detail || 'Internal server error while processing request.'}`)
   }
 
   if (!response.ok) {
     let detail = ''
     try {
-      const errJson = await response.json()
-      detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
-    } catch {}
-    throw new Error(`LANDSYNC request failed (${response.status}): ${detail || response.statusText}`)
+      const contentType = response.headers.get('Content-Type')
+      if (contentType && contentType.includes('application/json')) {
+        const errJson = await response.json()
+        detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
+      } else {
+        detail = await response.text()
+      }
+    } catch {
+      // Non-JSON error body; fall back to the status text below.
+    }
+    throw new ApiError(`LANDSYNC request failed (${response.status})`, response.status, detail || response.statusText)
   }
 
+
   try {
-    return await response.json()
-  } catch {
+    const contentType = response.headers.get('Content-Type')
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json()
+    }
+    const text = await response.text()
+    throw new Error(`Expected JSON response but received ${contentType}: ${text.slice(0, 100)}`)
+  } catch (parseError) {
+    if (parseError instanceof Error && parseError.message.startsWith('Expected JSON')) throw parseError
     throw new Error('The backend returned data in an unexpected format (malformed JSON).')
   }
+
 }
 
 /** @returns {Promise<{status: string, engine: string, parcel_count: number, cadastral_crs?: string, municipal_crs?: string}>} */

@@ -2,11 +2,8 @@ import React from 'react';
 import { SYSTEM_METRICS_OVERVIEW } from '../../data/landsyncData';
 import { 
   BarChart3, 
-  TrendingUp, 
-  CheckCircle2, 
   AlertTriangle, 
   Building2, 
-  Layers, 
   Map, 
   ShieldCheck, 
   ArrowUpRight,
@@ -16,7 +13,6 @@ import {
 export default function ExecutiveDashboard({ parcels = [] }) {
   const totalCount = parcels.length;
   const highPriorityCount = parcels.filter(p => p.priority === 'HIGH').length;
-  const mediumPriorityCount = parcels.filter(p => p.priority === 'MEDIUM').length;
   const lowPriorityCount = parcels.filter(p => p.priority === 'LOW').length;
 
   const avgConfidence = Math.round(

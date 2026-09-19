@@ -122,6 +122,7 @@ export const FleetProvider = ({ children }) => {
         }
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only scan; adding deps would re-notify on every update
   }, []);
 
   // CRUD for Vehicles

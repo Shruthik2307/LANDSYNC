@@ -2,42 +2,21 @@ import React, { useMemo } from 'react'
 import PropTypes from 'prop-types'
 import { CircleMarker, Polygon } from 'react-leaflet'
 import { priorityOf } from '../../validation'
-import difference from '@turf/difference'
-import { polygon } from '@turf/helpers'
+import { computeDisputedRings } from './disputedArea'
 
 export default function ParcelShape({ parcel, selected, dimmed, onSelect, boundaryMode }) {
   const coordinates = parcel?.boundaries?.cadastral?.coordinates?.[0]
-  const droneCoordinates = parcel?.boundaries?.drone_ori?.coordinates?.[0]
+  const droneRing = parcel?.boundaries?.drone_ori?.coordinates?.[0]
 
   // Compute disputed area (geometry difference) for geometry_conflict parcels
   const disputedArea = useMemo(() => {
-    if (!selected || !parcel?.geometry_conflict || !droneCoordinates) return null
-
-    try {
-      const cadastralPoly = polygon(parcel.boundaries.cadastral.coordinates)
-      const dronePoly = polygon(parcel.boundaries.drone_ori.coordinates)
-
-      // Compute symmetric difference (areas that don't overlap)
-      const diff1 = difference(cadastralPoly, dronePoly)
-      const diff2 = difference(dronePoly, cadastralPoly)
-
-      const disputed = []
-      if (diff1?.geometry?.coordinates) {
-        diff1.geometry.coordinates.forEach(ring => {
-          disputed.push(ring[0].map(([lng, lat]) => [lat, lng]))
-        })
-      }
-      if (diff2?.geometry?.coordinates) {
-        diff2.geometry.coordinates.forEach(ring => {
-          disputed.push(ring[0].map(([lng, lat]) => [lat, lng]))
-        })
-      }
-
-      return disputed.length > 0 ? disputed : null
-    } catch {
-      return null
-    }
-  }, [selected, parcel, droneCoordinates])
+    if (!selected || !parcel?.geometry_conflict || !droneRing) return null
+    // computeDisputedRings takes full GeoJSON Polygon coordinate arrays
+    return computeDisputedRings(
+      parcel.boundaries.cadastral.coordinates,
+      parcel.boundaries.drone_ori.coordinates,
+    )
+  }, [selected, parcel, droneRing])
 
   if (!Array.isArray(coordinates) || coordinates.length < 4) return null
 
@@ -52,8 +31,8 @@ export default function ParcelShape({ parcel, selected, dimmed, onSelect, bounda
   const opacity = dimmed ? 0.05 : selected ? 0.55 : 0.25
   const strokeColor = selected ? '#FFFFFF' : fill
 
-  const dronePoints = Array.isArray(droneCoordinates) && droneCoordinates.length >= 4
-    ? droneCoordinates.map(([lng, lat]) => [lat, lng])
+  const dronePoints = Array.isArray(droneRing) && droneRing.length >= 4
+    ? droneRing.map(([lng, lat]) => [lat, lng])
     : null
 
   return (

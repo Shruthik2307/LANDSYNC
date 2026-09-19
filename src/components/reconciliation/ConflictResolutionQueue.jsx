@@ -3,18 +3,10 @@ import {
   AlertTriangle, 
   CheckCircle2, 
   Search, 
-  Filter, 
-  ChevronRight, 
-  MapPin, 
-  FileText, 
   ShieldAlert, 
   Check, 
-  Send, 
-  Sliders, 
   Zap, 
-  Info,
-  ExternalLink,
-  Layers
+  Info
 } from 'lucide-react';
 
 export default function ConflictResolutionQueue({ 

@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:backend": "cd backend && python main.py",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev\" --names \"backend,frontend\" --prefix-colors \"blue,green\"",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",
@@ -27,6 +29,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "@vitest/coverage-v8": "^5.0.0",
     "autoprefixer": "^10.6.0",
+    "concurrently": "^10.0.5",
     "eslint": "^9.39.5",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
