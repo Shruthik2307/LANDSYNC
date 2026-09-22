@@ -1,0 +1,13 @@
+.pytest_cache
+node_modules_old
+node_modules
+dist
+coverage
+test-results
+playwright-report
+.git
+backend
+*.log
+.freebuff
+skill-observations
+LANDSYNC-main

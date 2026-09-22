@@ -1,0 +1,25 @@
+node_modules/
+dist/
+coverage/
+test-results/
+playwright-report/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vite/
+
+data/sample/hyd_cadastral_raw.geojson
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Runtime data
+backend/tile_cache/
+backend/uploads/
+backend/*.db
+backend/backend_log.txt
+.vercel/
+*.geojson.tmp

@@ -1,0 +1,41 @@
+# LANDSYNC Backend — Python dependencies
+# Phase 1: Core FastAPI + GIS engine integration
+
+# ── Web framework ──────────────────────────────────────────────────────────
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0   # BaseSettings for config.py
+pyotp>=2.8.0               # TOTP (routes/auth.py)
+
+# ── File upload & async HTTP ───────────────────────────────────────────────
+python-multipart>=0.0.6    # multipart/form-data for /api/upload
+aiofiles>=23.2.1
+aiohttp>=3.9.0             # satellite tile proxy
+
+# ── Geospatial (core engine dependencies) ─────────────────────────────────
+# CRS handling is done via EPSG:3857 — see engine/crs.py
+geopandas>=0.14.1          # GeoDataFrame, read_file
+shapely>=2.0.2             # Geometry operations (IoU, area)
+pyproj>=3.6.0              # CRS definitions & transformations
+fiona>=1.9.5               # GeoJSON I/O backend for geopandas
+rasterio>=1.3.9            # Raster data processing (drone/aerial imagery)
+# GDAL>=3.8.0              # Optional: Install manually via wheel from https://github.com/cgohlke/geospatial-wheels/releases
+
+# ── AI/ML (conflict detection & computer vision) ──────────────────────────
+scikit-learn>=1.3.2        # ML models for confidence scoring
+opencv-python>=4.8.1       # Computer vision for imagery processing
+recordlinkage>=0.15        # Record linkage algorithms
+numpy>=1.24.0              # Numerical operations (scikit-learn dependency)
+pandas>=2.1.0              # Data manipulation (scikit-learn dependency)
+
+# ── Database (kept for satellite proxy / legacy mock-data loading) ─────────
+sqlalchemy>=2.0.23
+python-dotenv>=1.0.0
+psycopg2-binary>=2.9.9     # PostgreSQL adapter
+geoalchemy2>=0.14.2        # PostGIS integration for SQLAlchemy
+alembic>=1.13.0            # Database migrations
+
+# ── Testing ────────────────────────────────────────────────────────────────
+pytest>=7.4.0
+httpx>=0.25.0              # ASGI test client for FastAPI

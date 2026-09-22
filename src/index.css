@@ -1,0 +1,207 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==========================================================================
+   LANDSYNC DESIGN SYSTEM — PALANTIR AIP × GOOGLE EARTH × LUXURY SAAS
+   ========================================================================== */
+
+:root {
+  --bg-void: #030712;
+  --bg-space: #070D1D;
+  --bg-surface: #0B1528;
+  --bg-surface-elevated: #101E38;
+  --bg-surface-translucent: rgba(11, 21, 40, 0.78);
+  --bg-glass: rgba(13, 25, 48, 0.65);
+  
+  --border-subtle: rgba(0, 240, 255, 0.12);
+  --border-medium: rgba(0, 240, 255, 0.22);
+  --border-bright: rgba(0, 240, 255, 0.45);
+  --border-amber: rgba(255, 184, 0, 0.28);
+  --border-alert: rgba(255, 76, 76, 0.32);
+  
+  --cyan-core: #00F0FF;
+  --cyan-glow: rgba(0, 240, 255, 0.35);
+  --blue-tactical: #3B82F6;
+  --amber-core: #FFB800;
+  --alert-core: #FF4C4C;
+  --emerald-core: #10B981;
+  
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-dim: #475569;
+  
+  --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  
+  --shadow-hud: 0 16px 36px -8px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(0, 240, 255, 0.15) inset;
+  --shadow-glow: 0 0 25px rgba(0, 240, 255, 0.2);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-sans);
+  background-color: var(--bg-void);
+  color: var(--text-primary);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-width: 320px;
+  background-color: var(--bg-void);
+  overflow-x: hidden;
+  color: var(--text-primary);
+}
+
+::selection {
+  background: rgba(0, 240, 255, 0.25);
+  color: #FFFFFF;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--cyan-core);
+  outline-offset: 2px;
+}
+
+input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--cyan-core);
+  outline-offset: 2px;
+}
+
+.mono, .parcel-id, .project-code {
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+}
+
+/* --- ANIMATIONS & KEYFRAMES --- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hudPulse {
+  0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 2px var(--cyan-core)); }
+  50% { opacity: 0.9; filter: drop-shadow(0 0 8px var(--cyan-core)); }
+}
+
+@keyframes radarSweep {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes gridDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+@keyframes reticleScan {
+  0%, 100% { transform: translateY(-4px); opacity: 0.7; }
+  50% { transform: translateY(4px); opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Tactical Background Grid */
+.bg-tactical-grid {
+  background-image: 
+    linear-gradient(to right, rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.bg-radial-vignette {
+  background: radial-gradient(circle at center, transparent 30%, #030712 90%);
+}
+
+.hud-glass {
+  background: var(--bg-surface-translucent);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-hud);
+}
+
+.hud-glass-elevated {
+  background: rgba(16, 30, 56, 0.85);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid var(--border-medium);
+  box-shadow: var(--shadow-hud), 0 0 20px rgba(0, 240, 255, 0.1);
+}
+
+/* Custom Tactical Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(3, 7, 18, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 240, 255, 0.2);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 240, 255, 0.4);
+}
+
+/* --- LEAFLET UI OVERRIDES FOR ULTRA CLEAN GIS --- */
+.leaflet-container {
+  background-color: #030712 !important;
+  font-family: var(--font-sans) !important;
+}
+
+.leaflet-control-zoom {
+  display: none !important;
+}
+
+.leaflet-control-attribution {
+  background: rgba(3, 7, 18, 0.75) !important;
+  color: var(--text-dim) !important;
+  font-size: 9px !important;
+  font-family: var(--font-mono) !important;
+  border-top-left-radius: 4px;
+  border: 1px solid rgba(0, 240, 255, 0.1) !important;
+  border-bottom: none !important;
+  border-right: none !important;
+  padding: 2px 6px !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--text-muted) !important;
+}
+
+/* Pulsing parcel animation */
+.parcel-selected {
+  filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.75));
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
