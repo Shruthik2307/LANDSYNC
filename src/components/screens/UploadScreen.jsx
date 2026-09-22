@@ -11,7 +11,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
   const [uploadSuccess, setUploadSuccess] = useState(null)
   const [error, setError] = useState('')
   const [showConfig, setShowConfig] = useState(false)
-  const [customBackendUrl, setCustomBackendUrl] = useState(API_BASE_URL || '')
+  const [customBackendUrl, setCustomBackendUrl] = useState(API_BASE_URL || 'https://landsync-cmcg.onrender.com')
   const fileInputRef = useRef(null)
 
   function addFiles(nextFiles) {
