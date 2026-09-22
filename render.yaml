@@ -1,0 +1,14 @@
+# Render Blueprint — LANDSYNC FastAPI backend
+# Deploy: Render dashboard → New + → Blueprint → select this repo → Apply
+services:
+  - type: web
+    name: landsync-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    # No env vars required: DATABASE_URL defaults to a local SQLite file and
+    # CORS_ORIGINS defaults to "*". Set them here if you need PostGIS or a
+    # locked-down CORS list later.
