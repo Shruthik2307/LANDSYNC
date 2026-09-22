@@ -319,7 +319,11 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                   {submitting ? (
                     <>
                       <span className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                      <span>Preparing dataset…</span>
+                      <span>
+                        {files[0]?.size > 5 * 1024 * 1024
+                          ? `Uploading large file (${Math.round(files[0].size / (1024 * 1024))} MB)… please wait`
+                          : 'Preparing dataset…'}
+                      </span>
                     </>
                   ) : (
                     <>

@@ -83,29 +83,45 @@ async def upload_dataset(file: UploadFile = File(...)) -> UploadResponse:
         logger.error("[upload] Failed to save uploaded file: %s", exc)
         raise HTTPException(status_code=500, detail="Server could not save the uploaded file.")
 
-    # After saving, read from disk for validation to keep memory low
+    # After saving, validate content without exceeding server memory limits
+    file_size = save_path.stat().st_size
+    feature_count = 0
+
     try:
-        with open(save_path, "rb") as f:
-            content = f.read()
+        if file_size > 20 * 1024 * 1024:
+            # For large files (>20 MB), stream the header to avoid loading hundreds of MB into RAM (prevent Render OOM)
+            with open(save_path, "r", encoding="utf-8", errors="ignore") as f:
+                header = f.read(4096)
+                if '"FeatureCollection"' not in header and "'FeatureCollection'" not in header:
+                    if save_path.exists():
+                        os.remove(save_path)
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Invalid GeoJSON. The root object must have 'type': 'FeatureCollection'.",
+                    )
+            feature_count = -1
+        else:
+            with open(save_path, "rb") as f:
+                content = f.read()
 
-        # Basic JSON validation
-        geojson = json.loads(content)
-        if not isinstance(geojson, dict) or geojson.get("type") != "FeatureCollection":
-            if save_path.exists():
-                os.remove(save_path)
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid GeoJSON. The root object must have 'type': 'FeatureCollection'.",
-            )
+            geojson = json.loads(content)
+            if not isinstance(geojson, dict) or geojson.get("type") != "FeatureCollection":
+                if save_path.exists():
+                    os.remove(save_path)
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid GeoJSON. The root object must have 'type': 'FeatureCollection'.",
+                )
 
-        features = geojson.get("features", [])
-        if not features:
-            if save_path.exists():
-                os.remove(save_path)
-            raise HTTPException(
-                status_code=400,
-                detail="GeoJSON contains no features. Please upload a FeatureCollection containing at least one parcel feature.",
-            )
+            features = geojson.get("features", [])
+            if not features:
+                if save_path.exists():
+                    os.remove(save_path)
+                raise HTTPException(
+                    status_code=400,
+                    detail="GeoJSON contains no features. Please upload a FeatureCollection containing at least one parcel feature.",
+                )
+            feature_count = len(features)
 
     except HTTPException:
         raise
@@ -122,10 +138,10 @@ async def upload_dataset(file: UploadFile = File(...)) -> UploadResponse:
         raise HTTPException(status_code=400, detail=f"File validation failed: {str(e)}")
 
     logger.info(
-        "[upload] Saved dataset %r (%d features, %.1f KB) → %s",
+        "[upload] Saved dataset %r (%s features, %.1f MB) → %s",
         dataset_id,
-        len(features),
-        len(content) / 1024,
+        str(feature_count) if feature_count >= 0 else "large",
+        file_size / (1024 * 1024),
         save_path.name,
     )
 

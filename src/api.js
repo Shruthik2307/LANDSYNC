@@ -13,10 +13,11 @@ class ApiError extends Error {
 // Prod builds default to same-origin API calls ('' → fetch('/api/…')) — the
 // unified Render service serves the SPA and the API from one URL. Override
 // via VITE_API_BASE_URL or window/localStorage for split deployments.
+const defaultLiveUrl = 'https://landsync-cmcg.onrender.com'
 const configuredApiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== 'undefined' && (window.__LANDSYNC_API_BASE_URL__ || localStorage.getItem('LANDSYNC_API_BASE_URL'))) ||
-  ''
+  (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') ? defaultLiveUrl : '')
 export const API_BASE_URL = (configuredApiBaseUrl || '').replace(/\/$/, '')
 
 export function setApiBaseUrl(url) {
@@ -157,7 +158,8 @@ export function uploadDataset(files) {
       }) || files[0]
       body.append('file', geoFile, geoFile?.name || 'source.geojson')
     }
-    return request('/api/upload', { method: 'POST', body })
+    // Give uploads up to 10 minutes (600,000 ms) for large datasets (e.g. 200MB)
+    return request('/api/upload', { method: 'POST', body }, 600000)
   }
   return new Promise((resolve) => setTimeout(() => resolve({ dataset_id: `mock-${Date.now()}-${files.length}` }), 700))
 }
