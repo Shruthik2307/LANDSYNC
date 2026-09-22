@@ -10,9 +10,9 @@ class ApiError extends Error {
   }
 }
 
-const configuredApiBaseUrl = import.meta.env.DEV
-  ? import.meta.env.VITE_API_BASE_URL
-  : globalThis.__LANDSYNC_API_BASE_URL__
+// Prod builds can point at a hosted backend via VITE_API_BASE_URL (e.g. a Render/Railway URL);
+// the window global remains as an override for self-hosted static bundles.
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL || globalThis.__LANDSYNC_API_BASE_URL__
 export const API_BASE_URL = (configuredApiBaseUrl || 'http://localhost:8000').replace(/\/$/, '')
 // Static deployments without a backend (e.g. GitHub Pages) can build with
 // VITE_DEFAULT_DEMO_MODE=true so the site boots straight into the demo fixture.
