@@ -5,6 +5,8 @@
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
 pydantic>=2.5.0
+pydantic-settings>=2.1.0   # BaseSettings for config.py
+pyotp>=2.8.0               # TOTP (routes/auth.py)
 
 # ── File upload & async HTTP ───────────────────────────────────────────────
 python-multipart>=0.0.6    # multipart/form-data for /api/upload
