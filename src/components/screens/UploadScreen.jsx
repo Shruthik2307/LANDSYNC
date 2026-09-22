@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react'
 import { Upload, FileUp, X, AlertCircle, FileText, Shield, ArrowRight, CheckCircle2, Sparkles, Settings } from 'lucide-react'
 import { uploadDataset, API_BASE_URL, setApiBaseUrl } from '../../api'
 import BrandHeader from '../layout/BrandHeader'
-import sampleCadastral from '../../data/cadastral.geojson'
 
 export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArchitecture, onNavigateLanding }) {
   const [files, setFiles] = useState([])
@@ -31,13 +30,17 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
     setUploadSuccess(null)
   }
 
-  function loadSampleData() {
+  async function loadSampleData() {
     try {
-      const blob = new Blob([JSON.stringify(sampleCadastral)], { type: 'application/geo+json' })
+      const resp = await fetch('/cadastral.geojson')
+      if (!resp.ok) throw new Error('Could not fetch sample dataset')
+      const data = await resp.json()
+      const blob = new Blob([JSON.stringify(data)], { type: 'application/geo+json' })
       const sampleFile = new File([blob], 'hyd_cadastral.geojson', { type: 'application/geo+json' })
       addFiles([sampleFile])
     } catch (e) {
       console.error('Failed to load sample dataset', e)
+      setError('Could not load sample dataset. Try uploading your own .geojson file.')
     }
   }
 
