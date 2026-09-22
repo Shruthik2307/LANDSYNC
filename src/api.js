@@ -10,10 +10,11 @@ class ApiError extends Error {
   }
 }
 
-// Prod builds can point at a hosted backend via VITE_API_BASE_URL (e.g. a Render/Railway URL);
-// the window global remains as an override for self-hosted static bundles.
-const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL || globalThis.__LANDSYNC_API_BASE_URL__
-export const API_BASE_URL = (configuredApiBaseUrl || 'http://localhost:8000').replace(/\/$/, '')
+// Prod builds default to same-origin API calls ('' → fetch('/api/…')) — the
+// unified Render service serves the SPA and the API from one URL. Override
+// via VITE_API_BASE_URL or the window global for split deployments.
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL || globalThis.__LANDSYNC_API_BASE_URL__ || ''
+export const API_BASE_URL = (configuredApiBaseUrl || '').replace(/\/$/, '')
 // Static deployments without a backend (e.g. GitHub Pages) can build with
 // VITE_DEFAULT_DEMO_MODE=true so the site boots straight into the demo fixture.
 let forceDemoMode = import.meta.env.VITE_DEFAULT_DEMO_MODE === 'true'
@@ -44,7 +45,7 @@ async function request(path, options = {}, timeoutMs = 15000) {
     if (error.name === 'AbortError') {
       throw new Error('This request timed out. Check that the backend is responding, then retry.')
     }
-    throw new Error(`The live backend at ${API_BASE_URL} could not be reached. Ensure FastAPI is running on port 8000.`)
+    throw new Error(`The live backend at ${API_BASE_URL || 'this origin'} could not be reached. Check your connection and retry.`)
   } finally {
     clearTimeout(timeout)
   }
