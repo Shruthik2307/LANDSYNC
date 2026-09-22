@@ -2,7 +2,7 @@
 # Deploy: Render dashboard → New + → Blueprint → select this repo → Apply
 services:
   - type: web
-    name: landsync-backend
+    name: landsync-sih26013
     runtime: docker
     dockerfilePath: ./Dockerfile
     dockerContext: .

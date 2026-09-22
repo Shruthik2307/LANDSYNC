@@ -74,6 +74,26 @@
 
      npm run dev
 
+  ## 🚀 Deployment (one URL — frontend + backend together)
+
+  The whole app ships as a **single Render service**: Docker builds the Vite
+  frontend, and FastAPI serves both the SPA and every `/api/*` route from one
+  origin. No separate frontend host, no CORS, no local processes.
+
+  [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Shruthik2307/LANDSYNC)
+
+  1. Click the button → confirm → Render builds (`render.yaml` → service
+     `landsync-sih26013`, first build ≈ 10–15 min for the GIS stack)
+  2. When live, your app is at `https://landsync-sih26013.onrender.com` —
+     open it: Backend: Connected, 25 parcels, full reconciliation UI
+  3. Share that one URL with the team. Done.
+
+  Notes:
+  - Free plan: the service sleeps after ~15 min idle; the first visit then
+    takes ~50s to wake (Render cold start). Paid plan is always-on.
+  - Local development is still the classic two-process flow:
+    `npm run dev` + `cd backend && python main.py`.
+
   ## 🧪 Testing & Quality Assurance
 
   We maintain a strict quality gate. Run the following commands to verify the build:
