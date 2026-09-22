@@ -91,14 +91,31 @@ async def upload_dataset(file: UploadFile = File(...)) -> UploadResponse:
         # Basic JSON validation
         geojson = json.loads(content)
         if not isinstance(geojson, dict) or geojson.get("type") != "FeatureCollection":
-            os.remove(save_path)
-            raise HTTPException(status_code=400, detail="Invalid GeoJSON FeatureCollection")
+            if save_path.exists():
+                os.remove(save_path)
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid GeoJSON. The root object must have 'type': 'FeatureCollection'.",
+            )
 
         features = geojson.get("features", [])
         if not features:
-            os.remove(save_path)
-            raise HTTPException(status_code=400, detail="GeoJSON has no features")
+            if save_path.exists():
+                os.remove(save_path)
+            raise HTTPException(
+                status_code=400,
+                detail="GeoJSON contains no features. Please upload a FeatureCollection containing at least one parcel feature.",
+            )
 
+    except HTTPException:
+        raise
+    except json.JSONDecodeError as err:
+        if save_path.exists():
+            os.remove(save_path)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Uploaded file is not valid JSON ({err.msg} at line {err.lineno}, col {err.colno}).",
+        )
     except Exception as e:
         if save_path.exists():
             os.remove(save_path)

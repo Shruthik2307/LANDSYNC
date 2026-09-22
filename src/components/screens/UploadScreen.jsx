@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react'
-import { Upload, FileUp, X, AlertCircle, FileText, Shield, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { uploadDataset } from '../../api'
+import { Upload, FileUp, X, AlertCircle, FileText, Shield, ArrowRight, CheckCircle2, Sparkles, Settings } from 'lucide-react'
+import { uploadDataset, API_BASE_URL, setApiBaseUrl } from '../../api'
 import BrandHeader from '../layout/BrandHeader'
+import sampleCadastral from '../../data/cadastral.geojson'
 
 export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArchitecture, onNavigateLanding }) {
   const [files, setFiles] = useState([])
@@ -9,6 +10,8 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
   const [submitting, setSubmitting] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(null)
   const [error, setError] = useState('')
+  const [showConfig, setShowConfig] = useState(false)
+  const [customBackendUrl, setCustomBackendUrl] = useState(API_BASE_URL || '')
   const fileInputRef = useRef(null)
 
   function addFiles(nextFiles) {
@@ -28,11 +31,39 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
     setUploadSuccess(null)
   }
 
+  function loadSampleData() {
+    try {
+      const blob = new Blob([JSON.stringify(sampleCadastral)], { type: 'application/geo+json' })
+      const sampleFile = new File([blob], 'hyd_cadastral.geojson', { type: 'application/geo+json' })
+      addFiles([sampleFile])
+    } catch (e) {
+      console.error('Failed to load sample dataset', e)
+    }
+  }
+
+  function handleSaveBackendUrl(e) {
+    e.preventDefault()
+    setApiBaseUrl(customBackendUrl.trim())
+    window.location.reload()
+  }
+
   function handleSubmit(event) {
     event.preventDefault()
     if (!files.length || submitting) return
     setSubmitting(true)
     setError('')
+
+    // Validate that at least one file is a GeoJSON or JSON file
+    const hasGeoJson = files.some(f => {
+      const name = (f.name || '').toLowerCase()
+      return name.endsWith('.geojson') || name.endsWith('.json')
+    })
+
+    if (!hasGeoJson && !demoMode) {
+      setSubmitting(false)
+      setError('Please upload a valid GeoJSON dataset (.geojson or .json). The LANDSYNC engine reconciles cadastral and municipal boundary FeatureCollections.')
+      return
+    }
 
     uploadDataset(files)
       .then(({ dataset_id }) => {
@@ -41,7 +72,11 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
       })
       .catch((requestError) => {
         setSubmitting(false)
-        const msg = requestError?.message || 'Upload operation failed. Please check network connection and try again.'
+        const detail = requestError?.detail
+        let msg = requestError?.message || 'Upload operation failed. Please check network connection and try again.'
+        if (detail && !msg.includes(typeof detail === 'string' ? detail : '')) {
+          msg = `${msg}: ${typeof detail === 'string' ? detail : JSON.stringify(detail)}`
+        }
         setError(msg)
       })
   }
@@ -119,16 +154,53 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
             </div>
 
             {/* Mode Banner */}
-            <div className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 flex items-center gap-3">
-              <Shield size={18} className={demoMode ? 'text-amber-400' : 'text-emerald-400'} />
-              <div className="text-xs">
-                <span className="text-slate-300 font-medium">
-                  {demoMode ? 'Local Isolated Mode' : 'Connected to Live FastAPI Backend'}
-                </span>
-                <p className="text-slate-500 text-[11px]">
-                  {demoMode ? 'Processes against prepared verification datasets.' : 'Sends payloads to http://127.0.0.1:8000/api/upload.'}
-                </p>
+            <div className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield size={18} className={demoMode ? 'text-amber-400' : 'text-emerald-400'} />
+                  <div className="text-xs">
+                    <span className="text-slate-300 font-medium">
+                      {demoMode ? 'Local Isolated Mode' : 'Live Backend Engine'}
+                    </span>
+                    <p className="text-slate-500 text-[11px]">
+                      {demoMode ? 'Processes against prepared verification datasets.' : `Target: ${API_BASE_URL || 'Current Origin'}/api/upload`}
+                    </p>
+                  </div>
+                </div>
+                {!demoMode && (
+                  <button
+                    type="button"
+                    onClick={() => setShowConfig(!showConfig)}
+                    className="text-slate-400 hover:text-cyan-400 p-1 rounded hover:bg-slate-800 transition-colors"
+                    title="Configure Backend URL"
+                    aria-label="Configure Backend URL"
+                  >
+                    <Settings size={14} />
+                  </button>
+                )}
               </div>
+
+              {showConfig && !demoMode && (
+                <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+                  <span className="text-[10px] text-slate-400 block">Render Backend URL (saved in browser):</span>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={customBackendUrl}
+                      onChange={(e) => setCustomBackendUrl(e.target.value)}
+                      placeholder="https://your-backend.onrender.com"
+                      className="flex-1 bg-slate-950 border border-slate-700 rounded px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveBackendUrl}
+                      className="px-2.5 py-1 bg-cyan-400 text-slate-950 font-bold rounded text-xs hover:bg-white transition-all"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -177,13 +249,23 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                     {isDragging ? 'Release to Ingest Sources' : 'DROP LAND RECORDS'}
                   </p>
                   <p className="text-xs text-slate-400 font-mono">
-                    PDF • CSV • GeoJSON • SHP • TIFF
+                    GeoJSON • JSON (FeatureCollection)
                   </p>
                   <p className="text-[11px] text-cyan-400/80 pt-1">
                     or <span className="underline underline-offset-2 font-medium">Browse Files</span> from your computer
                   </p>
                 </div>
               </div>
+
+              {/* Instant Load Sample Data Button */}
+              <button
+                type="button"
+                onClick={loadSampleData}
+                className="mt-3 text-xs text-cyan-300 hover:text-cyan-200 flex items-center justify-center gap-1.5 w-full font-mono py-2 px-3 rounded-lg border border-cyan-500/30 bg-cyan-950/40 hover:bg-cyan-900/50 transition-all shadow-sm"
+              >
+                <Sparkles size={13} className="text-cyan-400 shrink-0" />
+                <span>Quick-Load Sample Hyderabad Dataset (cadastral.geojson)</span>
+              </button>
 
               {/* Uploaded File List */}
               {files.length > 0 && (

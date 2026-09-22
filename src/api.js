@@ -12,9 +12,22 @@ class ApiError extends Error {
 
 // Prod builds default to same-origin API calls ('' → fetch('/api/…')) — the
 // unified Render service serves the SPA and the API from one URL. Override
-// via VITE_API_BASE_URL or the window global for split deployments.
-const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL || globalThis.__LANDSYNC_API_BASE_URL__ || ''
+// via VITE_API_BASE_URL or window/localStorage for split deployments.
+const configuredApiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== 'undefined' && (window.__LANDSYNC_API_BASE_URL__ || localStorage.getItem('LANDSYNC_API_BASE_URL'))) ||
+  ''
 export const API_BASE_URL = (configuredApiBaseUrl || '').replace(/\/$/, '')
+
+export function setApiBaseUrl(url) {
+  if (typeof window !== 'undefined') {
+    if (url) {
+      localStorage.setItem('LANDSYNC_API_BASE_URL', url)
+    } else {
+      localStorage.removeItem('LANDSYNC_API_BASE_URL')
+    }
+  }
+}
 // Static deployments without a backend (e.g. GitHub Pages) can build with
 // VITE_DEFAULT_DEMO_MODE=true so the site boots straight into the demo fixture.
 let forceDemoMode = import.meta.env.VITE_DEFAULT_DEMO_MODE === 'true'
@@ -78,7 +91,10 @@ async function request(path, options = {}, timeoutMs = 15000) {
     } catch {
       // Non-JSON error body; fall back to the status text below.
     }
-    throw new ApiError(`LANDSYNC request failed (${response.status})`, response.status, detail || response.statusText)
+    const message = detail
+      ? `LANDSYNC request failed (${response.status}): ${detail}`
+      : `LANDSYNC request failed (${response.status})`
+    throw new ApiError(message, response.status, detail || response.statusText)
   }
 
 
@@ -134,7 +150,12 @@ export function uploadDataset(files) {
   if (!isDemoMode()) {
     const body = new FormData()
     if (files && files.length > 0) {
-      body.append('file', files[0], files[0]?.name || 'source.geojson')
+      // Pick the GeoJSON or JSON file first if present
+      const geoFile = files.find(f => {
+        const name = (f.name || '').toLowerCase()
+        return name.endsWith('.geojson') || name.endsWith('.json')
+      }) || files[0]
+      body.append('file', geoFile, geoFile?.name || 'source.geojson')
     }
     return request('/api/upload', { method: 'POST', body })
   }
