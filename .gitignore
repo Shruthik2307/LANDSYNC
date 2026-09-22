@@ -20,5 +20,6 @@ __pycache__/
 backend/tile_cache/
 backend/uploads/
 backend/*.db
+backend/backend_log.txt
 .vercel/
 *.geojson.tmp
