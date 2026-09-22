@@ -36,7 +36,6 @@ WORKDIR /app
 COPY backend ./backend
 COPY engine ./engine
 COPY data ./data
-COPY models ./models
 COPY --from=frontend-build /build/dist ./frontend-dist
 
 WORKDIR /app/backend
