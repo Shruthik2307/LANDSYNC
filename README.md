@@ -74,25 +74,6 @@
 
      npm run dev
 
-  ## 🚀 Deployment (one URL — frontend + backend together)
-
-  The whole app ships as a **single Railway service**: Docker builds the Vite
-  frontend, and FastAPI serves both the SPA and every `/api/*` route from one
-  origin. No separate frontend host, no CORS, no local processes.
-
-  - **Live URL:** https://landsync-sih26013-production.up.railway.app
-  - Project: https://railway.com/project/1afac2d7-a8e1-4dfc-9927-0ab09ca0bf20
-  - Deploys from this repo via the Dockerfile (multi-stage: Node build →
-    Python runtime). Pushes to `main` are deployed with `railway up` from a
-    linked checkout (`.railwayignore` keeps dev junk out of the upload).
-  - Health probe: `GET /api/health` → `{"status":"ok","parcel_count":25}`
-
-  Notes:
-  - Railway bills by usage (trial credit first). Services don't sleep, so
-    there are no cold-start surprises during demos.
-  - Local development is still the classic two-process flow:
-    `npm run dev` + `cd backend && python main.py`.
-
   ## 🧪 Testing & Quality Assurance
 
   We maintain a strict quality gate. Run the following commands to verify the build:

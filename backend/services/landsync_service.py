@@ -239,13 +239,6 @@ def load_data(
             )
             continue
 
-        # `boundaries.drone_ori` — present only when geometry_conflict == True
-        # (the municipal survey acts as the alternative / drone-survey source)
-        mun_geom = mun_geom_map.get(pid)
-        boundaries: dict[str, Any] = {"cadastral": cad_geom}
-        if rec["geometry_conflict"] and mun_geom is not None:
-            boundaries["drone_ori"] = mun_geom
-
         # ------------------------------------------------------------------
         # ML-powered conflict detection and confidence scoring
         # ------------------------------------------------------------------
@@ -259,10 +252,17 @@ def load_data(
             final_confidence = rec["confidence"]
             final_conflict = rec["geometry_conflict"]
 
+        # `boundaries.drone_ori` — present only when geometry_conflict == True
+        # (the municipal survey acts as the alternative / drone-survey source)
+        mun_geom = mun_geom_map.get(pid)
+        boundaries: dict[str, Any] = {"cadastral": cad_geom}
+        if final_conflict and mun_geom is not None:
+            boundaries["drone_ori"] = mun_geom
+
         parcel: dict[str, Any] = {
             # Engine fields (7 mandatory keys)
             "parcel_id": rec["parcel_id"],
-            "confidence": final_confidence,
+            "confidence": int(round(final_confidence)),
             "priority": rec["priority"],
             "area_difference": rec["area_difference"],
             "geometry_conflict": final_conflict,
