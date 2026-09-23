@@ -2,7 +2,7 @@
   {
     "parcel_id": "1042",
     "confidence": 87,
-    "priority": "HIGH",
+    "priority": "LOW",
     "area_difference": 24,
     "geometry_conflict": true,
     "attribute_conflict": false,
@@ -66,7 +66,7 @@
   },
   {
     "parcel_id": "1078",
-    "confidence": 74,
+    "confidence": 41,
     "priority": "HIGH",
     "area_difference": 18,
     "geometry_conflict": true,
@@ -145,7 +145,7 @@
   },
   {
     "parcel_id": "1126",
-    "confidence": 92,
+    "confidence": 76,
     "priority": "MEDIUM",
     "area_difference": 11,
     "geometry_conflict": true,
@@ -210,7 +210,7 @@
   },
   {
     "parcel_id": "1189",
-    "confidence": 81,
+    "confidence": 62,
     "priority": "MEDIUM",
     "area_difference": 7,
     "geometry_conflict": true,
@@ -313,7 +313,7 @@
   },
   {
     "parcel_id": "1250",
-    "confidence": 68,
+    "confidence": 44,
     "priority": "HIGH",
     "area_difference": 31,
     "geometry_conflict": true,
