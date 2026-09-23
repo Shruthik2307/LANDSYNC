@@ -147,11 +147,11 @@ def _spatial_bbox_join(
         Spatially matched rows with the same column layout as the
         exact join output.
     """
-    # Build envelope GeoDataFrames (bounding boxes) for fast spatial join.
-    env_a = unmatched_a.copy()
+    # Work on positional indexes so sjoin results can be mapped back to the
+    # source rows unambiguously (original indexes may carry non-unique labels).
+    env_a = unmatched_a.copy().reset_index(drop=True)
+    env_b = unmatched_b.copy().reset_index(drop=True)
     env_a["geometry_a"] = env_a["geometry_a"].envelope
-
-    env_b = unmatched_b.copy()
     env_b["geometry_b"] = env_b["geometry_b"].envelope
 
     # Temporarily set active geometry for sjoin.
@@ -179,16 +179,43 @@ def _spatial_bbox_join(
     if joined.empty:
         return gpd.GeoDataFrame()
 
-    # Restore original (non-envelope) geometries from unmatched sets.
-    joined = joined.merge(
-        unmatched_a[[id_col, "geometry_a"]].rename(
-            columns={"geometry_a": "geometry_a_orig"}
-        ),
-        on=id_col,
-        how="left",
+    # sjoin renames the shared join key (parcel_id → parcel_id_a/parcel_id_b)
+    # and does NOT carry the right frame's geometry column into the result.
+    # Normalise the key back and restore BOTH original geometries from the
+    # unmatched frames via the sjoin index columns.
+    left_key = f"{id_col}_a"
+    right_key = f"{id_col}_b"
+    if id_col not in joined.columns:
+        if left_key in joined.columns:
+            joined = joined.rename(columns={left_key: id_col})
+        elif right_key in joined.columns:
+            joined = joined.rename(columns={right_key: id_col})
+    joined = joined.drop(
+        columns=[c for c in (left_key, right_key) if c in joined.columns]
     )
-    joined["geometry_a"] = joined["geometry_a_orig"]
-    joined = joined.drop(columns=["geometry_a_orig"])
+
+    # Left rows: the result index holds env_a's positional index.
+    joined["geometry_a"] = [env_a["geometry_a"].iloc[i] for i in joined.index]
+
+    # Right rows: env_b's position arrives as a column whose name varies by
+    # geopandas version ('index_right', 'index_b', or 'index_rightb').
+    right_pos_col = next(
+        (
+            c
+            for c in ("index_right", "index_b", "index_rightb")
+            if c in joined.columns
+        ),
+        None,
+    )
+    needs_b = "geometry_b" not in joined.columns or joined["geometry_b"].isna().all()
+    if right_pos_col is not None and needs_b:
+        joined["geometry_b"] = [
+            env_b["geometry_b"].iloc[i] for i in joined[right_pos_col]
+        ]
+    elif right_pos_col is not None:
+        joined = joined.drop(columns=[right_pos_col])
+
+    joined = joined.reset_index(drop=True)
 
     return gpd.GeoDataFrame(joined, geometry="geometry_a", crs=f"EPSG:{REQUIRED_EPSG}")
 

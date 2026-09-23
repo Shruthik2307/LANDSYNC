@@ -250,7 +250,14 @@ def load_data(
     # 2. Run engine reconciliation (handles CRS reprojection internally)
     # ------------------------------------------------------------------
     logger.info("[landsync_service] Running engine reconciliation …")
-    engine_results: list[dict] = run_reconciliation(cad_path, mun_path)
+    # Pass the validated (and parcel_id-normalised) frames so the engine
+    # never re-reads raw files and bypasses the derived-ID normalisation.
+    engine_results: list[dict] = run_reconciliation(
+        cad_path,
+        mun_path,
+        cadastral_gdf=gdf_cad,
+        municipal_gdf=gdf_mun,
+    )
     logger.info(
         "[landsync_service] Engine returned %d reconciliation records.",
         len(engine_results),
@@ -328,6 +335,11 @@ def load_data(
         boundaries: dict[str, Any] = {"cadastral": cad_geom}
         if mun_geom is not None:
             boundaries["drone_ori"] = mun_geom
+        elif rec.get("municipal_geometry") is not None:
+            # Spatially-matched parcel: the municipal row's ID differs from
+            # the cadastral ID, so the ID-keyed lookup above misses. The
+            # pipeline attached the matched municipal geometry directly.
+            boundaries["drone_ori"] = rec["municipal_geometry"]
         elif final_conflict:
             logger.warning(
                 "[landsync_service] Parcel %r has geometry_conflict=True but no municipal geometry found.",

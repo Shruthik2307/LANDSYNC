@@ -53,6 +53,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 import geopandas as gpd
+import shapely
 
 from engine.crs import CRSManager
 from engine.matching import match_parcels
@@ -66,6 +67,9 @@ from engine.conflicts import evaluate_conflicts
 def run_reconciliation(
     cadastral_path: "str | Path",
     municipal_path: "str | Path",
+    *,
+    cadastral_gdf: "gpd.GeoDataFrame | None" = None,
+    municipal_gdf: "gpd.GeoDataFrame | None" = None,
 ) -> "list[dict[str, Any]]":
     """Load, normalise, match, and evaluate two parcel GeoJSON datasets.
 
@@ -75,6 +79,12 @@ def run_reconciliation(
         Path to the cadastral GeoJSON file.
     municipal_path : str or Path
         Path to the municipal GeoJSON file.
+    cadastral_gdf, municipal_gdf : geopandas.GeoDataFrame, optional
+        Pre-loaded frames to use instead of re-reading *path* from disk.
+        The service layer passes these so that validation-time
+        normalisation (e.g. derived ``parcel_id`` columns for real
+        cadastral exports) is not silently bypassed when the engine
+        re-reads the raw files.
 
     Returns
     -------
@@ -97,10 +107,10 @@ def run_reconciliation(
     _assert_file_exists(municipal_path)
 
     # ------------------------------------------------------------------
-    # Step 1 -- Load raw GeoJSON files
+    # Step 1 -- Load raw GeoJSON files (or accept pre-validated frames)
     # ------------------------------------------------------------------
-    gdf_cadastral = gpd.read_file(cadastral_path)
-    gdf_municipal = gpd.read_file(municipal_path)
+    gdf_cadastral = cadastral_gdf if cadastral_gdf is not None else gpd.read_file(cadastral_path)
+    gdf_municipal = municipal_gdf if municipal_gdf is not None else gpd.read_file(municipal_path)
 
     # ------------------------------------------------------------------
     # Step 2 -- Normalise CRS to EPSG:3857 (rule: .agentrules section CRS)
@@ -161,13 +171,43 @@ def run_reconciliation(
             continue
 
         record = evaluate_conflicts(row)
+
+        # Attach the municipal geometry (converted back to EPSG:4326 GeoJSON)
+        # so the service layer can always provide the drone_ori overlay —
+        # including spatially-matched parcels whose municipal ID differs from
+        # the cadastral ID, where an ID-keyed lookup cannot find it.
+        try:
+            transformer = _make_3857_to_4326_transformer()
+            geom_b_4326 = shapely.ops.transform(
+                lambda x, y: transformer.transform(x, y), row["geometry_b"]
+            )
+            record["municipal_geometry"] = json.loads(
+                json.dumps(shapely.geometry.mapping(geom_b_4326))
+            )
+        except Exception as exc:  # geometry transport is best-effort
+            print(
+                f"[pipeline] WARNING: Could not attach municipal geometry for "
+                f"parcel {row.get('parcel_id')!r}: {exc}",
+                file=sys.stderr,
+            )
+
         results.append(record)
 
-    return results
-
-
-# ---------------------------------------------------------------------------
+    return results# ---------------------------------------------------------------------------
 # Private helpers
+
+def _make_3857_to_4326_transformer():
+    """Return a cached pyproj transformer EPSG:3857 → EPSG:4326."""
+    from functools import lru_cache
+    from pyproj import Transformer
+
+    @lru_cache(maxsize=1)
+    def _build():
+        return Transformer.from_crs(3857, 4326, always_xy=True)
+
+    return _build()
+
+
 # ---------------------------------------------------------------------------
 
 def _assert_file_exists(path: Path) -> None:
