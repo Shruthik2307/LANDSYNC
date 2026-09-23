@@ -532,9 +532,12 @@ def _load_and_validate(path: Path, label: str) -> gpd.GeoDataFrame:
 
 
 # Column candidates used to derive a stable parcel identity, in priority
-# order. The first present + non-empty column wins; rows with empty values
-# (and datasets with none of these columns) fall back to a deterministic
-# hash of the geometry, so every feature still gets a unique, stable ID.
+# order. Resolution is PER ROW: the first candidate with a non-empty value
+# wins for that row (real ward files have patchy survey columns — e.g.
+# OLD_SNO filled for old-town records but empty for newly amalgamated
+# plots that only carry TS_NO or TSCODE). Rows where every candidate is
+# empty fall back to a deterministic hash of the geometry, so every
+# feature still gets a unique, stable ID.
 _ID_CANDIDATES: tuple[str, ...] = (
     "parcel_id", "PARCEL_ID",
     "OLD_SNO", "TS_NO1", "TS_NO", "TSCODE", "LGC_NO",
@@ -547,44 +550,56 @@ def _derive_parcel_ids(gdf: gpd.GeoDataFrame, label: str) -> gpd.GeoDataFrame:
     """Deterministically assign a 'parcel_id' column to *gdf*.
 
     Strategy (deterministic across restarts — no randomized hash):
-    1. Use the first candidate column that exists and has non-empty values.
+    1. Per row, use the first candidate column (in priority order) whose
+       value is non-empty — ward files have patchy survey columns, so a
+       single dataset-wide column would wrongly degrade most rows to the
+       anonymous 'auto-<hash>' identity.
     2. Normalise numeric strings ('123.0' → '123').
     3. Uniquify repeated values with a '-2', '-3' … suffix (real ward files
        often have multiple polygons per survey number).
-    4. Fill any still-empty row with 'auto-<md5-of-geometry>' — identical
-       geometries therefore intentionally map to the same ID, which the
-       duplicate_id flag will surface.
+    4. Rows where every candidate is empty fall back to
+       'auto-<md5-of-geometry>' — identical geometries therefore
+       intentionally map to the same ID, which the duplicate_id flag
+       surfaces.
     """
     import hashlib
+    from collections import Counter
 
-    used_col: str | None = None
-    series: pd.Series | None = None
+    # Normalise every candidate column once (vectorised — cheap at 100k+ rows).
+    normalized: list[pd.Series] = []
     for col in _ID_CANDIDATES:
-        if col in gdf.columns and gdf[col].notna().any():
-            candidate = gdf[col].astype(str).str.strip()
-            candidate = candidate.replace({"": None, "nan": None, "None": None, "0": None})
-            candidate = candidate.str.replace(r"\.0$", "", regex=True)
-            if candidate.notna().sum() > 0:
-                used_col = col
-                series = candidate
-                break
+        if col in gdf.columns:
+            s = gdf[col].astype(str).str.strip()
+            s = s.replace({"": None, "nan": None, "None": None, "0": None})
+            s = s.str.replace(r"\.0$", "", regex=True)
+            if s.notna().any():
+                normalized.append(s)
 
-    if series is None:
-        used_col = "geometry"
-        series = pd.Series([None] * len(gdf), index=gdf.index, dtype="object")
+    if not normalized:
         logger.warning(
             "[landsync_service] %s: no identifier column found — deriving IDs from geometry hashes.",
             label,
         )
+        first = pd.Series([None] * len(gdf), index=gdf.index, dtype="object")
+        supplier = pd.Series(["geometry"] * len(gdf), index=gdf.index)
     else:
+        cand = pd.concat(normalized, axis=1)
+        # First non-null value across each row (bfill spreads it to column 0).
+        first = cand.bfill(axis=1).iloc[:, 0]
+        supplier = cand.notna().idxmax(axis=1).where(first.notna(), other="geometry")
+        breakdown = Counter(supplier[supplier != "geometry"])
+        summary = ", ".join(f"{cnt} from {col!r}" for col, cnt in breakdown.most_common())
         logger.info(
-            "[landsync_service] %s: deriving parcel_id from column %r.", label, used_col
+            "[landsync_service] %s: per-row parcel_id resolution — %s, %d from geometry hashes.",
+            label,
+            summary or "no column values",
+            int((supplier == "geometry").sum()),
         )
 
     derived: list[str] = []
     seen: dict[str, int] = {}
-    for value, geom in zip(series, gdf.geometry):
-        if value is None:
+    for value, geom in zip(first, gdf.geometry):
+        if value is None or (isinstance(value, float) and pd.isna(value)):
             try:
                 wkt = geom.wkt if geom is not None and not geom.is_empty else ""
             except Exception:
