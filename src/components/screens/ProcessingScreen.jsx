@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { CheckCircle2, Loader2, AlertCircle, RefreshCw, Cpu, Activity } from 'lucide-react'
+import { CheckCircle2, AlertCircle, RefreshCw, Cpu, Activity } from 'lucide-react'
+import { MorphingInfinity } from '../ui/MorphingInfinity'
 import { processDataset } from '../../api'
 import BrandHeader from '../layout/BrandHeader'
 
@@ -119,8 +120,8 @@ export default function ProcessingScreen({ datasetId, onComplete, demoMode, onTo
                           <CheckCircle2 size={14} />
                         </div>
                       ) : isActive ? (
-                        <div className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-400 animate-spin">
-                          <Loader2 size={14} />
+                        <div className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-400">
+                          <MorphingInfinity className="w-4 h-4" />
                         </div>
                       ) : (
                         <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono text-slate-400">

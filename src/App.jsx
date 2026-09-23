@@ -3,7 +3,7 @@ import { isDemoMode, setDemoMode } from './api'
 import LandingScreen from './components/screens/LandingScreen'
 import UploadScreen from './components/screens/UploadScreen'
 import ProcessingScreen from './components/screens/ProcessingScreen'
-import { Loader2 } from 'lucide-react'
+import { MorphingInfinity } from './components/ui/MorphingInfinity'
 
 
 // Global Error Boundary
@@ -56,8 +56,8 @@ function LoadingFallback() {
   return (
     <div className="min-h-screen bg-[#030712] text-slate-100 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <Loader2 size={32} className="animate-spin text-cyan-400" />
-        <span className="text-xs text-slate-400 font-mono uppercase tracking-widest animate-pulse">
+        <MorphingInfinity className="w-10 h-10 text-cyan-400" />
+        <span className="text-xs text-slate-400 font-mono uppercase tracking-widest">
           Loading component...
         </span>
       </div>
