@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Info, Settings2, Globe } from 'lucide-react'
+import { Info, Settings2, Globe, ArrowLeft } from 'lucide-react'
 import { getHealth } from '../../api'
 
 export default function BrandHeader({ 
@@ -40,6 +40,18 @@ export default function BrandHeader({
     <header className="sticky top-0 z-[1000] h-[58px] px-4 md:px-6 bg-[#030712]/80 backdrop-blur-xl border-b border-cyan-500/15 flex items-center justify-between shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
       {/* Brand & Mission Title */}
       <div className="flex items-center gap-3 md:gap-4">
+        {/* Visible back navigation on every screen except the landing */}
+        {step !== 'Overview' && (
+          <button
+            onClick={onNavigateLanding}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-300 text-xs font-mono hover:border-cyan-400/60 hover:text-cyan-300 transition-colors"
+            aria-label="Back to overview"
+            title="Back to Overview"
+          >
+            <ArrowLeft size={14} />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+        )}
         <button 
           onClick={onNavigateLanding}
           className="flex items-center gap-2.5 group focus:outline-none"

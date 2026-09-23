@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { MapPin, Database, ShieldCheck, ArrowRight, Sparkles, Compass } from 'lucide-react'
 import BrandHeader from '../layout/BrandHeader'
 
@@ -9,6 +10,17 @@ export default function LandingScreen({
   onToggleDemo,
   onArchitecture
 }) {
+  const reduceMotion = useReducedMotion()
+
+  const heroRise = (delay) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: 18 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 0.55, delay, ease: 'easeOut' },
+        }
+
   return (
     <div className="relative min-h-screen bg-[#030712] text-slate-100 flex flex-col overflow-x-hidden selection:bg-cyan-500/30">
       {/* Sleek Top Navigation */}
@@ -25,13 +37,21 @@ export default function LandingScreen({
         {/* Coordinate Grid */}
         <div className="absolute inset-0 bg-tactical-grid opacity-30 [mask-image:radial-gradient(ellipse_80%_60%_at_50%_40%,#000_70%,transparent_100%)]" />
         
-        {/* Subtle Ambient Radial Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-blue-600/10 blur-[140px] rounded-full pointer-events-none" />
+        {/* Subtle Ambient Radial Glows — slow positional drift */}
+        <motion.div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-cyan-500/10 blur-[130px] rounded-full pointer-events-none"
+          animate={reduceMotion ? undefined : { x: [0, 40, 0], y: [0, -18, 0] }}
+          transition={reduceMotion ? undefined : { duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-blue-600/10 blur-[140px] rounded-full pointer-events-none"
+          animate={reduceMotion ? undefined : { x: [0, -30, 0], y: [0, 22, 0] }}
+          transition={reduceMotion ? undefined : { duration: 26, repeat: Infinity, ease: 'easeInOut' }}
+        />
 
-        {/* Tactical Cadastral Contour Lines SVG */}
-        <svg 
-          className="absolute inset-0 w-full h-full opacity-20" 
+        {/* Tactical Cadastral Contour Lines SVG — animated */}
+        <svg
+          className="absolute inset-0 w-full h-full opacity-20"
           xmlns="http://www.w3.org/2000/svg"
           preserveAspectRatio="none"
         >
@@ -46,14 +66,41 @@ export default function LandingScreen({
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#dotPattern)" />
-          {/* Simulated Cadastral Boundaries */}
-          <polygon points="120,180 340,160 390,320 180,360" fill="none" stroke="url(#cadastralGrad)" strokeWidth="1" strokeDasharray="4 4" />
-          <polygon points="340,160 580,140 620,290 390,320" fill="rgba(0,240,255,0.02)" stroke="url(#cadastralGrad)" strokeWidth="1" />
-          <polygon points="580,140 850,110 890,260 620,290" fill="none" stroke="url(#cadastralGrad)" strokeWidth="1" strokeDasharray="3 6" />
-          <polygon points="210,410 460,390 510,560 270,590" fill="rgba(59,130,246,0.02)" stroke="url(#cadastralGrad)" strokeWidth="1.2" />
-          <polygon points="460,390 720,360 780,520 510,560" fill="none" stroke="url(#cadastralGrad)" strokeWidth="1" />
-          <polygon points="720,360 980,320 1020,480 780,520" fill="rgba(0,240,255,0.03)" stroke="url(#cadastralGrad)" strokeWidth="1" strokeDasharray="6 3" />
+          {/* Simulated Cadastral Boundaries — slow line-draw + drift */}
+          <motion.g
+            animate={reduceMotion ? undefined : {
+              strokeDashoffset: [0, -70],
+              x: [0, 6, 0],
+              y: [0, -4, 0],
+            }}
+            transition={reduceMotion ? undefined : {
+              strokeDashoffset: { duration: 24, repeat: Infinity, ease: 'linear' },
+              x: { duration: 18, repeat: Infinity, ease: 'easeInOut' },
+              y: { duration: 22, repeat: Infinity, ease: 'easeInOut' },
+            }}
+            style={{ strokeDashoffset: 0 }}
+          >
+            <polygon points="120,180 340,160 390,320 180,360" fill="none" stroke="url(#cadastralGrad)" strokeWidth="1" strokeDasharray="4 4" />
+            <polygon points="340,160 580,140 620,290 390,320" fill="rgba(0,240,255,0.02)" stroke="url(#cadastralGrad)" strokeWidth="1" />
+            <polygon points="580,140 850,110 890,260 620,290" fill="none" stroke="url(#cadastralGrad)" strokeWidth="1" strokeDasharray="3 6" />
+            <polygon points="210,410 460,390 510,560 270,590" fill="rgba(59,130,246,0.02)" stroke="url(#cadastralGrad)" strokeWidth="1.2" />
+            <polygon points="460,390 720,360 780,520 510,560" fill="none" stroke="url(#cadastralGrad)" strokeWidth="1" />
+            <polygon points="720,360 980,320 1020,480 780,520" fill="rgba(0,240,255,0.03)" stroke="url(#cadastralGrad)" strokeWidth="1" strokeDasharray="6 3" />
+          </motion.g>
         </svg>
+
+        {/* Recon Scan Sweep — vertical light band crossing the viewport */}
+        {!reduceMotion && (
+          <motion.div
+            className="absolute left-0 right-0 h-24 pointer-events-none"
+            style={{
+              background: 'linear-gradient(to bottom, transparent, rgba(0,240,255,0.06), transparent)',
+            }}
+            initial={{ top: '-10%' }}
+            animate={{ top: '110%' }}
+            transition={{ duration: 9, repeat: Infinity, ease: 'linear', repeatDelay: 4 }}
+          />
+        )}
 
         {/* Floating Telemetry Coordinates Markers */}
         <div className="absolute top-24 left-8 text-[10px] font-mono text-cyan-400/40 hidden lg:block tracking-widest">
@@ -71,13 +118,17 @@ export default function LandingScreen({
       {/* Main Hero Stage */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-16 sm:py-20 text-center max-w-5xl mx-auto">
         {/* Mission Signal Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(0,240,255,0.15)]">
+        <motion.div
+          {...heroRise(0)}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(0,240,255,0.15)]"
+        >
           <Sparkles size={13} className="text-cyan-400" />
           <span>Government-Grade Geospatial Intelligence</span>
-        </div>
+        </motion.div>
 
         {/* Primary Typography Hierarchy */}
-        <img
+        <motion.img
+          {...heroRise(0.08)}
           src="/brand/landsync-mark@256.png"
           alt="LANDSYNC GIS"
           width={96}
@@ -85,23 +136,35 @@ export default function LandingScreen({
           className="h-20 w-20 sm:h-24 sm:w-24 mb-6"
           draggable={false}
         />
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-4 leading-[1.08]">
+        <motion.h1
+          {...heroRise(0.16)}
+          className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-4 leading-[1.08]"
+        >
           <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-100 to-slate-400">
             LANDSYNC
           </span>
-        </h1>
+        </motion.h1>
 
-        <p className="text-xl sm:text-2xl md:text-3xl font-mono text-cyan-400 font-medium tracking-tight mb-6">
+        <motion.p
+          {...heroRise(0.24)}
+          className="text-xl sm:text-2xl md:text-3xl font-mono text-cyan-400 font-medium tracking-tight mb-6"
+        >
           Land Intelligence. Reconciled.
-        </p>
+        </motion.p>
 
-        <p className="max-w-2xl text-base sm:text-lg text-slate-300 font-normal leading-relaxed mb-10">
+        <motion.p
+          {...heroRise(0.32)}
+          className="max-w-2xl text-base sm:text-lg text-slate-300 font-normal leading-relaxed mb-10"
+        >
           Reconcile cadastral, survey and satellite sources into one trusted land view.
           Synthesize heterogeneous parcel records into high-confidence consensus for precision governance.
-        </p>
+        </motion.p>
 
         {/* Action CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mb-16">
+        <motion.div
+          {...heroRise(0.4)}
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md mb-16"
+        >
           <button
             onClick={onInitiate}
             className="w-full sm:w-auto flex-1 inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-lg bg-cyan-400 text-[#030712] font-bold text-sm tracking-wide shadow-[0_0_30px_rgba(0,240,255,0.4)] hover:bg-white hover:shadow-[0_0_40px_rgba(0,240,255,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
@@ -117,7 +180,7 @@ export default function LandingScreen({
             <Compass size={16} className="text-cyan-400" />
             <span>Explore Demo</span>
           </button>
-        </div>
+        </motion.div>
 
         {/* Three Pillar Value Prop Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-left">
