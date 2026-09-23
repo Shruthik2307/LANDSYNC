@@ -128,7 +128,7 @@ export default function QueuePanel({
         {filteredList.length > 0 ? (
           filteredList.map((parcel, idx) => (
             <QueueRow
-              key={`${parcel.parcel_id}-${idx}`}
+              key={parcel.parcel_id}
               parcel={parcel}
               selected={selected?.parcel_id === parcel.parcel_id}
               onSelect={setSelected}

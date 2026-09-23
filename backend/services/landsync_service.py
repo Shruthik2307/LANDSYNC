@@ -58,11 +58,14 @@ logger = logging.getLogger(__name__)
 _DATA_DIR = _PROJECT_ROOT / "data" / "sample"
 CADASTRAL_PATH = _DATA_DIR / "cadastral.geojson"
 MUNICIPAL_PATH = _DATA_DIR / "municipal.geojson"
+_UPLOADS_DIR = _BACKEND_DIR / "uploads"
 
 # Target CRS used by the engine for metric area calculations.
 ENGINE_CRS = "EPSG:3857"
 # Source CRS of both GeoJSON files (WGS84 / CRS84).
 SOURCE_CRS = "EPSG:4326"
+# One-shot flag: the degenerate-ML exclusion warning is logged once, not per parcel.
+_ML_EXCLUSION_LOGGED = False
 
 
 # ---------------------------------------------------------------------------
@@ -141,11 +144,51 @@ _cache = _Cache()
 # Public API
 # ---------------------------------------------------------------------------
 
+def _resolve_dataset_paths(dataset_id: str | None) -> tuple[Path, Path]:
+    """Resolve the (cadastral, municipal) source pair for a dataset_id.
+
+    Uploads are stored as ``uploads/<dataset_id>_<original_filename>``.
+
+    • No dataset_id (or unknown id) → the built-in sample pair.
+    • One uploaded file → treated as the cadastral source, reconciled
+      against the built-in sample municipal survey.
+    • Two or more uploaded files → first upload (oldest) is the cadastral
+      source, the next is the municipal source.
+    """
+    if not dataset_id or dataset_id == "sample":
+        return CADASTRAL_PATH, MUNICIPAL_PATH
+    uploads = sorted(
+        _UPLOADS_DIR.glob(f"{dataset_id}_*"),
+        key=lambda p: p.stat().st_mtime,
+    )
+    if not uploads:
+        logger.warning(
+            "[landsync_service] dataset %r has no uploaded files — using sample data.",
+            dataset_id,
+        )
+        return CADASTRAL_PATH, MUNICIPAL_PATH
+    if len(uploads) == 1:
+        logger.info(
+            "[landsync_service] dataset %r: single upload %s vs sample municipal survey.",
+            dataset_id,
+            uploads[0].name,
+        )
+        return uploads[0], MUNICIPAL_PATH
+    logger.info(
+        "[landsync_service] dataset %r: %s vs %s.",
+        dataset_id,
+        uploads[0].name,
+        uploads[1].name,
+    )
+    return uploads[0], uploads[1]
+
+
 def load_data(
     cadastral_path: "str | Path | None" = None,
     municipal_path: "str | Path | None" = None,
     *,
     force_reload: bool = False,
+    dataset_id: str | None = None,
 ) -> dict[str, Any]:
     """Load and reconcile cadastral + municipal GeoJSON, populate cache.
 
@@ -178,6 +221,8 @@ def load_data(
 
     cad_path = Path(cadastral_path) if cadastral_path else CADASTRAL_PATH
     mun_path = Path(municipal_path) if municipal_path else MUNICIPAL_PATH
+    if cadastral_path is None and municipal_path is None:
+        cad_path, mun_path = _resolve_dataset_paths(dataset_id)
 
     _assert_file_exists(cad_path, "cadastral")
     _assert_file_exists(mun_path, "municipal")
@@ -227,8 +272,19 @@ def load_data(
     duplicate_ids = {pid for pid, cnt in seen_ids.items() if cnt > 1}
 
     parcels: list[dict[str, Any]] = []
+    emitted_ids: set[str] = set()
     for rec in engine_results:
         pid = rec["parcel_id"]
+        if pid in emitted_ids:
+            # A parcel ID must map to exactly one record. Later duplicates are
+            # dropped so the id→parcel lookup can never be silently overwritten
+            # (otherwise two map features would resolve to the same record).
+            logger.warning(
+                "[landsync_service] Duplicate parcel_id %r in engine output — dropping the later record.",
+                pid,
+            )
+            continue
+        emitted_ids.add(pid)
 
         # `boundaries.cadastral` — always present (source A geometry)
         cad_geom = cad_geom_map.get(pid)
@@ -239,25 +295,42 @@ def load_data(
             )
             continue
 
-        # ------------------------------------------------------------------
-        # ML-powered conflict detection and confidence scoring
-        # ------------------------------------------------------------------
-        try:
-            has_ml_conflict, ml_confidence = conflict_detector.predict_conflict(rec)
-            # Use ML confidence if model trained, otherwise use engine confidence
-            final_confidence = ml_confidence if conflict_detector.classifier else rec["confidence"]
-            final_conflict = has_ml_conflict if conflict_detector.classifier else rec["geometry_conflict"]
-        except Exception as e:
-            logger.warning(f"ML prediction failed for {pid}: {e}, using engine values")
-            final_confidence = rec["confidence"]
-            final_conflict = rec["geometry_conflict"]
 
-        # `boundaries.drone_ori` — present only when geometry_conflict == True
-        # (the municipal survey acts as the alternative / drone-survey source)
+        # Confidence scoring
+        #
+        # The engine's rule-based reconciliation is the single source of
+        # truth for conflict flags and confidence. The shipped ML pickle is
+        # degenerate (trained on a single-class sample: every parcel labeled
+        # "conflict", so it predicts a constant for every input). Letting it
+        # override or blend into the engine output used to flatten all
+        # parcels to the same confidence / conflict values, making different
+        # parcels display identical data. ML can be re-enabled here once the
+        # model is retrained on genuinely labeled multi-class data.
+        # ------------------------------------------------------------------
+        final_conflict = rec["geometry_conflict"]
+        final_confidence = int(round(rec["confidence"]))
+        global _ML_EXCLUSION_LOGGED
+        if conflict_detector.classifier is not None and not _ML_EXCLUSION_LOGGED:
+            logger.warning(
+                "[landsync_service] ML classifier loaded but excluded from scoring: "
+                "the model is degenerate (single-class training data). "
+                "Engine rule-based confidence is authoritative."
+            )
+            _ML_EXCLUSION_LOGGED = True
+
+        # `boundaries.drone_ori` — the municipal survey acts as the
+        # alternative / drone-survey source. Include it for every parcel that
+        # has one so the frontend can always draw both boundaries and the
+        # disputed-area overlay; warn when a geometry conflict lacks it.
         mun_geom = mun_geom_map.get(pid)
         boundaries: dict[str, Any] = {"cadastral": cad_geom}
-        if final_conflict and mun_geom is not None:
+        if mun_geom is not None:
             boundaries["drone_ori"] = mun_geom
+        elif final_conflict:
+            logger.warning(
+                "[landsync_service] Parcel %r has geometry_conflict=True but no municipal geometry found.",
+                pid,
+            )
 
         parcel: dict[str, Any] = {
             # Engine fields (7 mandatory keys)

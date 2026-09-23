@@ -61,6 +61,17 @@ describe('LANDSYNC API contract', () => {
     const upload = await uploadDataset([new File([sampleGeoJson], 'source.geojson')])
     expect(upload.dataset_id).toMatch(/^(server-|ds_)/)
     expect(await processDataset(upload.dataset_id)).toEqual({ job_status: 'complete' })
+
+    // The reconciled results must now come from the UPLOADED dataset (the
+    // uploaded cadastral source paired against the sample municipal survey),
+    // not from the built-in sample parcels — this is the regression guard
+    // for the bug where /api/process ignored the dataset_id entirely.
+    const processedParcels = await getParcels()
+    expect(processedParcels.length).toBeGreaterThan(0)
+    expect(processedParcels.some((p) => p.parcel_id === 'TEST-100')).toBe(true)
+
+    // Restoring the sample dataset must bring the sample parcels back.
+    expect(await processDataset('sample')).toEqual({ job_status: 'complete' })
     const parcel = await getParcelById('HYD-REV-1000')
     expect(parcel.parcel_id).toBe('HYD-REV-1000')
     expect(parcel.confidence).toBeGreaterThanOrEqual(0)

@@ -11,10 +11,10 @@ Phase 1 behaviour
 • Returns { job_status: "complete" } on success (OpenAPI: ProcessResponse).
 • Returns { job_status: "failed" } with error detail on engine errors.
 
-Note: For Phase 1 the dataset_id is accepted but not used to select a
-different data file — reconciliation always runs on the two sample GeoJSON
-files. This interface is intentionally kept compatible with the future
-multi-source upload workflow.
+Note: If the dataset_id matches uploaded files in backend/uploads/, the
+reconciliation runs on those files (single upload → cadastral source vs
+sample municipal survey; two uploads → cadastral vs municipal). Unknown
+or missing dataset_ids fall back to the two sample GeoJSON files.
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ def process_dataset(request: ProcessRequest) -> ProcessResponse:
     logger.info("[process] Received process request for dataset_id=%r", request.dataset_id)
 
     try:
-        info = load_data(force_reload=True)
+        info = load_data(force_reload=True, dataset_id=request.dataset_id)
         parcel_count = info.get("reconciled_parcel_count", 0)
         logger.info(
             "[process] Reconciliation complete: %d parcels produced.", parcel_count

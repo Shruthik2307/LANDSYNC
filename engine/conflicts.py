@@ -49,14 +49,17 @@ WEIGHT_IOU: int = 60
 WEIGHT_AREA: int = 30
 WEIGHT_ATTR: int = 10
 
-# Columns that are NOT considered "attributes" for conflict detection.
-_NON_ATTRIBUTE_COLS: frozenset[str] = frozenset(
+# Fields that are NOT considered "attributes" for conflict detection.
+# Matched against the *unsuffixed* field name (``source``, not ``source_a``).
+# "source" is dataset provenance ("Cadastral_Revenue_Dept" vs
+# "Municipal_Drone_Survey") — it differs *by design* between the two input
+# files, so comparing it would flag attribute_conflict on every parcel.
+_NON_ATTRIBUTE_FIELDS: frozenset[str] = frozenset(
     {
         "parcel_id",
-        "geometry_a",
-        "geometry_b",
         "geometry",
         "area_m2",          # source-reported area (not authoritative)
+        "source",           # dataset provenance, not a parcel attribute
         "index_right",
         "index_left",
     }
@@ -197,7 +200,9 @@ def _detect_attribute_conflict(matched_row: Any) -> bool:
     for field in shared_fields:
         col_a = f"{field}_a"
         col_b = f"{field}_b"
-        if col_a in _NON_ATTRIBUTE_COLS or col_b in _NON_ATTRIBUTE_COLS:
+        # Compare the unsuffixed field name against the exclusion list —
+        # suffixed names (``source_a``) would never match otherwise.
+        if field in _NON_ATTRIBUTE_FIELDS:
             continue
         val_a = matched_row[col_a]
         val_b = matched_row[col_b]

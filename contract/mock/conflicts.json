@@ -1,9 +1,405 @@
 [
-  {"parcel_id":"1250","confidence":68,"priority":"HIGH","area_difference":31,"geometry_conflict":true,"attribute_conflict":true,"recommendation":"Escalate for resurvey","boundaries":{"cadastral":{"type":"Polygon","coordinates":[[[77.6030,12.9712],[77.6052,12.9712],[77.6052,12.9731],[77.6030,12.9731],[77.6030,12.9712]]]},"drone_ori":{"type":"Polygon","coordinates":[[[77.6027,12.9714],[77.6056,12.9710],[77.6058,12.9730],[77.6032,12.9735],[77.6027,12.9714]]]}}},
-  {"parcel_id":"1042","confidence":87,"priority":"HIGH","area_difference":24,"geometry_conflict":true,"attribute_conflict":false,"recommendation":"Field verification","boundaries":{"cadastral":{"type":"Polygon","coordinates":[[[77.5941,12.9716],[77.5962,12.9716],[77.5962,12.9734],[77.5941,12.9734],[77.5941,12.9716]]]},"drone_ori":{"type":"Polygon","coordinates":[[[77.5944,12.9713],[77.5966,12.9717],[77.5961,12.9736],[77.5942,12.9732],[77.5944,12.9713]]]}}},
-  {"parcel_id":"1078","confidence":74,"priority":"HIGH","area_difference":18,"geometry_conflict":true,"attribute_conflict":true,"recommendation":"Review ownership attributes","boundaries":{"cadastral":{"type":"Polygon","coordinates":[[[77.5982,12.9708],[77.6005,12.9708],[77.6005,12.9727],[77.5982,12.9727],[77.5982,12.9708]]]},"drone_ori":{"type":"Polygon","coordinates":[[[77.5984,12.9711],[77.6001,12.9704],[77.6008,12.9725],[77.5986,12.9731],[77.5984,12.9711]]]}}},
-  {"parcel_id":"1126","confidence":92,"priority":"MEDIUM","area_difference":11,"geometry_conflict":true,"attribute_conflict":false,"recommendation":"Accept with survey note","boundaries":{"cadastral":{"type":"Polygon","coordinates":[[[77.5922,12.9747],[77.5942,12.9747],[77.5942,12.9764],[77.5922,12.9764],[77.5922,12.9747]]]},"drone_ori":{"type":"Polygon","coordinates":[[[77.5921,12.9749],[77.5944,12.9751],[77.5940,12.9766],[77.5924,12.9762],[77.5921,12.9749]]]}}},
-  {"parcel_id":"1189","confidence":81,"priority":"MEDIUM","area_difference":7,"geometry_conflict":true,"attribute_conflict":false,"recommendation":"Schedule boundary check","boundaries":{"cadastral":{"type":"Polygon","coordinates":[[[77.5968,12.9750],[77.5990,12.9750],[77.5990,12.9768],[77.5968,12.9768],[77.5968,12.9750]]]},"drone_ori":{"type":"Polygon","coordinates":[[[77.5970,12.9752],[77.5993,12.9754],[77.5987,12.9769],[77.5969,12.9765],[77.5970,12.9752]]]}}},
-  {"parcel_id":"1306","confidence":89,"priority":"LOW","area_difference":2,"geometry_conflict":false,"attribute_conflict":true,"duplicate_id":false,"recommendation":"Verify owner name","boundaries":{"cadastral":{"type":"Polygon","coordinates":[[[77.6012,12.9780],[77.6035,12.9780],[77.6035,12.9798],[77.6012,12.9798],[77.6012,12.9780]]]}}},
-  {"parcel_id":"1042","confidence":78,"priority":"MEDIUM","area_difference":5,"geometry_conflict":false,"attribute_conflict":true,"duplicate_id":true,"recommendation":"Resolve duplicate parcel ID","boundaries":{"cadastral":{"type":"Polygon","coordinates":[[[77.5950,12.9785],[77.5972,12.9785],[77.5972,12.9802],[77.5950,12.9802],[77.5950,12.9785]]]}}}
+  {
+    "parcel_id": "1250",
+    "confidence": 68,
+    "priority": "HIGH",
+    "area_difference": 31,
+    "geometry_conflict": true,
+    "attribute_conflict": true,
+    "recommendation": "Escalate for resurvey",
+    "boundaries": {
+      "cadastral": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.603,
+              12.9712
+            ],
+            [
+              77.6052,
+              12.9712
+            ],
+            [
+              77.6052,
+              12.9731
+            ],
+            [
+              77.603,
+              12.9731
+            ],
+            [
+              77.603,
+              12.9712
+            ]
+          ]
+        ]
+      },
+      "drone_ori": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.6027,
+              12.9714
+            ],
+            [
+              77.6056,
+              12.971
+            ],
+            [
+              77.6058,
+              12.973
+            ],
+            [
+              77.6032,
+              12.9735
+            ],
+            [
+              77.6027,
+              12.9714
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "parcel_id": "1042",
+    "confidence": 87,
+    "priority": "HIGH",
+    "area_difference": 24,
+    "geometry_conflict": true,
+    "attribute_conflict": false,
+    "recommendation": "Field verification",
+    "boundaries": {
+      "cadastral": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5941,
+              12.9716
+            ],
+            [
+              77.5962,
+              12.9716
+            ],
+            [
+              77.5962,
+              12.9734
+            ],
+            [
+              77.5941,
+              12.9734
+            ],
+            [
+              77.5941,
+              12.9716
+            ]
+          ]
+        ]
+      },
+      "drone_ori": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5944,
+              12.9713
+            ],
+            [
+              77.5966,
+              12.9717
+            ],
+            [
+              77.5961,
+              12.9736
+            ],
+            [
+              77.5942,
+              12.9732
+            ],
+            [
+              77.5944,
+              12.9713
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "parcel_id": "1078",
+    "confidence": 74,
+    "priority": "HIGH",
+    "area_difference": 18,
+    "geometry_conflict": true,
+    "attribute_conflict": true,
+    "recommendation": "Review ownership attributes",
+    "boundaries": {
+      "cadastral": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5982,
+              12.9708
+            ],
+            [
+              77.6005,
+              12.9708
+            ],
+            [
+              77.6005,
+              12.9727
+            ],
+            [
+              77.5982,
+              12.9727
+            ],
+            [
+              77.5982,
+              12.9708
+            ]
+          ]
+        ]
+      },
+      "drone_ori": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5984,
+              12.9711
+            ],
+            [
+              77.6001,
+              12.9704
+            ],
+            [
+              77.6008,
+              12.9725
+            ],
+            [
+              77.5986,
+              12.9731
+            ],
+            [
+              77.5984,
+              12.9711
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "parcel_id": "1126",
+    "confidence": 92,
+    "priority": "MEDIUM",
+    "area_difference": 11,
+    "geometry_conflict": true,
+    "attribute_conflict": false,
+    "recommendation": "Accept with survey note",
+    "boundaries": {
+      "cadastral": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5922,
+              12.9747
+            ],
+            [
+              77.5942,
+              12.9747
+            ],
+            [
+              77.5942,
+              12.9764
+            ],
+            [
+              77.5922,
+              12.9764
+            ],
+            [
+              77.5922,
+              12.9747
+            ]
+          ]
+        ]
+      },
+      "drone_ori": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5921,
+              12.9749
+            ],
+            [
+              77.5944,
+              12.9751
+            ],
+            [
+              77.594,
+              12.9766
+            ],
+            [
+              77.5924,
+              12.9762
+            ],
+            [
+              77.5921,
+              12.9749
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "parcel_id": "1189",
+    "confidence": 81,
+    "priority": "MEDIUM",
+    "area_difference": 7,
+    "geometry_conflict": true,
+    "attribute_conflict": false,
+    "recommendation": "Schedule boundary check",
+    "boundaries": {
+      "cadastral": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.5968,
+              12.975
+            ],
+            [
+              77.599,
+              12.975
+            ],
+            [
+              77.599,
+              12.9768
+            ],
+            [
+              77.5968,
+              12.9768
+            ],
+            [
+              77.5968,
+              12.975
+            ]
+          ]
+        ]
+      },
+      "drone_ori": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.597,
+              12.9752
+            ],
+            [
+              77.5993,
+              12.9754
+            ],
+            [
+              77.5987,
+              12.9769
+            ],
+            [
+              77.5969,
+              12.9765
+            ],
+            [
+              77.597,
+              12.9752
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "parcel_id": "1306",
+    "confidence": 89,
+    "priority": "LOW",
+    "area_difference": 2,
+    "geometry_conflict": false,
+    "attribute_conflict": true,
+    "duplicate_id": false,
+    "recommendation": "Verify owner name",
+    "boundaries": {
+      "cadastral": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.6012,
+              12.978
+            ],
+            [
+              77.6035,
+              12.978
+            ],
+            [
+              77.6035,
+              12.9798
+            ],
+            [
+              77.6012,
+              12.9798
+            ],
+            [
+              77.6012,
+              12.978
+            ]
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "parcel_id": "1042-DUP",
+    "confidence": 78,
+    "priority": "MEDIUM",
+    "area_difference": 5,
+    "geometry_conflict": false,
+    "attribute_conflict": true,
+    "duplicate_id": true,
+    "recommendation": "Resolve duplicate parcel ID",
+    "boundaries": {
+      "cadastral": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              77.595,
+              12.9785
+            ],
+            [
+              77.5972,
+              12.9785
+            ],
+            [
+              77.5972,
+              12.9802
+            ],
+            [
+              77.595,
+              12.9802
+            ],
+            [
+              77.595,
+              12.9785
+            ]
+          ]
+        ]
+      }
+    }
+  }
 ]
