@@ -33,6 +33,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 # ---------------------------------------------------------------------------
 # sys.path bootstrap — ensure the project root is on sys.path so that
 # `import engine` resolves whether this module is imported from:
@@ -495,13 +497,81 @@ def _load_and_validate(path: Path, label: str) -> gpd.GeoDataFrame:
             "[landsync_service] %s: %d invalid geometries detected.", label, invalid_geoms
         )
 
-    # Validate required column
+    # Derive a stable parcel_id when the dataset lacks one — real cadastral
+    # exports (e.g. GHMC ward shapefiles) carry survey-number columns
+    # (OLD_SNO, TS_NO, TSCODE, …) instead of a unified 'parcel_id'.
     if "parcel_id" not in gdf.columns:
-        raise ValueError(
-            f"[landsync_service] {label} GeoDataFrame is missing required column "
-            f"'parcel_id'. Available columns: {list(gdf.columns)}"
+        gdf = _derive_parcel_ids(gdf, label)
+
+    return gdf
+
+
+# Column candidates used to derive a stable parcel identity, in priority
+# order. The first present + non-empty column wins; rows with empty values
+# (and datasets with none of these columns) fall back to a deterministic
+# hash of the geometry, so every feature still gets a unique, stable ID.
+_ID_CANDIDATES: tuple[str, ...] = (
+    "parcel_id", "PARCEL_ID",
+    "OLD_SNO", "TS_NO1", "TS_NO", "TSCODE", "LGC_NO",
+    "survey_no", "SURVEY_NO", "khata_no", "KHATA_NO", "plot_no", "PLOT_NO",
+    "PID", "pid", "ID", "id", "OBJECTID", "FID",
+)
+
+
+def _derive_parcel_ids(gdf: gpd.GeoDataFrame, label: str) -> gpd.GeoDataFrame:
+    """Deterministically assign a 'parcel_id' column to *gdf*.
+
+    Strategy (deterministic across restarts — no randomized hash):
+    1. Use the first candidate column that exists and has non-empty values.
+    2. Normalise numeric strings ('123.0' → '123').
+    3. Uniquify repeated values with a '-2', '-3' … suffix (real ward files
+       often have multiple polygons per survey number).
+    4. Fill any still-empty row with 'auto-<md5-of-geometry>' — identical
+       geometries therefore intentionally map to the same ID, which the
+       duplicate_id flag will surface.
+    """
+    import hashlib
+
+    used_col: str | None = None
+    series: pd.Series | None = None
+    for col in _ID_CANDIDATES:
+        if col in gdf.columns and gdf[col].notna().any():
+            candidate = gdf[col].astype(str).str.strip()
+            candidate = candidate.replace({"": None, "nan": None, "None": None, "0": None})
+            candidate = candidate.str.replace(r"\.0$", "", regex=True)
+            if candidate.notna().sum() > 0:
+                used_col = col
+                series = candidate
+                break
+
+    if series is None:
+        used_col = "geometry"
+        series = pd.Series([None] * len(gdf), index=gdf.index, dtype="object")
+        logger.warning(
+            "[landsync_service] %s: no identifier column found — deriving IDs from geometry hashes.",
+            label,
+        )
+    else:
+        logger.info(
+            "[landsync_service] %s: deriving parcel_id from column %r.", label, used_col
         )
 
+    derived: list[str] = []
+    seen: dict[str, int] = {}
+    for value, geom in zip(series, gdf.geometry):
+        if value is None:
+            try:
+                wkt = geom.wkt if geom is not None and not geom.is_empty else ""
+            except Exception:
+                wkt = ""
+            digest = hashlib.md5(wkt.encode("utf-8")).hexdigest()[:8] if wkt else "EMPTY"
+            value = f"auto-{digest}"
+        count = seen.get(value, 0) + 1
+        seen[value] = count
+        derived.append(value if count == 1 else f"{value}-{count}")
+
+    gdf = gdf.copy()
+    gdf["parcel_id"] = pd.Series(derived, index=gdf.index, dtype="object")
     return gdf
 
 

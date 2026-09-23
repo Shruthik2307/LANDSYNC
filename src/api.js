@@ -177,7 +177,7 @@ export function processDataset(datasetId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dataset_id: datasetId || 'sample' })
       },
-      30000
+      300000
     )
   }
   return new Promise((resolve) => setTimeout(() => resolve({ job_status: 'complete' }), 3400))
