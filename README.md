@@ -82,6 +82,50 @@
   - E2E Tests: npm run test:e2e
   - Coverage Report: Check the /coverage directory after running tests.
 
+  ## 🚀 Deployment — ONE authoritative production architecture
+
+  Production is a **single Railway service** (`landsync-sih26013`). The Docker
+  build compiles the Vite frontend, and FastAPI serves **both the SPA and every
+  `/api/*` route from one URL**:
+
+  > **https://landsync-sih26013-production.up.railway.app**
+
+  - No CORS, no proxy rewrites, no second URL, no `VITE_API_BASE_URL` needed.
+  - Deploy from the repo checkout: `cd <repo> && railway up` (Railway builds
+    the Dockerfile cloud-side). Railway is linked to this project.
+
+  **Do not reintroduce split deployments.** A previous Vercel static deploy
+  (`landsync-sih.vercel.app`) proxied `/api/*` to a *different, outdated*
+  backend (`landsync-cmcg.onrender.com`), which served stale flattened parcel
+  data. That configuration has been removed from the repository:
+  `vercel.json` is deleted on purpose. If a Vercel deployment reappears, it
+  must point at the canonical Railway URL — or better, not exist at all.
+
+  ### Canonical data source
+
+  One source of truth: `data/sample/cadastral.geojson` +
+  `data/sample/municipal.geojson`, reconciled by `engine/` and cached by
+  `backend/services/landsync_service.py`. `public/cadastral.geojson` (the
+  Quick-Load sample button) and `src/data/*.geojson` are byte-for-byte
+  copies of the same dataset and must be kept in sync or removed.
+
+  ### ML confidence model — deliberately excluded
+
+  The shipped `backend/models/conflict_detector.pkl` is degenerate (trained on
+  a single-class sample: every parcel labeled "conflict"), so it predicts a
+  constant and is **excluded from scoring**
+  (`backend/services/landsync_service.py` logs this once at startup). The
+  engine's rule-based confidence is authoritative. To safely re-enable ML:
+
+  1. Produce genuine multi-class labels (conflict vs no-conflict) from
+     adjudicated ground truth — not from the model's own input flags.
+  2. Retrain with `backend/train_model.py` and verify on held-out data that
+     predictions **vary** across parcels (a constant predictor must fail CI).
+  3. Add a startup sanity check: if the model returns identical output for
+     distinct inputs, refuse to load it.
+  4. Re-introduce it as a *refinement* (never override) of the engine score,
+     e.g. `0.7 * engine + 0.3 * ml`, with the blend logged.
+
   ## 📄 License
 
   This project is licensed under the MIT License - see the LICENSE (LICENSE) file for details.

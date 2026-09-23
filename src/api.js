@@ -11,13 +11,16 @@ class ApiError extends Error {
 }
 
 // Prod builds default to same-origin API calls ('' → fetch('/api/…')) — the
-// unified Render service serves the SPA and the API from one URL. Override
-// via VITE_API_BASE_URL or window/localStorage for split deployments.
-const defaultLiveUrl = 'https://landsync-cmcg.onrender.com'
+// unified single-service deployment (Railway) serves the SPA and the API from
+// ONE URL. Override via VITE_API_BASE_URL or window/localStorage ONLY when the
+// frontend is deliberately hosted separately from the API.
+// NOTE: there is deliberately NO hostname-based fallback. An earlier build
+// silently redirected *.vercel.app pages to an outdated third-party backend,
+// which is how stale "confidence 50" data reappeared on the Vercel deployment.
 const configuredApiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== 'undefined' && (window.__LANDSYNC_API_BASE_URL__ || localStorage.getItem('LANDSYNC_API_BASE_URL'))) ||
-  (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') ? defaultLiveUrl : '')
+  ''
 export const API_BASE_URL = (configuredApiBaseUrl || '').replace(/\/$/, '')
 
 export function setApiBaseUrl(url) {

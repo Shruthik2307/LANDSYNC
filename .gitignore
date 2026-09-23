@@ -15,6 +15,7 @@ data/sample/hyd_cadastral_raw.geojson
 # Python cache
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
 # Runtime data
 backend/tile_cache/
