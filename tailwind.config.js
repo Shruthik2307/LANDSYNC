@@ -13,10 +13,41 @@ export default {
         blueprint: '#16233D',
         ink: '#1F3355',
         paper: '#F1F5F9',
-        cyan: '#00F0FF',
-        amber: '#FFB800',
+        // Brand accents (referenced as e.g. text-cyan / border-amber by name)
+        // sit alongside the full DEFAULT Tailwind scales below — the scalar
+        // override previously REPLACED the cyan/amber/emerald scales, so
+        // every -300/-400/-500/-950 utility (incl. the primary CTA's
+        // bg-cyan-400) was purged from production CSS and rendered invisible.
+        cyan: {
+          DEFAULT: '#00F0FF',
+          200: '#a5f3fc',
+          300: '#67e8f9',
+          400: '#22d3ee',
+          500: '#06b6d4',
+          600: '#0891b2',
+          900: '#164e63',
+          950: '#083344',
+        },
+        amber: {
+          DEFAULT: '#FFB800',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          800: '#92400e',
+          950: '#451a03',
+        },
+        emerald: {
+          DEFAULT: '#10B981',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          800: '#065f46',
+          950: '#022c22',
+        },
         alert: '#FF4C4C',
-        emerald: '#10B981',
         blueTactical: '#3B82F6',
       },
       fontFamily: {

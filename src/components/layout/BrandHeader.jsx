@@ -89,7 +89,11 @@ export default function BrandHeader({
           title={health ? `Engine: ${health.engine} | CRS: ${health.engine_crs || 'EPSG:3857'}` : 'Backend unreachable'}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${healthError ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'}`} />
-          {healthError || demoMode ? (
+          {/* Truthful health display: demo MODE is communicated by the amber
+              'Demo Fixture' pill beside this chip — the backend really is
+              connected even when demo fixtures are being rendered, so only a
+              genuine healthError may claim 'Offline'. */}
+          {healthError ? (
             <span className="text-red-300">Backend: Offline</span>
           ) : (
             <span className="flex items-center gap-1.5">

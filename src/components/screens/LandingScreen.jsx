@@ -57,8 +57,8 @@ export default function LandingScreen({
 
         {/* Floating Telemetry Coordinates Markers */}
         <div className="absolute top-24 left-8 text-[10px] font-mono text-cyan-400/40 hidden lg:block tracking-widest">
-          + LAT: 12.971598° N<br/>
-          + LNG: 77.594562° E<br/>
+          + LAT: 17.385044° N<br/>
+          + LNG: 78.486671° E<br/>
           + DATUM: WGS84
         </div>
         <div className="absolute bottom-16 right-8 text-[10px] font-mono text-cyan-400/40 hidden lg:block text-right tracking-widest">
