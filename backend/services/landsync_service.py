@@ -266,9 +266,23 @@ def load_data(
     # ------------------------------------------------------------------
     # 3. Build geometry lookup maps (original EPSG:4326 for frontend)
     #    Key: parcel_id → GeoJSON-serialisable coordinates dict
+    #    Memory-bounded: only geometries for parcels the engine actually
+    #    matched are converted. Large ward datasets can hold 100k+ features
+    #    whose polygons are never served; converting all of them OOM-killed
+    #    the container right after a successful reconciliation.
     # ------------------------------------------------------------------
-    cad_geom_map = _build_geometry_map(gdf_cad)
-    mun_geom_map = _build_geometry_map(gdf_mun)
+    matched_ids = {rec["parcel_id"] for rec in engine_results}
+    cad_geom_map = _build_geometry_map(gdf_cad, only_ids=matched_ids)
+    mun_geom_map = _build_geometry_map(gdf_mun, only_ids=matched_ids)
+
+    # Capture CRS strings, then free the raw frames — with 100k+ feature
+    # ward files these dominate memory and are no longer needed once the
+    # matched-only geometry maps exist.
+    cad_crs_str = _crs_string(gdf_cad)
+    mun_crs_str = _crs_string(gdf_mun)
+    del gdf_cad, gdf_mun
+    import gc
+    gc.collect()
 
     # ------------------------------------------------------------------
     # 4. Map engine output → frontend Parcel schema
@@ -367,9 +381,8 @@ def load_data(
     info: dict[str, Any] = {
         "cadastral_path": str(cad_path),
         "municipal_path": str(mun_path),
-        "cadastral_crs": _crs_string(gdf_cad),
-        "municipal_crs": _crs_string(gdf_mun),
-        "engine_crs": ENGINE_CRS,
+        "cadastral_crs": cad_crs_str,
+        "municipal_crs": mun_crs_str,
         "cadastral_feature_count": cad_count,
         "municipal_feature_count": mun_count,
         "reconciled_parcel_count": len(parcels),
@@ -587,13 +600,33 @@ def _derive_parcel_ids(gdf: gpd.GeoDataFrame, label: str) -> gpd.GeoDataFrame:
     return gdf
 
 
-def _build_geometry_map(gdf: gpd.GeoDataFrame) -> dict[str, dict]:
+def _build_geometry_map(
+    gdf: gpd.GeoDataFrame, only_ids: set[str] | None = None
+) -> dict[str, dict]:
     """Build a parcel_id → GeoJSON geometry dict map (EPSG:4326).
 
     The GeoDataFrame is assumed to already be in EPSG:4326 (CRS84) as loaded
     from the raw GeoJSON file. We do NOT reproject here — the frontend map
     expects WGS84 longitude/latitude coordinates.
+
+    Parameters
+    ----------
+    gdf : gpd.GeoDataFrame
+        Frame whose geometries should be mapped.
+    only_ids : set[str], optional
+        If given, restrict conversion to these parcel IDs. Large datasets
+        (100k+ features) must not have every polygon converted to Python
+        dicts — that alone can exhaust container memory.
     """
+    import json
+    from shapely.geometry import mapping
+
+    # Pre-filter BEFORE iterating: iterrows() materialises a Series per row,
+    # which is both slow and wasteful when only a handful of the 100k+ rows
+    # are actually needed.
+    if only_ids is not None and "parcel_id" in gdf.columns:
+        gdf = gdf[gdf["parcel_id"].astype(str).isin(only_ids)]
+
     geom_map: dict[str, dict] = {}
     for _, row in gdf.iterrows():
         pid = row.get("parcel_id")
@@ -601,8 +634,6 @@ def _build_geometry_map(gdf: gpd.GeoDataFrame) -> dict[str, dict]:
         if pid is None or geom is None or geom.is_empty:
             continue
         # Convert Shapely geometry → GeoJSON-compatible dict
-        import json
-        from shapely.geometry import mapping
         geom_map[str(pid)] = json.loads(json.dumps(mapping(geom)))
     return geom_map
 
