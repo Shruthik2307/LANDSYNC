@@ -542,6 +542,8 @@ _ID_CANDIDATES: tuple[str, ...] = (
     "parcel_id", "PARCEL_ID",
     "OLD_SNO", "TS_NO1", "TS_NO", "TSCODE", "LGC_NO",
     "survey_no", "SURVEY_NO", "khata_no", "KHATA_NO", "plot_no", "PLOT_NO",
+    # CAD-derived ward exports carry the printed survey-number label here:
+    "DXF_TEXT",
     "PID", "pid", "ID", "id", "OBJECTID", "FID",
 )
 
