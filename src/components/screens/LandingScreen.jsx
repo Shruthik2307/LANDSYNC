@@ -77,6 +77,14 @@ export default function LandingScreen({
         </div>
 
         {/* Primary Typography Hierarchy */}
+        <img
+          src="/brand/landsync-mark@256.png"
+          alt="LANDSYNC GIS"
+          width={96}
+          height={96}
+          className="h-20 w-20 sm:h-24 sm:w-24 mb-6"
+          draggable={false}
+        />
         <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-4 leading-[1.08]">
           <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-100 to-slate-400">
             LANDSYNC

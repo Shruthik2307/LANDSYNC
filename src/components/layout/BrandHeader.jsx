@@ -45,10 +45,18 @@ export default function BrandHeader({
           className="flex items-center gap-2.5 group focus:outline-none"
           title="LANDSYNC Home"
         >
-          <div className="relative w-8 h-8 rounded border border-cyan-400/50 bg-cyan-950/40 flex items-center justify-center text-cyan-300 font-mono font-bold text-xs shadow-[0_0_12px_rgba(0,240,255,0.25)] group-hover:bg-cyan-500 group-hover:text-black group-hover:border-white transition-all duration-300">
-            <span>LS</span>
-            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping opacity-75" />
-          </div>
+          {/* LANDSYNC GIS brand mark (public/brand/landsync-mark.png) —
+              replaces the former 'LS' placeholder square. 32px, aspect
+              locked, vertically aligned with the wordmark. */}
+          <img
+            src="/brand/landsync-mark.png"
+            alt="LANDSYNC GIS"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0"
+            draggable={false}
+          />
+          <span className="absolute -top-0.5 left-6 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping opacity-75" />
           <div className="text-left">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold tracking-[0.14em] text-slate-100 group-hover:text-cyan-300 transition-colors">
