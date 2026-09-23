@@ -56,7 +56,6 @@ export default function BrandHeader({
             className="h-8 w-8 shrink-0"
             draggable={false}
           />
-          <span className="absolute -top-0.5 left-6 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping opacity-75" />
           <div className="text-left">
             <div className="flex items-center gap-2">
               <span className="text-sm font-bold tracking-[0.14em] text-slate-100 group-hover:text-cyan-300 transition-colors">

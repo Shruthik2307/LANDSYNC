@@ -71,7 +71,7 @@ export default function LandingScreen({
       {/* Main Hero Stage */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-16 sm:py-20 text-center max-w-5xl mx-auto">
         {/* Mission Signal Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(0,240,255,0.15)] animate-pulse">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(0,240,255,0.15)]">
           <Sparkles size={13} className="text-cyan-400" />
           <span>Government-Grade Geospatial Intelligence</span>
         </div>
