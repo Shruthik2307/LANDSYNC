@@ -126,7 +126,7 @@ export default function QueuePanel({
       {/* Parcels List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2">
         {filteredList.length > 0 ? (
-          filteredList.map((parcel, idx) => (
+          filteredList.map((parcel) => (
             <QueueRow
               key={parcel.parcel_id}
               parcel={parcel}
