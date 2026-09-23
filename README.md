@@ -94,6 +94,30 @@
   - Deploy from the repo checkout: `cd <repo> && railway up` (Railway builds
     the Dockerfile cloud-side). Railway is linked to this project.
 
+  ### Branch → production workflow (keep it this way)
+
+  ```
+  main  ──railway up──▶  Railway (landsync-sih26013)  ──▶  production
+  ```
+
+  - Production deploys **only** from `main`.
+  - Feature branches are for review/CI only — never `railway up` from a
+    feature branch, and never give a branch its own backend. A per-branch
+    deployment with its own API is how conflicting "versions" of LANDSYNC
+    with different parcel data appear.
+  - CI (`.github/workflows/ci.yml`) enforces deployment hygiene and parcel
+    data integrity on every push/PR to `main`.
+
+  ### Obsolete deployments — manual decommission required
+
+  These belong to teammates' personal accounts and can only be removed by
+  their owners (do not share these URLs; they serve outdated data):
+
+  | URL | Owner action |
+  |---|---|
+  | `https://landsync-cmcg.onrender.com` | Render dashboard → delete the `landsync-cmcg` service |
+  | `https://landsync-sih.vercel.app` | Vercel dashboard → delete the project (it also proxies to the stale Render backend) |
+
   **Do not reintroduce split deployments.** A previous Vercel static deploy
   (`landsync-sih.vercel.app`) proxied `/api/*` to a *different, outdated*
   backend (`landsync-cmcg.onrender.com`), which served stale flattened parcel

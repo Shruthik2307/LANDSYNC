@@ -49,6 +49,7 @@ from fastapi.responses import FileResponse
 
 # ── New engine-backed route modules ───────────────────────────────────────
 from routes.health import router as health_router
+from services.landsync_service import get_dataset_info, is_loaded
 from routes.upload import router as upload_router
 from routes.process import router as process_router
 from routes.parcels import router as parcels_router
@@ -140,8 +141,19 @@ _SERVE_FRONTEND = os.getenv("LANDSYNC_SERVE_FRONTEND", "").lower() in {"1", "tru
 
 @app.get("/health")
 def legacy_health():
-    """Legacy simple health check (kept for backwards compatibility)."""
-    return {"status": "healthy", "service": "landsync-backend"}
+    """Lightweight liveness + engine readiness check.
+
+    Reports whether the server is alive, the reconciliation engine has data
+    loaded, and the expected parcel count. Exposes no secrets.
+    """
+    loaded = is_loaded()
+    parcel_count = get_dataset_info().get("reconciled_parcel_count", 0) if loaded else 0
+    return {
+        "status": "healthy" if loaded else "starting",
+        "service": "landsync-backend",
+        "engine": "loaded" if loaded else "unavailable",
+        "parcel_count": parcel_count,
+    }
 
 
 if not _SERVE_FRONTEND:

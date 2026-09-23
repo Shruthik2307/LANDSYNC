@@ -10,7 +10,9 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
   const [uploadSuccess, setUploadSuccess] = useState(null)
   const [error, setError] = useState('')
   const [showConfig, setShowConfig] = useState(false)
-  const [customBackendUrl, setCustomBackendUrl] = useState(API_BASE_URL || 'https://landsync-cmcg.onrender.com')
+  // Empty = same origin (the single-service deployment). Never default to a
+  // hardcoded external backend — that is how the stale split-deploy bug began.
+  const [customBackendUrl, setCustomBackendUrl] = useState(API_BASE_URL || '')
   const fileInputRef = useRef(null)
 
   function addFiles(nextFiles) {
@@ -191,7 +193,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                       type="url"
                       value={customBackendUrl}
                       onChange={(e) => setCustomBackendUrl(e.target.value)}
-                      placeholder="https://your-backend.onrender.com"
+                      placeholder="https://api.example.com"
                       className="flex-1 bg-slate-950 border border-slate-700 rounded px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
                     />
                     <button
