@@ -141,7 +141,26 @@ export function getHealth() {
  */
 export function getImageryInfo(lng, lat, source = 'esri_wayback') {
   const qs = new URLSearchParams({ lng: String(lng), lat: String(lat), source })
-  return request(`/api/imagery/info?${qs.toString()}`)
+  // Deliberately NOT routed through demo mode: this endpoint returns facts
+  // about the REAL imagery tiles displayed on the map (Esri acquisition
+  // metadata), which are identical in demo and live modes. There is no
+  // fixture for it, and fabricating one would violate the no-fake-metadata
+  // rule. If the backend is unreachable, the panel shows an honest
+  // "source temporarily unavailable" state with retry.
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15000)
+  return fetch(`${API_BASE_URL}/api/imagery/info?${qs.toString()}`, { signal: controller.signal })
+    .then((r) => {
+      if (!r.ok) throw Object.assign(new Error(`Imagery metadata request failed (${r.status})`), { status: r.status })
+      return r.json()
+    })
+    .catch((error) => {
+      if (error.name === 'AbortError') {
+        throw new Error('This request timed out. Check that the backend is responding, then retry.')
+      }
+      throw error
+    })
+    .finally(() => clearTimeout(timeout))
 }
 
 /** @returns {Promise<Parcel[]>} */
