@@ -108,6 +108,13 @@ app.include_router(imagery_info_router)
 app.include_router(auth_router)
 app.include_router(ml_router)
 
+# ── Satellite proxy (kept from original backend) ──────────────────────────
+try:
+    from satellite import get_satellite_tile
+    _SATELLITE_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _SATELLITE_AVAILABLE = False
+
 
 
 
