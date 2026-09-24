@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import globals from 'globals'
 
 export default [
-  { ignores: ['coverage/**', 'dist/**', 'node_modules/**', 'node_modules_old/**', 'test-results/**', '.pytest_cache/**', 'backend/**', 'engine/**', 'data/**', 'uploads/**', 'tile_cache/**'] },
+  { ignores: ['coverage/**', 'dist/**', 'node_modules/**', 'node_modules_old/**', 'test-results/**', '.pytest_cache/**', 'backend/**', 'engine/**', 'data/**', 'uploads/**', 'tile_cache/**', 'LANDSYNC-main/**'] },
   js.configs.recommended,
   {
     files: ['**/*.{js,jsx,mjs}'],
