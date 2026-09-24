@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 import hashlib
 import logging
-from config import SATELLITE_TILE_CACHE_DIR, SATELLITE_TILE_PROVIDERS
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,8 @@ async def get_satellite_tile(z: int, x: int, y: int, provider: str = "esri") -> 
         return _tile_cache_memory[cache_key]
 
     # Check disk cache
-    cache_file = SATELLITE_TILE_CACHE_DIR / f"{cache_key}.png"
+    cache_dir = settings.SATELLITE_TILE_CACHE_DIR
+    cache_file = cache_dir / f"{cache_key}.png"
     if cache_file.exists():
         logger.debug(f"Tile {z}/{x}/{y} served from disk cache")
         with open(cache_file, "rb") as f:
@@ -47,7 +48,7 @@ async def get_satellite_tile(z: int, x: int, y: int, provider: str = "esri") -> 
             return tile_data
 
     # Fetch from upstream
-    tile_url = SATELLITE_TILE_PROVIDERS.get(provider)
+    tile_url = settings.SATELLITE_TILE_PROVIDERS.get(provider)
     if not tile_url:
         logger.error(f"Unknown tile provider: {provider}")
         return None
@@ -107,7 +108,7 @@ def clear_tile_cache():
     _tile_cache_memory = {}
 
     # Clear disk cache
-    for cache_file in SATELLITE_TILE_CACHE_DIR.glob("*.png"):
+    for cache_file in settings.SATELLITE_TILE_CACHE_DIR.glob("*.png"):
         try:
             cache_file.unlink()
         except Exception as e:
