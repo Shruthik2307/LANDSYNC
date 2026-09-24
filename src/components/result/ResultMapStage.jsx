@@ -83,11 +83,11 @@ export default function ResultMapStage({
         <div className="pointer-events-auto px-3.5 py-2 rounded-xl bg-[#070D1A]/90 backdrop-blur-xl border border-cyan-500/20 shadow-xl flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
           <div>
-            <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-widest block font-semibold">
-              GIS RECONCILIATION VIEWPORT
+            <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest block font-semibold">
+              Selected parcel view
             </span>
             <span className="text-xs font-bold text-slate-100 font-mono">
-              {selected ? `PARCEL ${selected.parcel_id}` : 'SURVEY SECTOR ALPHA'}
+              {selected ? `Parcel ${selected.parcel_id}` : 'Survey sector'}
             </span>
           </div>
         </div>
@@ -205,10 +205,10 @@ export default function ResultMapStage({
 
       {/* Bottom-Left Tactical Legend */}
       <div 
-        className="absolute bottom-4 left-3 z-[490] p-2.5 sm:p-3 rounded-xl bg-[#070D1A]/90 backdrop-blur-xl border border-cyan-500/20 text-[10px] font-mono shadow-xl space-y-1.5 text-slate-300"
+        className="absolute bottom-4 left-3 z-[490] p-2.5 sm:p-3 rounded-xl bg-[#070D1A]/90 backdrop-blur-xl border border-cyan-500/20 text-[11px] font-mono shadow-xl space-y-1.5 text-slate-300"
         aria-label="Map legend"
       >
-        <div className="text-[9px] text-cyan-400/80 uppercase tracking-widest font-bold pb-1 border-b border-slate-800">
+        <div className="text-[11px] text-cyan-400/80 uppercase tracking-widest font-bold pb-1 border-b border-slate-800">
           GIS OVERLAY LEGEND
         </div>
         <div className="flex items-center gap-2">

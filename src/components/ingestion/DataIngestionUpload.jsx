@@ -72,7 +72,7 @@ export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData 
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
-            <UploadCloud className="w-5 h-5 text-emerald-400" />
+            <UploadCloud className="w-5 h-5 text-cyan-400" />
             <h3 className="text-base font-bold text-white">Multi-Source Geospatial Ingestion Engine</h3>
           </div>
           <button
@@ -93,7 +93,7 @@ export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData 
                 onClick={() => setSelectedSource(src.id)}
                 className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                   selectedSource === src.id
-                    ? 'bg-slate-800 border-emerald-500 text-white shadow-md'
+                    ? 'bg-slate-800 border-cyan-500 text-white shadow-md'
                     : 'bg-slate-800/40 border-slate-700/60 text-slate-400 hover:bg-slate-800/70'
                 }`}
               >
@@ -101,7 +101,7 @@ export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData 
                   <span>{src.name}</span>
                   <span className="w-2 h-2 rounded-full" style={{ backgroundColor: src.color }}></span>
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1 line-clamp-1">{src.desc}</div>
+                <div className="text-[11px] text-slate-400 mt-1 line-clamp-1">{src.desc}</div>
               </div>
             ))}
           </div>
@@ -114,7 +114,7 @@ export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData 
             <select
               value={targetCRS}
               onChange={(e) => setTargetCRS(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
             >
               <option value="EPSG:4326">EPSG:4326 - WGS 84 Geographic</option>
               <option value="EPSG:3857">EPSG:3857 - Web Mercator</option>
@@ -125,7 +125,7 @@ export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData 
           <div>
             <label className="text-xs font-semibold text-slate-300 block mb-1">Upload File (GeoJSON, SHP, CSV, TIF):</label>
             <label className="flex items-center justify-center w-full px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-xl cursor-pointer hover:bg-slate-700 text-xs text-slate-300 font-medium">
-              <UploadCloud className="w-4 h-4 mr-1.5 text-emerald-400" />
+              <UploadCloud className="w-4 h-4 mr-1.5 text-cyan-400" />
               {selectedFile ? selectedFile.name : 'Choose File...'}
               <input type="file" onChange={handleFileChange} className="hidden" accept=".geojson,.json,.zip,.csv,.kml" />
             </label>
@@ -134,7 +134,7 @@ export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData 
 
         {/* Ingestion Console Output */}
         {logs.length > 0 && (
-          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 space-y-1 max-h-28 overflow-y-auto">
+          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-cyan-400 space-y-1 max-h-28 overflow-y-auto">
             {logs.map((log, index) => (
               <div key={index} className="flex items-center gap-1.5">
                 <span className="text-slate-600">[{index + 1}]</span>
@@ -158,7 +158,7 @@ export default function DataIngestionUpload({ isOpen, onClose, onProcessNewData 
             disabled={!selectedFile || isProcessing}
             className={`px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
               selectedFile && !isProcessing
-                ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-950/50'
+                ? 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-950/50'
                 : 'bg-slate-800 text-slate-500 cursor-not-allowed'
             }`}
           >

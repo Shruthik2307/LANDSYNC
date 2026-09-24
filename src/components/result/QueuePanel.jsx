@@ -30,7 +30,7 @@ export default function QueuePanel({
       <div className="p-3.5 sm:p-4 border-b border-slate-800/80 shrink-0">
         <div className="flex items-center justify-between mb-2.5">
           <div>
-            <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-widest block font-semibold">
+            <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest block font-semibold">
               RECONCILIATION MONITOR
             </span>
             <div className="flex items-center gap-2 mt-0.5">
@@ -44,7 +44,7 @@ export default function QueuePanel({
           </div>
 
           {datasetId && (
-            <div className="text-[10px] font-mono px-2 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 max-w-[120px] truncate" title={datasetId}>
+            <div className="text-[11px] font-mono px-2 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 max-w-[120px] truncate" title={datasetId}>
               {datasetId}
             </div>
           )}
@@ -62,7 +62,7 @@ export default function QueuePanel({
           >
             <Layers size={12} />
             <span>All Parcels</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
+            <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
               {parcels.length}
             </span>
           </button>
@@ -76,7 +76,7 @@ export default function QueuePanel({
           >
             <AlertTriangle size={12} />
             <span>Conflicts</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
+            <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
               {conflicts.length}
             </span>
           </button>

@@ -33,7 +33,7 @@ export default function ArchitectureView({ demoMode, onToggleDemo, onClose }) {
         <div className="w-full max-w-5xl space-y-8 relative z-10">
           {/* Header */}
           <div className="text-center space-y-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 bg-cyan-950/70 border border-cyan-500/30 px-3 py-1 rounded-full">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-cyan-400 bg-cyan-950/70 border border-cyan-500/30 px-3 py-1 rounded-full">
               System Architecture & Evidence Pipeline
             </span>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
@@ -59,7 +59,7 @@ export default function ArchitectureView({ demoMode, onToggleDemo, onClose }) {
                   >
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] font-mono text-cyan-400 font-bold">
+                        <span className="text-[11px] font-mono text-cyan-400 font-bold">
                           0{index + 1}
                         </span>
                         <Icon size={14} className="text-slate-400 group-hover:text-cyan-400 transition-colors" />
@@ -68,7 +68,7 @@ export default function ArchitectureView({ demoMode, onToggleDemo, onClose }) {
                         {stage.name}
                       </span>
                     </div>
-                    <p className="text-[10px] text-slate-500 leading-snug font-mono mt-1">
+                    <p className="text-[11px] text-slate-500 leading-snug font-mono mt-1">
                       {stage.desc}
                     </p>
                   </div>

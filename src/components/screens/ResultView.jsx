@@ -148,7 +148,7 @@ export default function ResultView({
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-cyan-400 font-mono text-sm">
           <Loader2 size={32} className="animate-spin text-cyan-400" />
           <span className="tracking-widest uppercase text-xs animate-pulse">
-            Synthesizing Multimodal Spatial Boundaries…
+            Preparing reconciliation results…
           </span>
         </div>
       </div>

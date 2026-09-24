@@ -103,12 +103,12 @@ export default function LandingScreen({
         )}
 
         {/* Floating Telemetry Coordinates Markers */}
-        <div className="absolute top-24 left-8 text-[10px] font-mono text-cyan-400/40 hidden lg:block tracking-widest">
+        <div className="absolute top-24 left-8 text-[11px] font-mono text-cyan-400/40 hidden lg:block tracking-widest">
           + LAT: 17.385044° N<br/>
           + LNG: 78.486671° E<br/>
           + DATUM: WGS84
         </div>
-        <div className="absolute bottom-16 right-8 text-[10px] font-mono text-cyan-400/40 hidden lg:block text-right tracking-widest">
+        <div className="absolute bottom-16 right-8 text-[11px] font-mono text-cyan-400/40 hidden lg:block text-right tracking-widest">
           SYS: RECONCILIATION ENGINE 2.4<br/>
           RESOL: 0.1M / SUB-PARCEL<br/>
           HARMONIZATION: ACTIVE
@@ -123,7 +123,7 @@ export default function LandingScreen({
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono uppercase tracking-widest mb-8 shadow-[0_0_20px_rgba(0,240,255,0.15)]"
         >
           <Sparkles size={13} className="text-cyan-400" />
-          <span>Government-Grade Geospatial Intelligence</span>
+          <span>Land Records Reconciliation Platform</span>
         </motion.div>
 
         {/* Primary Typography Hierarchy */}
@@ -156,8 +156,8 @@ export default function LandingScreen({
           {...heroRise(0.32)}
           className="max-w-2xl text-base sm:text-lg text-slate-300 font-normal leading-relaxed mb-10"
         >
-          Reconcile cadastral, survey and satellite sources into one trusted land view.
-          Synthesize heterogeneous parcel records into high-confidence consensus for precision governance.
+          Reconcile land records, surveys and imagery into one trusted view.
+          Compare what is recorded with what is observed — and flag what needs field verification.
         </motion.p>
 
         {/* Action CTAs */}
@@ -212,7 +212,7 @@ export default function LandingScreen({
 
           {/* Pillar 3 */}
           <div className="p-5 rounded-xl bg-slate-900/40 backdrop-blur-md border border-slate-800/80 hover:border-cyan-500/30 transition-all duration-300 group">
-            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-3 group-hover:bg-emerald-500/20 group-hover:scale-105 transition-all">
+            <div className="w-9 h-9 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mb-3 group-hover:bg-cyan-500/20 group-hover:scale-105 transition-all">
               <ShieldCheck size={18} />
             </div>
             <h2 className="text-sm font-bold text-slate-100 mb-1 flex items-center gap-1.5">
@@ -228,15 +228,14 @@ export default function LandingScreen({
       {/* Footer System Status Bar */}
       <footer className="relative z-10 border-t border-slate-800/60 py-3.5 px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono text-slate-500 bg-[#030712]/70 backdrop-blur">
         <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-emerald-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="flex items-center gap-1.5 text-cyan-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
             CORE ONLINE
           </span>
-          <span>INGESTION: GEOJSON · SHP · CSV · TIFF · PDF</span>
+          <span>Supports GeoJSON · SHP · CSV · TIFF · PDF</span>
         </div>
         <div className="flex items-center gap-4">
-          <span>COORDINATE CONSENSUS: ACTIVE</span>
-          <span className="text-slate-400">SIH26013 · LANDSYNC</span>
+          <span>Decision-support prototype — not an official record</span>
         </div>
       </footer>
     </div>

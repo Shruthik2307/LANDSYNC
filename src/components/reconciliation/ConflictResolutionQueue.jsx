@@ -37,7 +37,7 @@ export default function ConflictResolutionQueue({
       case 'MEDIUM':
         return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1"><Info className="w-3 h-3" /> MEDIUM</span>;
       case 'LOW':
-        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> LOW</span>;
+        return <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> LOW</span>;
       default:
         return null;
     }
@@ -53,7 +53,7 @@ export default function ConflictResolutionQueue({
         <div className="space-y-3 mb-4 pb-3 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-emerald-400" />
+              <ShieldAlert className="w-4 h-4 text-cyan-400" />
               Reconciliation Queue
             </h3>
             <span className="text-xs text-slate-400 font-medium">
@@ -69,14 +69,14 @@ export default function ConflictResolutionQueue({
                 placeholder="Search Parcel #, Survey, Owner..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
               />
             </div>
             
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+              className="bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
             >
               <option value="ALL">All Priorities</option>
               <option value="HIGH">High Priority</option>
@@ -96,7 +96,7 @@ export default function ConflictResolutionQueue({
                 onClick={() => onSelectParcel(parcel.parcel_id)}
                 className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-slate-800/90 border-emerald-500 shadow-md shadow-emerald-950/40'
+                    ? 'bg-slate-800/90 border-cyan-500 shadow-md shadow-cyan-950/40'
                     : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800/70'
                 }`}
               >
@@ -117,20 +117,20 @@ export default function ConflictResolutionQueue({
                 <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-700/50 mt-2">
                   <div className="flex items-center gap-3">
                     <div>
-                      <span className="text-slate-500 block text-[10px]">Confidence</span>
-                      <span className={`font-bold ${parcel.confidence < 75 ? 'text-rose-400' : parcel.confidence < 90 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                      <span className="text-slate-500 block text-[11px]">Confidence</span>
+                      <span className={`font-bold ${parcel.confidence < 75 ? 'text-rose-400' : parcel.confidence < 90 ? 'text-amber-400' : 'text-cyan-400'}`}>
                         {parcel.confidence}%
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-500 block text-[10px]">Area Diff</span>
+                      <span className="text-slate-500 block text-[11px]">Area Diff</span>
                       <span className="font-semibold text-slate-200">{parcel.area_difference} m²</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    {parcel.geometry_conflict && <span className="px-1.5 py-0.5 rounded text-[10px] bg-rose-950 text-rose-400 border border-rose-800">Geometry</span>}
-                    {parcel.attribute_conflict && <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-950 text-amber-400 border border-amber-800">Attribute</span>}
+                    {parcel.geometry_conflict && <span className="px-1.5 py-0.5 rounded text-[11px] bg-rose-950 text-rose-400 border border-rose-800">Geometry</span>}
+                    {parcel.attribute_conflict && <span className="px-1.5 py-0.5 rounded text-[11px] bg-amber-950 text-amber-400 border border-amber-800">Attribute</span>}
                   </div>
                 </div>
               </div>
@@ -149,7 +149,7 @@ export default function ConflictResolutionQueue({
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-bold text-white">Parcel #{selectedParcel.parcel_id} Detail</h2>
-                  <span className="text-xs font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
+                  <span className="text-xs font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800">
                     Survey {selectedParcel.survey_number}
                   </span>
                   {getPriorityBadge(selectedParcel.priority)}
@@ -161,7 +161,7 @@ export default function ConflictResolutionQueue({
 
               <button
                 onClick={() => onResolveParcel(selectedParcel.parcel_id)}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-md shadow-emerald-950/50 flex items-center gap-1.5"
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-cyan-500 hover:bg-cyan-400 text-slate-950 transition-all shadow-md shadow-cyan-950/50 flex items-center gap-1.5"
               >
                 <Check className="w-4 h-4" />
                 Approve Harmonization
@@ -174,7 +174,7 @@ export default function ConflictResolutionQueue({
                 onClick={() => setActiveTab('summary')}
                 className={`pb-2 border-b-2 transition-all ${
                   activeTab === 'summary'
-                    ? 'border-emerald-400 text-emerald-400'
+                    ? 'border-cyan-400 text-cyan-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -184,7 +184,7 @@ export default function ConflictResolutionQueue({
                 onClick={() => setActiveTab('side_by_side')}
                 className={`pb-2 border-b-2 transition-all ${
                   activeTab === 'side_by_side'
-                    ? 'border-emerald-400 text-emerald-400'
+                    ? 'border-cyan-400 text-cyan-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -194,7 +194,7 @@ export default function ConflictResolutionQueue({
                 onClick={() => setActiveTab('raw_contract')}
                 className={`pb-2 border-b-2 transition-all ${
                   activeTab === 'raw_contract'
-                    ? 'border-emerald-400 text-emerald-400'
+                    ? 'border-cyan-400 text-cyan-400'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
               >
@@ -211,7 +211,7 @@ export default function ConflictResolutionQueue({
                   <div>
                     <div className="text-slate-400 text-xs font-medium">Reconciliation Confidence Score</div>
                     <div className="flex items-baseline gap-2 mt-1">
-                      <span className="text-3xl font-extrabold text-emerald-400">{selectedParcel.confidence}%</span>
+                      <span className="text-3xl font-extrabold text-cyan-400">{selectedParcel.confidence}%</span>
                       <span className="text-slate-400 text-xs">Overall System Reliability</span>
                     </div>
                   </div>
@@ -296,7 +296,7 @@ export default function ConflictResolutionQueue({
                     <tr className="bg-slate-800 text-slate-300">
                       <th className="p-2.5 border border-slate-700">Attribute Field</th>
                       <th className="p-2.5 border border-slate-700 text-blue-400">Cadastral Map</th>
-                      <th className="p-2.5 border border-slate-700 text-emerald-400">Drone ORI / AI</th>
+                      <th className="p-2.5 border border-slate-700 text-cyan-400">Drone ORI / AI</th>
                       <th className="p-2.5 border border-slate-700 text-purple-400">Revenue Record</th>
                     </tr>
                   </thead>
@@ -304,7 +304,7 @@ export default function ConflictResolutionQueue({
                     <tr>
                       <td className="p-2 border border-slate-800 font-sans font-medium text-slate-400">Parcel Area</td>
                       <td className="p-2 border border-slate-800">{selectedParcel.area_cadastral_sqm} m²</td>
-                      <td className="p-2 border border-slate-800 font-bold text-emerald-300">{selectedParcel.area_drone_sqm} m²</td>
+                      <td className="p-2 border border-slate-800 font-bold text-cyan-300">{selectedParcel.area_drone_sqm} m²</td>
                       <td className="p-2 border border-slate-800">{selectedParcel.area_cadastral_sqm} m²</td>
                     </tr>
                     <tr>
@@ -316,7 +316,7 @@ export default function ConflictResolutionQueue({
                     <tr>
                       <td className="p-2 border border-slate-800 font-sans font-medium text-slate-400">Land Classification</td>
                       <td className="p-2 border border-slate-800">{selectedParcel.land_use}</td>
-                      <td className="p-2 border border-slate-800 text-emerald-400">Extracted Boundary</td>
+                      <td className="p-2 border border-slate-800 text-cyan-400">Extracted Boundary</td>
                       <td className="p-2 border border-slate-800">{selectedParcel.land_use}</td>
                     </tr>
                   </tbody>
@@ -326,7 +326,7 @@ export default function ConflictResolutionQueue({
 
             {/* Tab 3: SIH Shared Data Contract JSON */}
             {activeTab === 'raw_contract' && (
-              <div className="flex-1 overflow-y-auto bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-cyan-400 custom-scrollbar">
                 <pre>
 {JSON.stringify(
   {

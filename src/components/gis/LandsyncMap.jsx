@@ -94,7 +94,7 @@ export default function LandsyncMap({ parcels, selectedParcelId, onSelectParcel,
 
       <div className="absolute top-4 left-4 z-[1000] flex flex-wrap items-center gap-2 bg-slate-900/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-slate-700/80 shadow-lg">
         <div className="flex items-center gap-2 pr-3 border-r border-slate-700">
-          <Layers className="w-4 h-4 text-emerald-400" />
+          <Layers className="w-4 h-4 text-cyan-400" />
           <span className="text-xs font-semibold text-slate-200 uppercase tracking-wider">Web-GIS Layers</span>
         </div>
 
@@ -110,10 +110,10 @@ export default function LandsyncMap({ parcels, selectedParcelId, onSelectParcel,
         <button
           onClick={() => onToggleLayer('drone_ori')}
           className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
-            activeLayers.drone_ori ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/50' : 'bg-slate-800 text-slate-400'
+            activeLayers.drone_ori ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-800 text-slate-400'
           }`}
         >
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Drone ORI Layer
+          <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span> Drone ORI Layer
         </button>
 
         <button
@@ -126,17 +126,17 @@ export default function LandsyncMap({ parcels, selectedParcelId, onSelectParcel,
         </button>
 
         <div className="ml-auto flex items-center gap-1 bg-slate-800 p-0.5 rounded-lg border border-slate-700">
-          <button onClick={() => setMapTile('satellite')} className={`px-2 py-0.5 text-[11px] rounded font-medium ${mapTile === 'satellite' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400'}`}>Satellite</button>
-          <button onClick={() => setMapTile('dark')} className={`px-2 py-0.5 text-[11px] rounded font-medium ${mapTile === 'dark' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400'}`}>Dark Vector</button>
+          <button onClick={() => setMapTile('satellite')} className={`px-2 py-0.5 text-[11px] rounded font-medium ${mapTile === 'satellite' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400'}`}>Satellite</button>
+          <button onClick={() => setMapTile('dark')} className={`px-2 py-0.5 text-[11px] rounded font-medium ${mapTile === 'dark' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400'}`}>Dark Vector</button>
         </div>
       </div>
 
       {activeLayers.drone_ori && (
         <div className="absolute bottom-4 left-4 z-[1000] flex items-center gap-3 bg-slate-900/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-slate-700 shadow-lg">
-          <Sliders className="w-4 h-4 text-emerald-400" />
+          <Sliders className="w-4 h-4 text-cyan-400" />
           <span className="text-xs text-slate-300 font-medium">Drone Opacity:</span>
-          <input type="range" min="0.1" max="1.0" step="0.05" value={droneOpacity} onChange={(e) => setDroneOpacity(parseFloat(e.target.value))} className="w-24 accent-emerald-500 cursor-pointer" />
-          <span className="text-xs font-bold text-emerald-400 w-8">{Math.round(droneOpacity * 100)}%</span>
+          <input type="range" min="0.1" max="1.0" step="0.05" value={droneOpacity} onChange={(e) => setDroneOpacity(parseFloat(e.target.value))} className="w-24 accent-cyan-500 cursor-pointer" />
+          <span className="text-xs font-bold text-cyan-400 w-8">{Math.round(droneOpacity * 100)}%</span>
         </div>
       )}
 

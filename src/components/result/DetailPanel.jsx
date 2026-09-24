@@ -8,7 +8,7 @@ import { X, FileSearch } from 'lucide-react'
 function AttributeRow({ label, value, differs }) {
   return (
     <div className="space-y-0.5">
-      <div className="text-[9px] text-slate-500 uppercase">{label}</div>
+      <div className="text-[11px] text-slate-500 uppercase">{label}</div>
       <div className={`text-[11px] font-mono ${differs ? 'text-cyan-400 font-semibold' : 'text-slate-300'}`}>
         {value || 'N/A'}
       </div>
@@ -91,20 +91,20 @@ export default function DetailPanel({ parcel, onClose }) {
             <FileSearch size={16} />
           </div>
           <div>
-            <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-widest block">
+            <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest block">
               SELECTED PARCEL INTELLIGENCE
             </span>
             <div className="flex items-center gap-2">
               <h2 className="text-xl sm:text-2xl font-bold font-mono text-white tracking-tight detail-id">
                 {String(parcel.parcel_id)}
               </h2>
-              <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border priority priority--${priority.toLowerCase()} ${
-                isHigh ? 'bg-red-500/20 text-red-300 border-red-500/40' : isMed ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+              <span className={`text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded border priority priority--${priority.toLowerCase()} ${
+                isHigh ? 'bg-red-500/20 text-red-300 border-red-500/40' : isMed ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
               }`}>
                 {priority} PRIORITY
               </span>
               {parcel.duplicate_id && (
-                <span className="text-[10px] font-mono uppercase bg-red-500/20 text-red-300 border border-red-500/40 px-1.5 py-0.5 rounded">
+                <span className="text-[11px] font-mono uppercase bg-red-500/20 text-red-300 border border-red-500/40 px-1.5 py-0.5 rounded">
                   DUPLICATE RECORD
                 </span>
               )}
@@ -129,7 +129,7 @@ export default function DetailPanel({ parcel, onClose }) {
         <div className="md:col-span-3 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-950/50 border border-slate-800/80">
           <ConfidenceDial value={Number(parcel.confidence) || 0} />
           <div className="mt-2 text-center">
-            <span className="text-[10px] font-mono text-slate-500 uppercase">
+            <span className="text-[11px] font-mono text-slate-500 uppercase">
               CONFIDENCE MATRIX
             </span>
           </div>
@@ -139,9 +139,9 @@ export default function DetailPanel({ parcel, onClose }) {
         <div className="md:col-span-5 space-y-3">
           <div className="p-3 rounded-xl bg-slate-950/50 border border-slate-800/80 space-y-1.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400 font-mono text-[10px] uppercase">ANALYSIS FINDING</span>
+              <span className="text-slate-400 font-mono text-[11px] uppercase">ANALYSIS FINDING</span>
               <span className={`font-mono font-semibold text-xs ${
-                parcel.geometry_conflict ? 'text-amber-400' : parcel.attribute_conflict ? 'text-purple-400' : 'text-emerald-400'
+                parcel.geometry_conflict ? 'text-amber-400' : parcel.attribute_conflict ? 'text-purple-400' : 'text-cyan-400'
               }`}>
                 {issue}
               </span>
@@ -160,13 +160,13 @@ export default function DetailPanel({ parcel, onClose }) {
           {/* Side-by-Side Attribute Comparison for Conflicts */}
           {parcel.attribute_conflict && parcel.attributes && (
             <div className="p-3 rounded-xl bg-slate-950/50 border border-slate-800/80">
-              <div className="text-[10px] font-mono text-cyan-400 uppercase tracking-widest mb-2">
+              <div className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest mb-2">
                 SOURCE ATTRIBUTE COMPARISON
               </div>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 {/* Cadastral/Revenue Record Column */}
                 <div className="space-y-2">
-                  <div className="text-[10px] font-mono text-slate-400 uppercase font-semibold pb-1 border-b border-slate-800">
+                  <div className="text-[11px] font-mono text-slate-400 uppercase font-semibold pb-1 border-b border-slate-800">
                     Cadastral/Revenue Record
                   </div>
                   {parcel.attributes.cadastral && (
@@ -197,7 +197,7 @@ export default function DetailPanel({ parcel, onClose }) {
 
                 {/* Drone/Municipal Record Column */}
                 <div className="space-y-2">
-                  <div className="text-[10px] font-mono text-slate-400 uppercase font-semibold pb-1 border-b border-slate-800">
+                  <div className="text-[11px] font-mono text-slate-400 uppercase font-semibold pb-1 border-b border-slate-800">
                     Drone/Municipal Record
                   </div>
                   {parcel.attributes.drone && (
@@ -232,11 +232,11 @@ export default function DetailPanel({ parcel, onClose }) {
           {/* Metric Stats */}
           <div className="grid grid-cols-2 gap-3 text-xs font-mono">
             <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800">
-              <span className="text-[10px] text-slate-500 uppercase block">AREA VARIANCE</span>
+              <span className="text-[11px] text-slate-500 uppercase block">AREA VARIANCE</span>
               <span className="text-sm font-bold text-slate-100">{area} m²</span>
             </div>
             <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800">
-              <span className="text-[10px] text-slate-500 uppercase block">RECONCILIATION</span>
+              <span className="text-[11px] text-slate-500 uppercase block">RECONCILIATION</span>
               <span className="text-sm font-bold text-cyan-400">
                 {parcel.geometry_conflict ? 'Mismatch' : 'Consensus'}
               </span>
@@ -250,7 +250,7 @@ export default function DetailPanel({ parcel, onClose }) {
               The real provider metadata (acquisition date, resolution) is
               embedded here so it is always visible with the parcel. */}
           <div className="p-2.5 rounded-lg bg-sky-950/20 border border-sky-500/20">
-            <span className="text-[10px] font-mono text-sky-400 uppercase tracking-wider block font-semibold">
+            <span className="text-[11px] font-mono text-sky-400 uppercase tracking-wider block font-semibold">
               OBSERVED (LATEST AVAILABLE IMAGERY)
             </span>
             {parcel.geometry_conflict ? (
@@ -274,7 +274,7 @@ export default function DetailPanel({ parcel, onClose }) {
         {/* Right Column: Recommendation & Next Action */}
         <div className="md:col-span-4 p-3.5 rounded-xl bg-cyan-950/20 border border-cyan-500/20 flex flex-col justify-between h-full space-y-2">
           <div>
-            <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider block font-semibold">
+            <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-wider block font-semibold">
               RECOMMENDED ACTION
             </span>
             <strong className="text-sm text-slate-100 block mt-1">
@@ -286,7 +286,7 @@ export default function DetailPanel({ parcel, onClose }) {
           </div>
 
           <div className="pt-2">
-            <div className="text-[10px] font-mono text-slate-500 uppercase">
+            <div className="text-[11px] font-mono text-slate-500 uppercase">
               AUTHORITY: Human Verification Required
             </div>
           </div>

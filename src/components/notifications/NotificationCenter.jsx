@@ -60,7 +60,7 @@ export const NotificationCenter = ({ isOpen, onClose }) => {
                   )}
                   {ntf.title}
                 </span>
-                <span className="text-[10px] text-slate-400">{ntf.timestamp}</span>
+                <span className="text-[11px] text-slate-400">{ntf.timestamp}</span>
               </div>
               <p className="text-[11px] text-slate-300 font-normal">{ntf.message}</p>
             </div>

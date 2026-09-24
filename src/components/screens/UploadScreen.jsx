@@ -96,7 +96,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
       case 'shx':
         return 'bg-blue-500/15 text-blue-300 border-blue-500/30'
       case 'csv':
-        return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+        return 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
       case 'pdf':
         return 'bg-amber-500/15 text-amber-300 border-amber-500/30'
       default:
@@ -124,11 +124,11 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
           {/* Left Column: Context & Capabilities */}
           <div className="lg:col-span-5 space-y-6">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-1 rounded-full">
+              <span className="text-[11px] font-mono uppercase tracking-widest text-cyan-400 bg-cyan-950/60 border border-cyan-500/30 px-2.5 py-1 rounded-full">
                 Phase 1: Ingestion
               </span>
               <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mt-4 mb-3">
-                Ingest Source Intelligence.
+                Upload your land records
               </h1>
               <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
                 Upload geospatial and registry files that describe the same cadastral parcel from different operational perspectives.
@@ -162,13 +162,13 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
             <div className="p-3.5 rounded-lg bg-slate-900/70 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Shield size={18} className={demoMode ? 'text-amber-400' : 'text-emerald-400'} />
+                  <Shield size={18} className={demoMode ? 'text-amber-400' : 'text-cyan-400'} />
                   <div className="text-xs">
                     <span className="text-slate-300 font-medium">
-                      {demoMode ? 'Local Isolated Mode' : 'Live Backend Engine'}
+                      {demoMode ? 'Sample data mode' : 'Live backend'}
                     </span>
                     <p className="text-slate-500 text-[11px]">
-                      {demoMode ? 'Processes against prepared verification datasets.' : `Target: ${API_BASE_URL || 'Current Origin'}/api/upload`}
+                      {demoMode ? 'Runs against built-in verification datasets.' : `Target: ${API_BASE_URL || 'Current Origin'}/api/upload`}
                     </p>
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
 
               {showConfig && !demoMode && (
                 <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
-                  <span className="text-[10px] text-slate-400 block">Render Backend URL (saved in browser):</span>
+                  <span className="text-[11px] text-slate-400 block">Render Backend URL (saved in browser):</span>
                   <div className="flex gap-2">
                     <input
                       type="url"
@@ -251,7 +251,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
 
                 <div className="space-y-1.5">
                   <p className="text-sm sm:text-base font-bold text-slate-100 tracking-wide">
-                    {isDragging ? 'Release to Ingest Sources' : 'DROP LAND RECORDS'}
+                    {isDragging ? 'Drop files to upload' : 'Drag & drop files here'}
                   </p>
                   <p className="text-xs text-slate-400 font-mono">
                     GeoJSON • JSON (FeatureCollection)
@@ -280,7 +280,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                     <button 
                       type="button" 
                       onClick={() => setFiles([])}
-                      className="text-slate-500 hover:text-red-400 text-[10px]"
+                      className="text-slate-500 hover:text-red-400 text-[11px]"
                     >
                       Clear all
                     </button>
@@ -291,13 +291,13 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                       className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950/70 border border-slate-800 text-xs text-slate-200"
                     >
                       <div className="flex items-center gap-2.5 truncate max-w-[80%]">
-                        <span className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold border uppercase ${getFileBadgeColor(file.name)}`}>
+                        <span className={`px-1.5 py-0.5 rounded font-mono text-[11px] font-bold border uppercase ${getFileBadgeColor(file.name)}`}>
                           {file.name.split('.').pop() || 'FILE'}
                         </span>
                         <span className="truncate font-medium">{file.name}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-mono text-[10px] text-slate-400">
+                        <span className="font-mono text-[11px] text-slate-400">
                           {Math.max(1, Math.round(file.size / 1024))} KB
                         </span>
                         <button
@@ -345,11 +345,11 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
 
               {/* Upload Success Banner */}
               {uploadSuccess && (
-                <div className="mt-4 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn" role="status">
+                <div className="mt-4 p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs flex flex-col sm:flex-row items-center justify-between gap-3 animate-fadeIn" role="status">
                   <div className="flex items-center gap-2.5">
-                    <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+                    <CheckCircle2 size={18} className="text-cyan-400 shrink-0" />
                     <div>
-                      <strong className="font-semibold text-emerald-200 block">Upload Successful!</strong>
+                      <strong className="font-semibold text-cyan-200 block">Upload Successful!</strong>
                       <span className="font-mono text-[11px] text-slate-300">Dataset ID: {uploadSuccess.dataset_id}</span>
                     </div>
                   </div>
@@ -382,7 +382,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                 </div>
               )}
 
-              <p className="mt-4 text-center text-[10px] text-slate-500 font-mono">
+              <p className="mt-4 text-center text-[11px] text-slate-500 font-mono">
                 {demoMode 
                   ? 'Demo mode keeps your files local and uses synthetic parcel results.' 
                   : 'Files will be sent to the configured FastAPI backend.'}

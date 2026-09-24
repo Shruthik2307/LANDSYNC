@@ -109,14 +109,14 @@ export default function ProcessingScreen({ datasetId, onComplete, demoMode, onTo
                       isActive
                         ? 'bg-cyan-950/30 border-cyan-500/40 shadow-[0_0_20px_rgba(0,240,255,0.1)]'
                         : isDone
-                        ? 'bg-slate-950/40 border-emerald-500/20'
+                        ? 'bg-slate-950/40 border-cyan-500/20'
                         : 'bg-slate-950/20 border-slate-800/60 opacity-50'
                     }`}
                   >
                     {/* Status Icon */}
                     <div className="mt-0.5 shrink-0">
                       {isDone ? (
-                        <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-400">
+                        <div className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-400">
                           <CheckCircle2 size={14} />
                         </div>
                       ) : isActive ? (
@@ -124,7 +124,7 @@ export default function ProcessingScreen({ datasetId, onComplete, demoMode, onTo
                           <MorphingInfinity className="w-4 h-4" />
                         </div>
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-mono text-slate-400">
+                        <div className="w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[11px] font-mono text-slate-400">
                           {idx + 1}
                         </div>
                       )}
@@ -138,9 +138,9 @@ export default function ProcessingScreen({ datasetId, onComplete, demoMode, onTo
                         }`}>
                           {step.title}
                         </span>
-                        <span className="font-mono text-[10px] uppercase tracking-wider">
+                        <span className="font-mono text-[11px] uppercase tracking-wider">
                           {isDone ? (
-                            <span className="text-emerald-400">Complete</span>
+                            <span className="text-cyan-400">Complete</span>
                           ) : isActive ? (
                             <span className="text-cyan-400 animate-pulse">Running…</span>
                           ) : (

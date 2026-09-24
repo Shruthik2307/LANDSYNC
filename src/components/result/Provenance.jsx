@@ -22,7 +22,7 @@ export function SourceBadge({ health }) {
     return (
       <span
         data-testid="source-badge"
-        className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/40"
+        className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/40"
         title={`Real source data: ${health.cadastral_filename || 'cadastral'} + ${health.municipal_filename || 'municipal'}`}
       >
         REAL → REAL RECONCILIATION
@@ -33,7 +33,7 @@ export function SourceBadge({ health }) {
     return (
       <span
         data-testid="source-badge"
-        className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/40"
+        className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/40"
         title="One source is a real upload; the other is the built-in synthetic sample. Scores comparing them are not a like-for-like reconciliation."
       >
         <AlertTriangle size={10} />
@@ -44,7 +44,7 @@ export function SourceBadge({ health }) {
   return (
     <span
       data-testid="source-badge"
-      className="inline-flex items-center gap-1 text-[9px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-500/15 text-slate-300 border border-slate-500/40"
+      className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-500/15 text-slate-300 border border-slate-500/40"
       title="Built-in synthetic sample parcels — for demonstration, not real land records."
     >
       SYNTHETIC DEMO DATA
@@ -135,7 +135,7 @@ export function ImageryProvenancePanel({ lng, lat, source = 'esri_wayback' }) {
     return (
       <div
         data-testid="imagery-panel"
-        className="px-3 py-2 rounded-lg bg-[#070D1A]/90 backdrop-blur-md border border-sky-500/25 text-[10px] font-mono text-sky-300/80 flex items-center gap-2"
+        className="px-3 py-2 rounded-lg bg-[#070D1A]/90 backdrop-blur-md border border-sky-500/25 text-[11px] font-mono text-sky-300/80 flex items-center gap-2"
       >
         <Satellite size={12} className="animate-pulse text-sky-400" />
         <span>Querying imagery metadata…</span>
@@ -149,7 +149,7 @@ export function ImageryProvenancePanel({ lng, lat, source = 'esri_wayback' }) {
       <div
         data-testid="imagery-panel"
         role="status"
-        className="px-3 py-2 rounded-lg bg-[#070D1A]/90 backdrop-blur-md border border-amber-500/30 text-[10px] font-mono text-amber-300 flex items-center gap-2"
+        className="px-3 py-2 rounded-lg bg-[#070D1A]/90 backdrop-blur-md border border-amber-500/30 text-[11px] font-mono text-amber-300 flex items-center gap-2"
       >
         <AlertTriangle size={12} className="text-amber-400" />
         <span>Imagery metadata: source temporarily unavailable.</span>
@@ -173,7 +173,7 @@ export function ImageryProvenancePanel({ lng, lat, source = 'esri_wayback' }) {
   return (
     <div
       data-testid="imagery-panel"
-      className="px-3 py-2 rounded-lg bg-[#070D1A]/90 backdrop-blur-md border border-sky-500/25 text-[10px] font-mono text-slate-300 space-y-0.5 shadow-lg"
+      className="px-3 py-2 rounded-lg bg-[#070D1A]/90 backdrop-blur-md border border-sky-500/25 text-[11px] font-mono text-slate-300 space-y-0.5 shadow-lg"
     >
       <div className="flex items-center gap-1.5 text-sky-300 font-semibold tracking-wider">
         <Satellite size={12} className="text-sky-400" />
@@ -197,7 +197,7 @@ export function ImageryProvenancePanel({ lng, lat, source = 'esri_wayback' }) {
           <span>{info.suitability}</span>
         </div>
       )}
-      <div className="pt-0.5 text-slate-500 text-[9px]">
+      <div className="pt-0.5 text-slate-500 text-[11px]">
         Mosaic of dated captures — not a live view. {info.disclaimer}
       </div>
     </div>

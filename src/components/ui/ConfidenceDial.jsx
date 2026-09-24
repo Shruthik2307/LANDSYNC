@@ -47,7 +47,7 @@ export default function ConfidenceDial({ value, compact = false }) {
           />
         </svg>
         <span 
-          className="absolute text-[9px] font-bold"
+          className="absolute text-[11px] font-bold"
           style={{ color }}
         >
           {safeValue}
@@ -113,7 +113,7 @@ export default function ConfidenceDial({ value, compact = false }) {
             {safeValue}
             <span className="text-xs font-normal opacity-70 ml-0.5">%</span>
           </span>
-          <span className="text-[9px] text-slate-400 font-sans uppercase tracking-widest mt-0.5">
+          <span className="text-[11px] text-slate-400 font-sans uppercase tracking-widest mt-0.5">
             MATCH
           </span>
         </div>
@@ -121,7 +121,7 @@ export default function ConfidenceDial({ value, compact = false }) {
 
       {/* Signal Status Label */}
       <div 
-        className="mt-2 text-[10px] font-mono uppercase tracking-widest font-semibold px-2 py-0.5 rounded border"
+        className="mt-2 text-[11px] font-mono uppercase tracking-widest font-semibold px-2 py-0.5 rounded border"
         style={{ 
           color, 
           borderColor: `${color}40`, 

@@ -1,18 +1,20 @@
-import React, { useState, useEffect } from 'react'
-import { Info, Settings2, Globe, ArrowLeft } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Info, Settings2, ArrowLeft, Activity } from 'lucide-react'
 import { getHealth } from '../../api'
 import { SourceBadge } from '../result/Provenance'
 
-export default function BrandHeader({ 
-  step = 'Workspace', 
-  demoMode = false, 
-  onToggleDemo, 
-  onArchitecture, 
+export default function BrandHeader({
+  step = 'Workspace',
+  demoMode = false,
+  onToggleDemo,
+  onArchitecture,
   architectureOpen = false,
   onNavigateLanding,
 }) {
   const [health, setHealth] = useState(null)
   const [healthError, setHealthError] = useState(false)
+  const [sysPanelOpen, setSysPanelOpen] = useState(false)
+  const sysRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
@@ -36,27 +38,45 @@ export default function BrandHeader({
       cancelled = true
       clearInterval(interval)
     }
-  }, [demoMode])
+  }, [])
+
+  // Close the system panel on outside click
+  useEffect(() => {
+    if (!sysPanelOpen) return undefined
+    function handleClick(e) {
+      if (sysRef.current && !sysRef.current.contains(e.target)) setSysPanelOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [sysPanelOpen])
+
+  const statusLabel = healthError
+    ? 'Offline'
+    : health?.status === 'ok'
+      ? 'Operational'
+      : 'Starting'
+
   return (
-    <header className="sticky top-0 z-[1000] h-[58px] px-4 md:px-6 bg-[#030712]/80 backdrop-blur-xl border-b border-cyan-500/15 flex items-center justify-between shadow-[0_4px_30px_rgba(0,0,0,0.5)]">
-      {/* Brand & Mission Title */}
-      <div className="flex items-center gap-3 md:gap-4">
-        {/* Visible back navigation on every screen except the landing */}
-        {step !== 'Overview' && (
+    <header className="sticky top-0 z-[800] w-full h-14 shrink-0 bg-[#070D1A]/95 backdrop-blur-xl border-b border-slate-800 flex items-center justify-between px-3 sm:px-4 gap-2 select-none">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        {/* Back navigation */}
+        {onNavigateLanding && step !== 'Overview' && (
           <button
             onClick={onNavigateLanding}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-300 text-xs font-mono hover:border-cyan-400/60 hover:text-cyan-300 transition-colors"
-            aria-label="Back to overview"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-slate-300 hover:text-cyan-300 hover:bg-slate-800/70 border border-transparent hover:border-slate-700 transition-colors text-[13px] font-medium shrink-0"
             title="Back to Overview"
+            aria-label="Back to overview"
           >
-            <ArrowLeft size={14} />
+            <ArrowLeft size={15} />
             <span className="hidden sm:inline">Back</span>
           </button>
         )}
-        <button 
+
+        {/* Brand block: logo + wordmark. Clicking returns to the overview. */}
+        <button
           onClick={onNavigateLanding}
-          className="flex items-center gap-2.5 group focus:outline-none"
-          title="LANDSYNC Home"
+          className="group flex items-center gap-2.5 min-w-0 focus:outline-none"
+          title="LANDSYNC — back to overview"
         >
           {/* LANDSYNC GIS brand mark (public/brand/landsync-mark.png) —
               replaces the former 'LS' placeholder square. 32px, aspect
@@ -69,96 +89,57 @@ export default function BrandHeader({
             className="h-8 w-8 shrink-0"
             draggable={false}
           />
-          <div className="text-left">
+          <div className="text-left min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold tracking-[0.14em] text-slate-100 group-hover:text-cyan-300 transition-colors">
+              <span className="text-[15px] font-bold tracking-[0.14em] text-slate-100 group-hover:text-cyan-300 transition-colors">
                 LANDSYNC
               </span>
-              <span className="hidden sm:inline-flex items-center gap-1 text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                <Globe size={10} className="text-cyan-400" />
-                GIS v2.4
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                <Info size={10} className="text-cyan-400" aria-hidden="true" />
+                GIS
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 font-mono hidden md:block tracking-wide">
-              Cadastral Intelligence & Consensus Engine
+            <p className="text-[11px] text-slate-400 hidden md:block tracking-wide whitespace-nowrap">
+              Land Records Reconciliation
             </p>
           </div>
         </button>
 
-        <div className="hidden lg:flex items-center gap-1.5 pl-3 border-l border-slate-800 text-xs text-slate-400 font-mono">
-          <span className="text-slate-500">CRS:</span>
-          <span className="text-slate-300 bg-slate-900/80 px-1.5 py-0.5 rounded border border-slate-800 text-[10px]">
-            EPSG:4326
-          </span>
-          <span className="text-slate-500 ml-1">SOURCE:</span>
-          <span className="text-cyan-400 text-[10px] whitespace-nowrap">Records + Imagery</span>
-          {/* Honest provenance badge — reflects what is actually loaded */}
+        {/* Source provenance badge — what is actually loaded (sample/upload) */}
+        <span className="hidden xl:inline-flex">
           <SourceBadge health={health} />
-        </div>
+        </span>
       </div>
 
-      {/* Navigation and System Telemetry */}
+      {/* Right cluster: current screen, data mode, help, system info */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* System Health Status Indicator */}
-        <div 
-          className={`system-status-indicator flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-mono border ${
-            healthError
-              ? 'bg-red-500/10 text-red-300 border-red-500/30'
-              : health?.status === 'ok'
-              ? 'bg-slate-900/90 text-slate-300 border-slate-800'
-              : 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-          }`}
-          title={health ? `Engine: ${health.engine} | CRS: ${health.engine_crs || 'EPSG:3857'}` : 'Backend unreachable'}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${healthError ? 'bg-red-400' : 'bg-emerald-400 animate-pulse'}`} />
-          {/* Truthful health display: demo MODE is communicated by the amber
-              'Demo Fixture' pill beside this chip — the backend really is
-              connected even when demo fixtures are being rendered, so only a
-              genuine healthError may claim 'Offline'. */}
-          {healthError ? (
-            <span className="text-red-300">Backend: Offline</span>
-          ) : (
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-[0_0_15px_rgba(74,222,128,1)] ring-1 ring-white/20" />
-                Backend: Connected
-              </span>
-              <span className="text-slate-500">·</span>
-              <span className="text-cyan-400">Engine: {health?.engine ? health.engine.charAt(0).toUpperCase() + health.engine.slice(1) : 'Loaded'}</span>
-              <span className="text-slate-500">·</span>
-              <span className="text-slate-200">Parcels: {health?.parcel_count ?? 25}</span>
-            </span>
-          )}
+        {/* Current screen — plain language */}
+        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-800">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+          <span className="text-slate-300 text-[12px] font-medium uppercase tracking-wide">{step}</span>
         </div>
 
-        {/* Step Badge */}
-        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-900/90 border border-slate-800 text-xs font-mono">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-          <span className="text-slate-400 text-[11px]">MODE:</span>
-          <span className="text-slate-200 font-medium text-[11px] uppercase tracking-wider">{step}</span>
-        </div>
-
-        {/* Demo / Live Status Pill */}
+        {/* Data source toggle — plain language, amber = demo data in use */}
         <button
           onClick={onToggleDemo}
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono transition-all duration-200 border ${
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-medium transition-all duration-200 border ${
             demoMode
-              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20 hover:border-amber-400/50 shadow-[0_0_12px_rgba(255,184,0,0.15)]'
-              : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20 hover:border-emerald-400/50 shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
+              : 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/20'
           }`}
-          title={demoMode ? 'Click to switch to Live FastAPI Backend' : 'Click to switch to Local Demo Fixture'}
+          title={demoMode ? 'Switch to live backend data' : 'Switch to sample data'}
           aria-label={demoMode ? 'Use live backend' : 'Use demo data'}
         >
-          <span className={`w-1.5 h-1.5 rounded-full ${demoMode ? 'bg-amber-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
-          <span>{demoMode ? 'Demo Fixture' : 'Live FastAPI'}</span>
+          <span className={`w-1.5 h-1.5 rounded-full ${demoMode ? 'bg-amber-400' : 'bg-cyan-400'}`} />
+          <span>{demoMode ? 'Sample Data' : 'Live Data'}</span>
         </button>
 
-        {/* Architecture Button (Preserves exact button name 'How it works' for tests) */}
+        {/* Help (preserves exact button name 'How it works' for tests) */}
         {onArchitecture && (
           <button
-            className={`architecture-button inline-flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-all duration-200 border ${
-              architectureOpen 
-                ? 'bg-cyan-500 text-black border-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.4)]'
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded text-[13px] font-medium transition-all duration-200 border ${
+              architectureOpen
+                ? 'bg-cyan-500 text-black border-cyan-400'
                 : 'bg-slate-900/80 text-slate-300 border-slate-700 hover:text-cyan-300 hover:border-cyan-500/40 hover:bg-slate-800'
             }`}
             onClick={onArchitecture}
@@ -168,17 +149,83 @@ export default function BrandHeader({
           </button>
         )}
 
-        {/* Project Meta Code */}
-        <span className="project-code text-[10px] text-slate-500 font-mono hidden xl:inline-block">
-          SIH26013 / Day 4 · {step}
-        </span>
+        {/* System status + diagnostics popover — technical detail lives here,
+            not in the main bar. One glanceable dot + word. */}
+        <div className="relative" ref={sysRef}>
+          <button
+            onClick={() => setSysPanelOpen((v) => !v)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-[12px] font-mono border transition-colors ${
+              healthError
+                ? 'bg-red-500/10 text-red-300 border-red-500/30'
+                : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:border-slate-600'
+            }`}
+            aria-expanded={sysPanelOpen}
+            aria-haspopup="dialog"
+            title="System status details"
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                healthError ? 'bg-red-400' : 'bg-cyan-400'
+              } ${healthError ? '' : 'animate-pulse'}`}
+            />
+            <span className="hidden sm:inline">{statusLabel}</span>
+            <Activity size={12} className="text-slate-500" aria-hidden="true" />
+          </button>
 
-        {/* Quick Settings Gear (Maintains toggle functionality) */}
+          {sysPanelOpen && (
+            <div
+              role="dialog"
+              aria-label="System information"
+              className="absolute right-0 top-9 w-72 p-3 rounded-xl bg-[#070D1A]/98 backdrop-blur-xl border border-slate-700 shadow-2xl z-[900] space-y-2"
+            >
+              <div className="text-[11px] font-mono uppercase tracking-wider text-slate-500">
+                System Information
+              </div>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[12px] font-mono">
+                <dt className="text-slate-500">Status</dt>
+                <dd className={healthError ? 'text-red-300' : 'text-cyan-300'}>
+                  {healthError ? 'Backend unreachable' : statusLabel}
+                </dd>
+                {!healthError && (
+                  <>
+                    <dt className="text-slate-500">Engine</dt>
+                    <dd className="text-slate-200">
+                      {health?.engine ? health.engine.charAt(0).toUpperCase() + health.engine.slice(1) : 'Loaded'}
+                    </dd>
+                    <dt className="text-slate-500">Parcels loaded</dt>
+                    <dd className="text-slate-200">{health?.parcel_count ?? '—'}</dd>
+                    <dt className="text-slate-500">CRS</dt>
+                    <dd className="text-slate-200">{health?.cadastral_crs || 'EPSG:4326'}</dd>
+                    <dt className="text-slate-500">Data source</dt>
+                    <dd className="text-slate-200">
+                      {health?.cadastral_source === 'upload'
+                        ? 'Uploaded file'
+                        : 'Built-in sample'}
+                    </dd>
+                    {health?.cadastral_filename && (
+                      <>
+                        <dt className="text-slate-500">File</dt>
+                        <dd className="text-slate-300 truncate" title={health.cadastral_filename}>
+                          {health.cadastral_filename}
+                        </dd>
+                      </>
+                    )}
+                  </>
+                )}
+              </dl>
+              <div className="pt-1 text-[11px] text-slate-500 border-t border-slate-800">
+                Decision-support prototype — not an official land record.
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Quick settings gear (preserves toggle functionality) */}
         <button
           className="settings-button p-1.5 rounded text-slate-400 hover:text-cyan-300 hover:bg-slate-800/80 border border-transparent hover:border-slate-700 transition-colors"
           onClick={onToggleDemo}
           aria-label={demoMode ? 'Use live backend' : 'Use demo data'}
-          title={demoMode ? 'Switch to live FastAPI backend' : 'Switch to demo dataset'}
+          title={demoMode ? 'Switch to live data' : 'Switch to sample data'}
         >
           <Settings2 size={16} />
         </button>

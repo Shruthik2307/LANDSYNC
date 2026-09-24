@@ -30,7 +30,7 @@ export default function QueueRow({ parcel, selected, onSelect }) {
             {String(parcel.parcel_id)}
           </span>
           {parcel.duplicate_id && (
-            <span className="duplicate-flag inline-flex items-center gap-0.5 px-1 py-0.2 text-[9px] font-mono uppercase rounded bg-red-500/20 text-red-300 border border-red-500/40">
+            <span className="duplicate-flag inline-flex items-center gap-0.5 px-1 py-0.2 text-[11px] font-mono uppercase rounded bg-red-500/20 text-red-300 border border-red-500/40">
               dup
             </span>
           )}
@@ -38,12 +38,12 @@ export default function QueueRow({ parcel, selected, onSelect }) {
 
         {/* Priority Badge */}
         <span
-          className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border priority priority--${priority.toLowerCase()} ${
+          className={`text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border priority priority--${priority.toLowerCase()} ${
             isHigh
               ? 'bg-red-500/15 text-red-300 border-red-500/30'
               : isMed
               ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-              : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+              : 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
           }`}
         >
           {priority}
@@ -54,11 +54,11 @@ export default function QueueRow({ parcel, selected, onSelect }) {
       <div className="flex items-center justify-between text-slate-400 text-[11px]">
         <div className="flex items-center gap-2 queue-confidence">
           <ConfidenceDial value={Number(parcel.confidence) || 0} compact />
-          <span className="text-[10px] text-slate-400 font-mono">confidence</span>
+          <span className="text-[11px] text-slate-400 font-mono">confidence</span>
         </div>
 
         <div className="text-right area-delta">
-          <span className="text-[10px] font-mono">
+          <span className="text-[11px] font-mono">
             {parcel.geometry_conflict && parcel.attribute_conflict ? (
               <span className="text-red-400">Geom & Attr Conflict</span>
             ) : parcel.geometry_conflict ? (
@@ -66,7 +66,7 @@ export default function QueueRow({ parcel, selected, onSelect }) {
             ) : parcel.attribute_conflict ? (
               <span className="text-purple-400">Attr Mismatch</span>
             ) : (
-              <span className="text-emerald-400">Aligned</span>
+              <span className="text-cyan-400">Aligned</span>
             )}
           </span>
         </div>

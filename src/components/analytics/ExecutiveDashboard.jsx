@@ -40,7 +40,7 @@ export default function ExecutiveDashboard({ parcels = [] }) {
           </div>
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-2xl font-extrabold text-white">{totalCount}</span>
-            <span className="text-xs font-semibold text-emerald-400 flex items-center">
+            <span className="text-xs font-semibold text-cyan-400 flex items-center">
               GHMC Live <ArrowUpRight className="w-3 h-3 ml-0.5" />
             </span>
           </div>
@@ -50,14 +50,14 @@ export default function ExecutiveDashboard({ parcels = [] }) {
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
           <div className="flex items-center justify-between text-slate-400 text-xs font-medium">
             <span>Average Consensus Score</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-cyan-400" />
           </div>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-extrabold text-emerald-400">{avgConfidence}%</span>
+            <span className="text-2xl font-extrabold text-cyan-400">{avgConfidence}%</span>
             <span className="text-xs font-semibold text-slate-300">{lowPriorityCount} Clear</span>
           </div>
           <div className="w-full bg-slate-800 rounded-full h-1.5 mt-2 overflow-hidden">
-            <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${avgConfidence}%` }}></div>
+            <div className="bg-cyan-400 h-full rounded-full" style={{ width: `${avgConfidence}%` }}></div>
           </div>
         </div>
 
@@ -82,7 +82,7 @@ export default function ExecutiveDashboard({ parcels = [] }) {
           </div>
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-sm font-bold text-slate-100">{SYSTEM_METRICS_OVERVIEW.interdept_sync_status}</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
           </div>
           <div className="text-[11px] text-slate-400 mt-1">Revenue, Cadastral, Municipal & Utility live</div>
         </div>
@@ -96,7 +96,7 @@ export default function ExecutiveDashboard({ parcels = [] }) {
         <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              <BarChart3 className="w-4 h-4 text-cyan-400" />
               Geospatial Discrepancy Breakdown by Category
             </h3>
             <span className="text-xs text-slate-400">NAKSHA Zone 4 Analysis</span>
@@ -148,9 +148,9 @@ export default function ExecutiveDashboard({ parcels = [] }) {
             <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60 flex items-center justify-between">
               <div>
                 <div className="font-semibold text-slate-200">Survey & Land Records Dept</div>
-                <div className="text-[10px] text-slate-400">Cadastral Vector Polygons</div>
+                <div className="text-[11px] text-slate-400">Cadastral Vector Polygons</div>
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 font-medium">
+              <span className="px-2 py-0.5 rounded text-[11px] bg-cyan-950 text-cyan-300 border border-cyan-800 font-medium">
                 100% Synced
               </span>
             </div>
@@ -158,9 +158,9 @@ export default function ExecutiveDashboard({ parcels = [] }) {
             <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60 flex items-center justify-between">
               <div>
                 <div className="font-semibold text-slate-200">Revenue Administration</div>
-                <div className="text-[10px] text-slate-400">Owner Katha & Tax Attributes</div>
+                <div className="text-[11px] text-slate-400">Owner Katha & Tax Attributes</div>
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 font-medium">
+              <span className="px-2 py-0.5 rounded text-[11px] bg-cyan-950 text-cyan-300 border border-cyan-800 font-medium">
                 96% Synced
               </span>
             </div>
@@ -168,9 +168,9 @@ export default function ExecutiveDashboard({ parcels = [] }) {
             <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60 flex items-center justify-between">
               <div>
                 <div className="font-semibold text-slate-200">Municipal Urban Planning</div>
-                <div className="text-[10px] text-slate-400">Zoning & Building Footprints</div>
+                <div className="text-[11px] text-slate-400">Zoning & Building Footprints</div>
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-amber-950 text-amber-300 border border-amber-800 font-medium">
+              <span className="px-2 py-0.5 rounded text-[11px] bg-amber-950 text-amber-300 border border-amber-800 font-medium">
                 88% Synced
               </span>
             </div>
@@ -178,9 +178,9 @@ export default function ExecutiveDashboard({ parcels = [] }) {
             <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/60 flex items-center justify-between">
               <div>
                 <div className="font-semibold text-slate-200">Water & Electricity Utilities</div>
-                <div className="text-[10px] text-slate-400">Underground Pipelines & Lines</div>
+                <div className="text-[11px] text-slate-400">Underground Pipelines & Lines</div>
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-blue-950 text-blue-300 border border-blue-800 font-medium">
+              <span className="px-2 py-0.5 rounded text-[11px] bg-blue-950 text-blue-300 border border-blue-800 font-medium">
                 91% Synced
               </span>
             </div>
