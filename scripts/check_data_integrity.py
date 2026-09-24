@@ -17,6 +17,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CADASTRAL = PROJECT_ROOT / "data" / "sample" / "cadastral.geojson"
 MUNICIPAL = PROJECT_ROOT / "data" / "sample" / "municipal.geojson"
+DEMO_FIXTURE = PROJECT_ROOT / "contract" / "mock" / "parcels.json"
 
 # Plausible region for the canonical Hyderabad sample dataset (lng, lat).
 BOUNDS = (78.0, 17.0, 79.0, 18.0)
@@ -111,6 +112,40 @@ def check_conflicts(parcels: list[dict], conflicts: list[dict], problems: list[s
         _fail(problems, f"conflicts endpoint mismatch: extra={sorted(set(cids) - expected)} missing={sorted(expected - set(cids))}")
 
 
+def check_demo_fixture(problems: list[str]) -> None:
+    """The offline demo fixture must satisfy the same contract as the live API:
+    every parcel carries BOTH source boundaries, and identical rings only
+    occur where geometry_conflict is false (geometry-consensus parcels)."""
+    if not DEMO_FIXTURE.exists():
+        _fail(problems, f"demo fixture missing: {DEMO_FIXTURE}")
+        return
+    parcels = json.loads(DEMO_FIXTURE.read_text(encoding="utf-8"))
+    if not parcels:
+        _fail(problems, "demo fixture: no parcels")
+        return
+    ids = [p.get("parcel_id") for p in parcels]
+    if len(set(ids)) != len(ids):
+        _fail(problems, f"demo fixture: duplicate parcel_id: {[i for i in ids if ids.count(i) > 1]}")
+    for p in parcels:
+        pid = p.get("parcel_id", "?")
+        boundaries = p.get("boundaries") or {}
+        cad = (boundaries.get("cadastral") or {}).get("coordinates") or [[None]]
+        if len(cad[0]) < 4 or cad[0][0] != cad[0][-1]:
+            _fail(problems, f"demo fixture: {pid}: cadastral ring missing/unclosed")
+        mun = boundaries.get("drone_ori")
+        if not mun or not mun.get("coordinates"):
+            _fail(problems, f"demo fixture: {pid}: missing drone_ori (municipal) boundary")
+            continue
+        if p.get("geometry_conflict") is False:
+            if mun.get("coordinates") != (boundaries.get("cadastral") or {}).get("coordinates"):
+                _fail(problems, f"demo fixture: {pid}: geometry_conflict=false but rings differ")
+        conf = p.get("confidence")
+        if not isinstance(conf, (int, float)) or isinstance(conf, bool) or not (0 <= conf <= 100):
+            _fail(problems, f"demo fixture: {pid}: confidence {conf!r} not in [0, 100]")
+        if p.get("priority") not in VALID_PRIORITIES:
+            _fail(problems, f"demo fixture: {pid}: invalid priority {p.get('priority')!r}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--api", type=str, default=None, help="base URL of a live deployment to also verify")
@@ -118,6 +153,7 @@ def main() -> int:
 
     problems: list[str] = []
     check_source_files(problems)
+    check_demo_fixture(problems)
 
     # Reconcile locally when the backend stack is available; otherwise rely on --api.
     parcels: list[dict] = []
