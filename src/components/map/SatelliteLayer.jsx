@@ -13,9 +13,10 @@ export default function SatelliteLayer({
 
   useEffect(() => {
     if (tier === 'offline') {
-      if (onStatus) onStatus('Cached satellite view (Tier B fallback)')
+      if (onStatus) onStatus('Cached observation view (fallback imagery)')
     } else {
-      if (onStatus) onStatus('Sentinel-2 L2A Multi-spectral · Active Satellite Layer')
+      // Honest label: this is Esri World Imagery — a dated mosaic, not a live feed.
+      if (onStatus) onStatus('Latest Available Imagery · dated mosaic (not live)')
     }
   }, [onStatus, parcelId, tier])
 
@@ -40,7 +41,8 @@ export default function SatelliteLayer({
     )
   }
 
-  // Primary Sentinel-2 Imagery via Backend Proxy
+  // Primary observation imagery via the backend proxy (Esri World Imagery,
+  // with real per-location acquisition metadata served by /api/imagery/info).
   const primaryTileUrl = '/api/satellite-tile/{z}/{x}/{y}'
 
   return (
@@ -48,13 +50,13 @@ export default function SatelliteLayer({
       key={`${parcelId}-${tier}`}
       url={primaryTileUrl}
       opacity={0.8}
-      attribution="Copernicus Sentinel-2 · European Space Agency"
+      attribution="Esri World Imagery · latest available (dated mosaic, not live)"
       eventHandlers={{
         tileerror: () => {
-          // Silently fall back to Tier B cached asset without user-facing error
+          // Configured fallback (clearly identified, not a silent swap)
           if (cachedAsset) {
             setTier('offline')
-            if (onStatus) onStatus('Cached satellite view (Tier B fallback)')
+            if (onStatus) onStatus('Source temporarily unavailable — showing cached fallback imagery')
           } else {
             if (onUnavailable) onUnavailable(parcelId)
           }

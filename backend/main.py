@@ -55,6 +55,7 @@ from routes.process import router as process_router
 from routes.parcels import router as parcels_router
 from routes.conflicts import router as conflicts_router
 from routes.imagery import router as imagery_router
+from routes.imagery_info import router as imagery_info_router
 from routes.auth import router as auth_router
 from routes.ml import router as ml_router
 
@@ -109,6 +110,7 @@ app.include_router(process_router)
 app.include_router(parcels_router)
 app.include_router(conflicts_router)
 app.include_router(imagery_router)
+app.include_router(imagery_info_router)
 app.include_router(auth_router)
 app.include_router(ml_router)
 
@@ -223,7 +225,7 @@ async def startup_event():
         )
         logger.info("  Cadastral CRS : %s", info["cadastral_crs"])
         logger.info("  Municipal CRS : %s", info["municipal_crs"])
-        logger.info("  Engine CRS    : %s (EPSG:3857 — metric)", info["engine_crs"])
+        logger.info("  Engine CRS    : EPSG:3857 (metric)")
     except FileNotFoundError as exc:
         logger.warning(
             "⚠ Sample data not found at startup: %s\n"

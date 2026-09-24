@@ -221,6 +221,33 @@ export default function DetailPanel({ parcel, onClose }) {
               </span>
             </div>
           </div>
+
+          {/* OBSERVED — what imagery can and cannot say. The observation layer
+              is the latest available imagery (a dated mosaic), so wording stays
+              honest: an observed discrepancy is "potential" and needs human
+              verification; imagery alone never proves ownership or legality. */}
+          <div className="p-2.5 rounded-lg bg-sky-950/20 border border-sky-500/20">
+            <span className="text-[10px] font-mono text-sky-400 uppercase tracking-wider block font-semibold">
+              OBSERVED (LATEST AVAILABLE IMAGERY)
+            </span>
+            {parcel.geometry_conflict ? (
+              <p className="text-[11px] font-mono text-slate-300 mt-1 leading-relaxed">
+                Potential discrepancy detected between the recorded boundary and
+                the latest available imagery coverage. Manual field verification
+                required — imagery alone does not establish ownership, legality,
+                or encroachment.
+              </p>
+            ) : (
+              <p className="text-[11px] font-mono text-slate-300 mt-1 leading-relaxed">
+                No observed change requiring verification at this location.
+                Observation imagery is the latest available mosaic — manual review
+                remains the final authority.
+              </p>
+            )}
+            <span className="text-[9px] text-slate-500 block mt-1">
+              Acquisition date and resolution shown in the imagery panel on the map.
+            </span>
+          </div>
         </div>
 
         {/* Right Column: Recommendation & Next Action */}

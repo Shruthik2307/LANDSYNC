@@ -128,6 +128,22 @@ export function getHealth() {
   return request('/api/health')
 }
 
+/**
+ * Real imagery provenance for a location — provider, actual acquisition date
+ * (from Esri's Wayback metadata service when available), native resolution,
+ * and honest suitability notes. Never fabricates dates: when the acquisition
+ * date cannot be determined, `imagery.acquisition_date_available` is false
+ * and the UI must show "Imagery acquisition date unavailable".
+ * @param {number} lng
+ * @param {number} lat
+ * @param {string} [source] provider id: 'esri_wayback' | 'sentinel2'
+ * @returns {Promise<{status: string, imagery: object, providers: object[]}>}
+ */
+export function getImageryInfo(lng, lat, source = 'esri_wayback') {
+  const qs = new URLSearchParams({ lng: String(lng), lat: String(lat), source })
+  return request(`/api/imagery/info?${qs.toString()}`)
+}
+
 /** @returns {Promise<Parcel[]>} */
 export function getParcels() {
   return request('/api/parcels')

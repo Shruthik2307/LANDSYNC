@@ -51,6 +51,11 @@ def health() -> dict:
             "engine_crs": info.get("engine_crs", "EPSG:3857"),
             "cadastral_features": info.get("cadastral_feature_count", 0),
             "municipal_features": info.get("municipal_feature_count", 0),
+            # Provenance: "sample" (synthetic) vs "upload" (user's real file)
+            "cadastral_source": info.get("cadastral_source", "sample"),
+            "municipal_source": info.get("municipal_source", "sample"),
+            "cadastral_filename": info.get("cadastral_filename"),
+            "municipal_filename": info.get("municipal_filename"),
         }
 
     # Engine data not yet loaded

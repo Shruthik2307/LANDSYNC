@@ -146,6 +146,14 @@ _cache = _Cache()
 # Public API
 # ---------------------------------------------------------------------------
 
+def _is_upload_path(path: "Path") -> bool:
+    """True when the dataset file came from /api/upload (not the built-in sample)."""
+    try:
+        return _UPLOADS_DIR in path.resolve().parents or path.resolve().parent == _UPLOADS_DIR
+    except OSError:
+        return False
+
+
 def _resolve_dataset_paths(dataset_id: str | None) -> tuple[Path, Path]:
     """Resolve the (cadastral, municipal) source pair for a dataset_id.
 
@@ -386,6 +394,22 @@ def load_data(
         "cadastral_feature_count": cad_count,
         "municipal_feature_count": mun_count,
         "reconciled_parcel_count": len(parcels),
+        # ---- Data provenance (honest source labelling) ----------------
+        # sample  = built-in synthetic GeoJSON shipped with the repo
+        # upload  = a real file the user uploaded via /api/upload
+        # The frontend must NEVER call synthetic data "real".
+        "cadastral_source": (
+            "upload"
+            if _is_upload_path(cad_path)
+            else "sample"
+        ),
+        "municipal_source": (
+            "upload"
+            if _is_upload_path(mun_path)
+            else "sample"
+        ),
+        "cadastral_filename": Path(cad_path).name,
+        "municipal_filename": Path(mun_path).name,
     }
     _cache.store(parcels, info)
     return info

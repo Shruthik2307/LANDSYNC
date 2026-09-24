@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Info, Settings2, Globe, ArrowLeft } from 'lucide-react'
 import { getHealth } from '../../api'
+import { SourceBadge } from '../result/Provenance'
 
 export default function BrandHeader({ 
   step = 'Workspace', 
@@ -90,7 +91,9 @@ export default function BrandHeader({
             EPSG:4326
           </span>
           <span className="text-slate-500 ml-1">SOURCE:</span>
-          <span className="text-cyan-400 text-[10px]">Sentinel-2 / RoR</span>
+          <span className="text-cyan-400 text-[10px]">Records + Latest Available Imagery</span>
+          {/* Honest provenance badge — reflects what is actually loaded */}
+          <SourceBadge health={health} />
         </div>
       </div>
 
