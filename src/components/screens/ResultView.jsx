@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo } from 'react'
-import PropTypes from 'prop-types'
 import { getConflicts, getHealth, getParcels, processDataset } from '../../api'
 import BrandHeader from '../layout/BrandHeader'
 import SummaryStrip from '../result/SummaryStrip'
@@ -7,26 +6,11 @@ import ResultMapStage from '../result/ResultMapStage'
 import QueuePanel from '../result/QueuePanel'
 import DetailPanel from '../result/DetailPanel'
 import ExecutiveDashboard from '../analytics/ExecutiveDashboard'
-import { ImageryProvenancePanel, MixedSourceNotice } from '../result/Provenance'
+import { MixedSourceNotice } from '../result/Provenance'
 import { priorityOf } from '../../validation'
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react'
 
 const PRIORITY_ORDER = { HIGH: 3, MEDIUM: 2, LOW: 1 }
-
-/** Fetches real imagery provenance at the parcel's centroid. */
-function ImageryInfoForParcel({ parcel }) {
-  const ring = parcel.boundaries.cadastral.coordinates[0]
-  const lng = ring.reduce((s, p) => s + p[0], 0) / ring.length
-  const lat = ring.reduce((s, p) => s + p[1], 0) / ring.length
-  return <ImageryProvenancePanel lng={lng} lat={lat} />
-}
-ImageryInfoForParcel.propTypes = {
-  parcel: PropTypes.shape({
-    boundaries: PropTypes.shape({
-      cadastral: PropTypes.shape({ coordinates: PropTypes.array.isRequired }),
-    }).isRequired,
-  }).isRequired,
-}
 
 export default function ResultView({ 
   datasetId, 
@@ -266,15 +250,6 @@ export default function ResultView({
               parcel={selected} 
               onClose={() => setSelected(null)} 
             />
-
-            {/* OBSERVED — real imagery provenance for the selected parcel.
-                Positioned bottom-left under the map; shows the provider's
-                actual acquisition metadata or an honest unavailability. */}
-            {selected && selected.boundaries?.cadastral?.coordinates?.[0]?.[0] && (
-              <div className="absolute bottom-4 right-3 z-[480] max-w-[300px]">
-                <ImageryInfoForParcel parcel={selected} />
-              </div>
-            )}
           </div>
 
           {/* Conflict & Reconciliation Queue (Right Side) */}

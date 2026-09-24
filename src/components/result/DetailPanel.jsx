@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import ConfidenceDial from '../ui/ConfidenceDial'
 import { priorityOf } from '../../validation'
+import { ImageryProvenancePanel } from './Provenance'
 import { X, FileSearch } from 'lucide-react'
 
 function AttributeRow({ label, value, differs }) {
@@ -13,6 +14,26 @@ function AttributeRow({ label, value, differs }) {
       </div>
     </div>
   )
+}
+
+/** Real imagery metadata at the parcel centroid, embedded in OBSERVED. */
+function ParcelImageryMeta({ parcel }) {
+  const ring = parcel?.boundaries?.cadastral?.coordinates?.[0]
+  if (!Array.isArray(ring) || ring.length < 3) return null
+  const lng = ring.reduce((s, p) => s + p[0], 0) / ring.length
+  const lat = ring.reduce((s, p) => s + p[1], 0) / ring.length
+  return (
+    <div className="mt-2 [&>div]:max-w-none">
+      <ImageryProvenancePanel lng={lng} lat={lat} />
+    </div>
+  )
+}
+ParcelImageryMeta.propTypes = {
+  parcel: PropTypes.shape({
+    boundaries: PropTypes.shape({
+      cadastral: PropTypes.shape({ coordinates: PropTypes.array }),
+    }),
+  }),
 }
 
 export default function DetailPanel({ parcel, onClose }) {
@@ -225,7 +246,9 @@ export default function DetailPanel({ parcel, onClose }) {
           {/* OBSERVED — what imagery can and cannot say. The observation layer
               is the latest available imagery (a dated mosaic), so wording stays
               honest: an observed discrepancy is "potential" and needs human
-              verification; imagery alone never proves ownership or legality. */}
+              verification; imagery alone never proves ownership or legality.
+              The real provider metadata (acquisition date, resolution) is
+              embedded here so it is always visible with the parcel. */}
           <div className="p-2.5 rounded-lg bg-sky-950/20 border border-sky-500/20">
             <span className="text-[10px] font-mono text-sky-400 uppercase tracking-wider block font-semibold">
               OBSERVED (LATEST AVAILABLE IMAGERY)
@@ -244,9 +267,7 @@ export default function DetailPanel({ parcel, onClose }) {
                 remains the final authority.
               </p>
             )}
-            <span className="text-[9px] text-slate-500 block mt-1">
-              Acquisition date and resolution shown in the imagery panel on the map.
-            </span>
+            <ParcelImageryMeta parcel={parcel} />
           </div>
         </div>
 

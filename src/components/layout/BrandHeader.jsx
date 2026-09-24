@@ -91,7 +91,7 @@ export default function BrandHeader({
             EPSG:4326
           </span>
           <span className="text-slate-500 ml-1">SOURCE:</span>
-          <span className="text-cyan-400 text-[10px]">Records + Latest Available Imagery</span>
+          <span className="text-cyan-400 text-[10px] whitespace-nowrap">Records + Imagery</span>
           {/* Honest provenance badge — reflects what is actually loaded */}
           <SourceBadge health={health} />
         </div>
