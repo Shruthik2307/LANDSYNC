@@ -219,6 +219,22 @@ def _detect_attribute_conflict(matched_row: Any) -> bool:
     return False
 
 
+def _compute_area_score(area_a: float, area_difference: float) -> float:
+    """Compute area agreement score (0–30)."""
+    if area_a > 0:
+        area_pct: float = abs(area_difference) / area_a
+    else:
+        area_pct = 0.0 if area_difference == 0 else 1.0
+
+    if area_pct <= AREA_PCT_PERFECT:
+        return float(WEIGHT_AREA)
+    if area_pct >= AREA_PCT_CONFLICT:
+        return 0.0
+
+    # Linear interpolation between thresholds.
+    span = AREA_PCT_CONFLICT - AREA_PCT_PERFECT
+    return WEIGHT_AREA * (1.0 - (area_pct - AREA_PCT_PERFECT) / span)
+
 def _score_confidence(
     *,
     iou: float,
@@ -234,25 +250,8 @@ def _score_confidence(
     Area agreement   : 30 pts
     Attribute match  : 10 pts
     """
-    # --- IoU component (0–60) ---
     iou_score: float = min(iou, 1.0) * WEIGHT_IOU
-
-    # --- Area component (0–30) ---
-    if area_a > 0:
-        area_pct: float = abs(area_difference) / area_a
-    else:
-        area_pct = 0.0 if area_difference == 0 else 1.0
-
-    if area_pct <= AREA_PCT_PERFECT:
-        area_score: float = float(WEIGHT_AREA)
-    elif area_pct >= AREA_PCT_CONFLICT:
-        area_score = 0.0
-    else:
-        # Linear interpolation between thresholds.
-        span = AREA_PCT_CONFLICT - AREA_PCT_PERFECT
-        area_score = WEIGHT_AREA * (1.0 - (area_pct - AREA_PCT_PERFECT) / span)
-
-    # --- Attribute component (0–10) ---
+    area_score: float = _compute_area_score(area_a, area_difference)
     attr_score: float = 0.0 if attribute_conflict else float(WEIGHT_ATTR)
 
     raw = iou_score + area_score + attr_score

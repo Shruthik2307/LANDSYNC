@@ -136,16 +136,35 @@ class ConflictDetectionModel:
         logger.info(f"Model saved to {self.model_path}")
 
     def load_model(self):
-        """Load trained model from disk"""
+        """Load trained model from disk and verify it is not a constant predictor."""
         try:
             with open(self.model_path, 'rb') as f:
                 data = pickle.load(f)
                 self.classifier = data['classifier']
                 self.confidence_model = data['confidence_model']
                 self.scaler = data['scaler']
-            logger.info(f"Model loaded from {self.model_path}")
+
+            if not self._verify_model_variance():
+                logger.warning(f"Model at {self.model_path} is a constant predictor. Excluding from scoring.")
+                # We don't raise here to allow the system to fall back to engine scoring
+            else:
+                logger.info(f"Model loaded and verified from {self.model_path}")
         except Exception as e:
             logger.warning(f"Failed to load model: {e}")
+
+    def _verify_model_variance(self, sample_size: int = 10) -> bool:
+        """Verify model doesn't return identical output for distinct inputs."""
+        try:
+            # Create distinct synthetic feature vectors
+            test_inputs = np.array([np.random.rand(self.scaler.n_features_in_) for _ in range(sample_size)])
+            test_inputs_scaled = self.scaler.transform(test_inputs)
+            predictions = self.classifier.predict(test_inputs_scaled)
+
+            # If all predictions are the same, it's a constant predictor
+            return len(np.unique(predictions)) > 1
+        except Exception as e:
+            logger.error(f"Variance check failed: {e}")
+            return False
 
 
 class TopologyValidator:

@@ -61,12 +61,6 @@ from routes.ml import router as ml_router
 
 
 
-# ── Satellite proxy (kept from original backend) ──────────────────────────
-try:
-    from satellite import get_satellite_tile
-    _SATELLITE_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    _SATELLITE_AVAILABLE = False
 
 # ── Service for startup auto-load ─────────────────────────────────────────
 from services.landsync_service import load_data

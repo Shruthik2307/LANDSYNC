@@ -45,6 +45,42 @@ export function setDemoMode(enabled) {
   forceDemoMode = Boolean(enabled)
 }
 
+async function handleResponseErrors(response) {
+  if (response.status === 404) {
+    throw new Error(`Resource not found (404) at ${response.url}.`)
+  }
+
+  if (response.status === 500) {
+    let detail = ''
+    try {
+      const errJson = await response.json()
+      detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
+    } catch {
+      // Non-JSON 500 body
+    }
+    throw new Error(`Server error (500): ${detail || 'Internal server error while processing request.'}`)
+  }
+
+  if (!response.ok) {
+    let detail = ''
+    try {
+      const contentType = response.headers.get('Content-Type')
+      if (contentType && contentType.includes('application/json')) {
+        const errJson = await response.json()
+        detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
+      } else {
+        detail = await response.text()
+      }
+    } catch {
+      // Non-JSON error body
+    }
+    const message = detail
+      ? `LANDSYNC request failed (${response.status}): ${detail}`
+      : `LANDSYNC request failed (${response.status})`
+    throw new ApiError(message, response.status, detail || response.statusText)
+  }
+}
+
 async function request(path, options = {}, timeoutMs = 15000) {
   if (isDemoMode()) {
     if (path === '/api/parcels') return structuredClone(parcelsFixture)
@@ -67,40 +103,7 @@ async function request(path, options = {}, timeoutMs = 15000) {
     clearTimeout(timeout)
   }
 
-  if (response.status === 404) {
-    throw new Error(`Resource not found (404) at ${path}.`)
-  }
-
-  if (response.status === 500) {
-    let detail = ''
-    try {
-      const errJson = await response.json()
-      detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
-    } catch {
-      // Non-JSON 500 body; fall back to the generic message below.
-    }
-    throw new Error(`Server error (500): ${detail || 'Internal server error while processing request.'}`)
-  }
-
-  if (!response.ok) {
-    let detail = ''
-    try {
-      const contentType = response.headers.get('Content-Type')
-      if (contentType && contentType.includes('application/json')) {
-        const errJson = await response.json()
-        detail = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail || errJson)
-      } else {
-        detail = await response.text()
-      }
-    } catch {
-      // Non-JSON error body; fall back to the status text below.
-    }
-    const message = detail
-      ? `LANDSYNC request failed (${response.status}): ${detail}`
-      : `LANDSYNC request failed (${response.status})`
-    throw new ApiError(message, response.status, detail || response.statusText)
-  }
-
+  await handleResponseErrors(response)
 
   try {
     const contentType = response.headers.get('Content-Type')
@@ -113,7 +116,6 @@ async function request(path, options = {}, timeoutMs = 15000) {
     if (parseError instanceof Error && parseError.message.startsWith('Expected JSON')) throw parseError
     throw new Error('The backend returned data in an unexpected format (malformed JSON).')
   }
-
 }
 
 /** @returns {Promise<{status: string, engine: string, parcel_count: number, cadastral_crs?: string, municipal_crs?: string}>} */
