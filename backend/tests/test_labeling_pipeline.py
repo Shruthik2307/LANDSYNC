@@ -11,7 +11,7 @@ import json
 
 import pytest
 
-from scripts.label_store import (
+from backend.services.label_store import (
     SCHEMA_VERSION,
     LabelStoreError,
     append_label,

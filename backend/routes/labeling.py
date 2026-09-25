@@ -13,7 +13,7 @@ POST   /api/labeling/submit  — append a verified label to
                                duplicate-rejecting, synthetic-provenance-rejecting).
 GET    /api/labeling/report  — dataset quality report (spec §8).
 
-The store lives in scripts/label_store.py so the CLI tools share the exact
+The store lives in backend/services/label_store.py so the CLI tools share the exact
 same validation rules as the API.
 """
 
@@ -27,7 +27,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from scripts.label_store import (
+from services.label_store import (
     SCHEMA_VERSION,
     LabelStoreError,
     append_label,

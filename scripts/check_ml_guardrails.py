@@ -119,7 +119,7 @@ def check_label_store() -> list[str]:
         print("  label store: absent (INSUFFICIENT_VERIFIED_DATA is honest) — OK")
         return failures
     sys.path.insert(0, str(ROOT))
-    from scripts.label_store import load_labels
+    from backend.services.label_store import load_labels
 
     records, rep = load_labels()
     if rep["invalid_records"]:

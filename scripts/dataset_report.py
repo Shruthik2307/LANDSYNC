@@ -25,7 +25,7 @@ for _p in (_PROJECT_ROOT,):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from scripts.label_store import load_labels  # noqa: E402
+from backend.services.label_store import load_labels  # noqa: E402
 
 MIN_PER_CLASS = 10
 MIN_TOTAL = 40

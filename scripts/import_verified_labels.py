@@ -2,7 +2,7 @@
 scripts/import_verified_labels.py
 =================================
 Import reviewer-completed CSV rows into the validated label store
-(data/verified/labels.jsonl), reusing scripts/label_store validation so
+(data/verified/labels.jsonl), reusing backend/services/label_store validation so
 CSV imports are held to exactly the same honesty rules as the API
 (schema, dedupe, synthetic-provenance rejection).
 
@@ -27,7 +27,7 @@ for _p in (_PROJECT_ROOT, _PROJECT_ROOT / "backend"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from scripts.label_store import LabelStoreError, append_label, load_labels  # noqa: E402
+from backend.services.label_store import LabelStoreError, append_label, load_labels  # noqa: E402
 
 VALID_IMPORT_LABELS = (
     "MATCH",

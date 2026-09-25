@@ -36,7 +36,7 @@ if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
 from engine.ml_schema import FEATURE_ORDER, FEATURE_SCHEMA_VERSION, features_from_pair_metrics  # noqa: E402
-from scripts.label_store import load_labels, verified_training_records  # noqa: E402
+from backend.services.label_store import load_labels, verified_training_records  # noqa: E402
 
 VERIFIED_DIR = _PROJECT_ROOT / "data" / "verified"
 LABELS_PATH = VERIFIED_DIR / "labels.jsonl"

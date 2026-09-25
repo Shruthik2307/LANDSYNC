@@ -1,6 +1,6 @@
 """
-scripts/label_store.py
-======================
+backend/services/label_store.py
+===============================
 Label store for human-verified reconciliation labels (spec §3, §4).
 
 Storage: data/verified/labels.jsonl — one JSON object per line.
