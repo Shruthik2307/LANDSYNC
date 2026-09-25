@@ -36,7 +36,9 @@ import sys
 from pathlib import Path
 from typing import Any, Optional
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Repo root = three levels up from this file (backend/services/x.py).
+# In the container: /app/backend/services/label_store.py → /app/data/verified/.
+_PROJECT_ROOT = Path(__file__).resolve().parents[2]
 LABELS_PATH = _PROJECT_ROOT / "data" / "verified" / "labels.jsonl"
 
 SCHEMA_VERSION = "1.0.0"
