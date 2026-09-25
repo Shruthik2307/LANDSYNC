@@ -47,7 +47,13 @@ from engine.crs import CRSManager
 from engine.geometry import normalize_geometries, detect_duplicate_ids
 from engine.matching import match_parcels
 from engine.conflicts import evaluate_conflicts, _detect_attribute_conflict
-from engine.candidates import MatchingThresholds, classify_status
+from engine.candidates import (
+    MatchingThresholds,
+    classify_status,
+    find_candidates,
+    rank_candidates,
+    build_unmatched_record,
+)
 from engine.metrics import compute_pair_metrics
 from engine.ml_schema import FEATURE_ORDER, features_from_pair_metrics
 from engine.fusion import fuse
@@ -274,8 +280,6 @@ def run_reconciliation(
         if str(pid) not in matched_cadastral_ids
     ]
     if unmatched and not gdf_municipal.empty:
-        from engine.candidates import find_candidates, rank_candidates, build_unmatched_record
-
         b_geometry_by_id = dict(
             zip(gdf_municipal["parcel_id"].tolist(), gdf_municipal.geometry)
         )

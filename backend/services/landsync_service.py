@@ -241,6 +241,9 @@ def load_data(
         logger.debug("[landsync_service] Cache hit — skipping reload.")
         return _cache.info()
 
+    if dataset_id == "tgrac":
+        return load_tgrac_data(force_reload=force_reload)
+
     cad_path = Path(cadastral_path) if cadastral_path else CADASTRAL_PATH
     mun_path = Path(municipal_path) if municipal_path else MUNICIPAL_PATH
     if cadastral_path is None and municipal_path is None:
@@ -508,6 +511,243 @@ def load_data(
     return info
 
 
+def load_tgrac_data(
+    bbox: tuple[float, float, float, float] | None = None,
+    max_features: int = 500,
+    *,
+    force_reload: bool = False,
+) -> dict[str, Any]:
+    """Fetch real TGRAC Cadastral and ULB Municipal data, reconcile, and cache.
+
+    Strictly never falls back to synthetic fixtures.
+    """
+    if _cache.loaded and not force_reload:
+        current_info = _cache.info()
+        if current_info.get("cadastral_source") == "TGRAC_TELANGANA":
+            logger.debug("[landsync_service] Cache hit for TGRAC data — skipping reload.")
+            return current_info
+
+    from services.tgrac_service import (
+        DEFAULT_SANGAREDDY_BBOX,
+        TGRAC_CADASTRAL_URL,
+        TGRAC_QUERY_URL,
+        query_tgrac_vector_features,
+        tgrac_to_geodataframe,
+    )
+
+    target_bbox = bbox or DEFAULT_SANGAREDDY_BBOX
+    logger.info(f"[landsync_service] Ingesting real TGRAC data for bbox {target_bbox}...")
+
+    # 1. Fetch real Cadastral (Revenue) Layer
+    try:
+        cad_payload = query_tgrac_vector_features(
+            service_url=TGRAC_CADASTRAL_URL,
+            layer_id=0,
+            bbox=target_bbox,
+            max_records=max_features,
+        )
+    except Exception as exc:
+        logger.error(f"[landsync_service] Failed to fetch TGRAC cadastral: {exc}")
+        raise RuntimeError(f"REAL_DATA_UNAVAILABLE: TGRAC cadastral service unavailable: {exc}") from exc
+
+    if cad_payload["feature_count"] == 0:
+        raise RuntimeError(f"REAL_DATA_UNAVAILABLE: Zero cadastral features returned from TGRAC for bbox {target_bbox}")
+
+    gdf_cad = tgrac_to_geodataframe(cad_payload, layer_name="Cadastral 2.5m")
+
+    # 2. Fetch real Municipal (ULB) Layer
+    try:
+        mun_payload = query_tgrac_vector_features(
+            service_url=TGRAC_QUERY_URL,
+            layer_id=1,
+            bbox=target_bbox,
+            max_records=max_features,
+        )
+        if mun_payload["feature_count"] == 0:
+            mun_payload = query_tgrac_vector_features(
+                service_url=TGRAC_QUERY_URL,
+                layer_id=7,
+                bbox=target_bbox,
+                max_records=max_features,
+            )
+    except Exception as exc:
+        logger.error(f"[landsync_service] Failed to fetch TGRAC municipal: {exc}")
+        raise RuntimeError(f"REAL_DATA_UNAVAILABLE: TGRAC municipal service unavailable: {exc}") from exc
+
+    if mun_payload["feature_count"] == 0:
+        raise RuntimeError(f"REAL_DATA_UNAVAILABLE: Zero municipal features returned from TGRAC for bbox {target_bbox}")
+
+    gdf_mun = tgrac_to_geodataframe(mun_payload, layer_name="ULB Cadastral")
+
+    gdf_cad["parcel_id"] = "CAD-" + gdf_cad["parcel_id"].astype(str)
+    gdf_mun["parcel_id"] = "MUN-" + gdf_mun["parcel_id"].astype(str)
+
+    cad_count = len(gdf_cad)
+    mun_count = len(gdf_mun)
+    logger.info(
+        "[landsync_service] TGRAC loaded %d cadastral, %d municipal features.",
+        cad_count,
+        mun_count,
+    )
+
+    from services.reconciliation_model import get_predictor
+
+    engine_audit: dict[str, Any] = {}
+    engine_results: list[dict] = run_reconciliation(
+        CADASTRAL_PATH,
+        MUNICIPAL_PATH,
+        cadastral_gdf=gdf_cad,
+        municipal_gdf=gdf_mun,
+        model_predictor=get_predictor(),
+        audit=engine_audit,
+    )
+    logger.info(
+        "[landsync_service] Engine returned %d reconciliation records for TGRAC.",
+        len(engine_results),
+    )
+
+    matched_ids = {rec["parcel_id"] for rec in engine_results}
+    cad_geom_map = _build_geometry_map(gdf_cad, only_ids=matched_ids)
+    mun_geom_map = _build_geometry_map(gdf_mun, only_ids=matched_ids)
+
+    cad_crs_str = _crs_string(gdf_cad)
+    mun_crs_str = _crs_string(gdf_mun)
+    del gdf_cad, gdf_mun
+    import gc
+    gc.collect()
+
+    seen_ids: dict[str, int] = {}
+    for rec in engine_results:
+        pid = rec["parcel_id"]
+        seen_ids[pid] = seen_ids.get(pid, 0) + 1
+    duplicate_ids = {pid for pid, cnt in seen_ids.items() if cnt > 1}
+
+    parcels: list[dict[str, Any]] = []
+    unmatched_municipal_count = 0
+    emitted_ids: set[str] = set()
+    for rec in engine_results:
+        pid = rec["parcel_id"]
+
+        if rec.get("match_side") == "municipal":
+            unmatched_municipal_count += 1
+            continue
+        if rec.get("match_side") == "cadastral":
+            cad_geom = cad_geom_map.get(pid)
+            if cad_geom is None:
+                unmatched_municipal_count += 1
+                continue
+            parcels.append(
+                {
+                    "parcel_id": pid,
+                    "confidence": 0,
+                    "priority": "HIGH",
+                    "area_difference": 0.0,
+                    "geometry_conflict": False,
+                    "attribute_conflict": False,
+                    "recommendation": (
+                        "No municipal counterpart found for this parcel — "
+                        "manual review required."
+                    ),
+                    "duplicate_id": pid in duplicate_ids,
+                    "boundaries": {"cadastral": cad_geom},
+                    "match_status": "UNMATCHED",
+                    "reconciliation_score": None,
+                    "evidence_quality": "INSUFFICIENT",
+                    "review_required": True,
+                    "review_reasons": [
+                        "NO_SPATIAL_MATCH: no municipal parcel overlapped this parcel."
+                    ],
+                    "model_status": "MODEL_UNAVAILABLE",
+                    "nearest_candidate_distance_m": rec.get(
+                        "nearest_candidate_distance_m"
+                    ),
+                    "alternative_candidates": rec.get("alternative_candidates", []),
+                }
+            )
+            emitted_ids.add(pid)
+            continue
+
+        if pid in emitted_ids:
+            continue
+        emitted_ids.add(pid)
+
+        cad_geom = cad_geom_map.get(pid)
+        if cad_geom is None:
+            continue
+
+        final_conflict = rec["geometry_conflict"]
+        final_confidence = int(round(rec["confidence"]))
+
+        mun_geom = mun_geom_map.get(pid)
+        boundaries: dict[str, Any] = {"cadastral": cad_geom}
+        if mun_geom is not None:
+            boundaries["drone_ori"] = mun_geom
+
+        parcel: dict[str, Any] = {
+            "parcel_id": pid,
+            "confidence": final_confidence,
+            "priority": rec["priority"],
+            "area_difference": round(float(rec["area_difference"]), 2),
+            "geometry_conflict": final_conflict,
+            "attribute_conflict": rec["attribute_conflict"],
+            "recommendation": rec["recommendation"],
+            "duplicate_id": pid in duplicate_ids,
+            "boundaries": boundaries,
+        }
+
+        for _ev_key in (
+            "match_status",
+            "reconciliation_score",
+            "evidence_quality",
+            "review_required",
+            "review_reasons",
+            "model_status",
+            "candidate_match_id",
+            "spatial_metrics",
+            "attribute_metrics",
+            "imagery",
+            "ml",
+        ):
+            if _ev_key in rec:
+                parcel[_ev_key] = rec[_ev_key]
+        parcels.append(parcel)
+
+    info: dict[str, Any] = {
+        "cadastral_path": f"{TGRAC_CADASTRAL_URL}/0",
+        "municipal_path": f"{TGRAC_QUERY_URL}/1",
+        "cadastral_crs": cad_crs_str,
+        "municipal_crs": mun_crs_str,
+        "cadastral_feature_count": cad_count,
+        "municipal_feature_count": mun_count,
+        "reconciled_parcel_count": len(parcels),
+        "unmatched_municipal_count": unmatched_municipal_count,
+        "cadastral_source": "TGRAC_TELANGANA",
+        "municipal_source": "TGRAC_TELANGANA_ULB",
+        "reconciliation_type": "REAL_TO_REAL",
+        "cadastral_filename": "TGRAC_Cadastral_2.5m (Bhunaksha_Cadastral Layer 0)",
+        "municipal_filename": "TGRAC_ULB_Cadastral (Bhunaksha_query Layer 1)",
+        "normalization": engine_audit.get("normalization", {}),
+        "duplicate_ids_detected": engine_audit.get("duplicate_ids", {}),
+        "match_status_counts": _match_status_counts(parcels),
+        "tgrac_provenance": {
+            "source": "TGRAC_TELANGANA",
+            "service_cadastral": TGRAC_CADASTRAL_URL,
+            "layer_cadastral": "Cadastral 2.5m (Layer 0)",
+            "service_municipal": TGRAC_QUERY_URL,
+            "layer_municipal": "ULB Cadastral (Layer 1)",
+            "query_bbox": target_bbox,
+            "retrieval_timestamp": cad_payload["retrieval_timestamp"],
+            "retrieval_time_seconds": cad_payload["retrieval_time_seconds"] + mun_payload["retrieval_time_seconds"],
+            "cadastral_features_returned": cad_count,
+            "municipal_features_returned": mun_count,
+            "synthetic_data_used": False,
+        },
+    }
+
+    _cache.store(parcels, info)
+    return info
+
+
 def _match_status_counts(parcels: list[dict[str, Any]]) -> dict[str, int]:
     """Tally match_status across the result set (honesty metric for §29)."""
     counts: dict[str, int] = {}
@@ -666,11 +906,12 @@ def _load_and_validate(path: Path, label: str) -> gpd.GeoDataFrame:
 # feature still gets a unique, stable ID.
 _ID_CANDIDATES: tuple[str, ...] = (
     "parcel_id", "PARCEL_ID",
+    "Parcel_num", "Base_Syno",
     "OLD_SNO", "TS_NO1", "TS_NO", "TSCODE", "LGC_NO",
     "survey_no", "SURVEY_NO", "khata_no", "KHATA_NO", "plot_no", "PLOT_NO",
     # CAD-derived ward exports carry the printed survey-number label here:
     "DXF_TEXT",
-    "PID", "pid", "ID", "id", "OBJECTID", "FID",
+    "PID", "pid", "ID", "id", "OBJECTID", "OBJECTID_12", "FID",
 )
 
 

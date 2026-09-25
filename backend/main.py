@@ -62,6 +62,7 @@ from routes.model_info import router as model_info_router
 from routes.provenance import router as provenance_router
 from routes.labeling import router as labeling_router
 from routes.export import router as export_router
+from routes.tgrac import router as tgrac_router
 
 
 
@@ -115,6 +116,7 @@ app.include_router(model_info_router)
 app.include_router(provenance_router)
 app.include_router(labeling_router)
 app.include_router(export_router)
+app.include_router(tgrac_router)
 
 # ── Satellite proxy (kept from original backend) ──────────────────────────
 try:

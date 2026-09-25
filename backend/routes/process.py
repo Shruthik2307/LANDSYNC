@@ -72,8 +72,9 @@ def process_dataset(request: ProcessRequest) -> ProcessResponse:
     # is blocked in production, with an explicit REAL_DATA_UNAVAILABLE state.
     _BUILTIN_SAMPLE = ("", "sample")
     if not settings.DEMO_FIXTURE_MODE:
+        is_tgrac = bool(request.dataset_id and request.dataset_id.startswith("tgrac"))
         uploads = sorted((_BACKEND_UPLOADS_DIR).glob(f"{request.dataset_id}_*")) if request.dataset_id else []
-        if request.dataset_id in _BUILTIN_SAMPLE or not uploads:
+        if (request.dataset_id in _BUILTIN_SAMPLE or not uploads) and not is_tgrac:
             logger.error(
                 "[process] Production request would resolve to synthetic sample data "
                 "(dataset_id=%r) — rejected with REAL_DATA_UNAVAILABLE.",

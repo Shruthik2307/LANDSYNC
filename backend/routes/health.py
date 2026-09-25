@@ -62,8 +62,8 @@ def health() -> dict:
             "demo_fixture_mode": settings.DEMO_FIXTURE_MODE,
             "data_state": (
                 "SYNTHETIC_DEMO_DATA"
-                if info.get("cadastral_source", "SYNTHETIC_DEMO") != "USER_UPLOADED_REAL"
-                or info.get("municipal_source", "SYNTHETIC_DEMO") != "USER_UPLOADED_REAL"
+                if info.get("cadastral_source", "SYNTHETIC_DEMO") not in ("USER_UPLOADED_REAL", "TGRAC_TELANGANA")
+                or info.get("municipal_source", "SYNTHETIC_DEMO") not in ("USER_UPLOADED_REAL", "TGRAC_TELANGANA", "TGRAC_TELANGANA_ULB")
                 else "REAL_TO_REAL"
             ),
         }
