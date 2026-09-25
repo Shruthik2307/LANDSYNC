@@ -145,7 +145,7 @@ export default function LandsyncMap({ parcels, selectedParcelId, onSelectParcel,
         {mapTile === 'satellite' ? (
           <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
         ) : (
-          <TileLayer url={`https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${encodeURIComponent(import.meta.env.VITE_CARTO_API_KEY || '')}`} />
+          <TileLayer url={`https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${encodeURIComponent(import.meta.env.VITE_CARTO_API_KEY || 'cb1_3jja_1_c1643a41b30964720658c0ac')}`} />
         )}
 
         {activeLayers.cadastral && cadastralLayer}

@@ -18,7 +18,7 @@ COPY contract ./contract
 
 # Accept CARTO API key as a build argument so it is baked into the bundle.
 # Pass via Railway "Build Variables" as VITE_CARTO_API_KEY.
-ARG VITE_CARTO_API_KEY=""
+ARG VITE_CARTO_API_KEY="cb1_3jja_1_c1643a41b30964720658c0ac"
 ARG VITE_API_BASE_URL=""
 ARG VITE_ENABLE_SATELLITE_OVERLAY="true"
 ENV VITE_CARTO_API_KEY=$VITE_CARTO_API_KEY \

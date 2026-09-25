@@ -1,12 +1,10 @@
 import { useRef, useState } from 'react'
 import { TileLayer } from 'react-leaflet'
 
-const CARTO_API_KEY = import.meta.env.VITE_CARTO_API_KEY || ''
+const DEFAULT_CARTO_KEY = 'cb1_3jja_1_c1643a41b30964720658c0ac'
+const CARTO_API_KEY = import.meta.env.VITE_CARTO_API_KEY || DEFAULT_CARTO_KEY
 // CARTO basemaps require ?key= on the /rastertiles/ path (not the legacy /dark_all/ path).
-// Without a valid key, tiles are served with an "API KEY REQUIRED" watermark.
-const CARTO_TILE_URL = CARTO_API_KEY
-  ? `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${encodeURIComponent(CARTO_API_KEY)}`
-  : 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key='
+const CARTO_TILE_URL = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png?key=${encodeURIComponent(CARTO_API_KEY)}`
 const CARTO_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
 
