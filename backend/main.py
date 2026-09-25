@@ -58,6 +58,8 @@ from routes.imagery import router as imagery_router
 from routes.imagery_info import router as imagery_info_router
 from routes.auth import router as auth_router
 from routes.ml import router as ml_router
+from routes.model_info import router as model_info_router
+from routes.provenance import router as provenance_router
 
 
 
@@ -107,6 +109,8 @@ app.include_router(imagery_router)
 app.include_router(imagery_info_router)
 app.include_router(auth_router)
 app.include_router(ml_router)
+app.include_router(model_info_router)
+app.include_router(provenance_router)
 
 # ── Satellite proxy (kept from original backend) ──────────────────────────
 try:
@@ -224,6 +228,17 @@ async def startup_event():
     logger.info("=" * 60)
     logger.info("LANDSYNC Backend starting up …")
     logger.info("=" * 60)
+    # ---- Production model validation (spec §22): verify loudly -----------
+    try:
+        from services.model_info import get_registry
+
+        registry = get_registry()
+        if registry.available:
+            logger.info("✓ ML model artifact validated: %s", registry.info().get("model_version"))
+        else:
+            logger.info("ℹ ML model: %s — deterministic GIS evidence remains authoritative.", registry.reason)
+    except Exception as exc:
+        logger.error("✗ Model registry validation errored: %s", exc)
     if not settings.DEMO_FIXTURE_MODE:
         logger.info(
             "DEMO_FIXTURE_MODE=false (production): skipping synthetic sample "

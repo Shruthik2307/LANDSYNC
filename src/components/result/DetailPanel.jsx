@@ -241,7 +241,33 @@ export default function DetailPanel({ parcel, onClose }) {
                 {parcel.geometry_conflict ? 'Mismatch' : 'Consensus'}
               </span>
             </div>
+            {parcel.match_status && (
+              <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800">
+                <span className="text-[11px] text-slate-500 uppercase block">MATCH STATUS</span>
+                <span className="text-sm font-bold text-slate-100">{parcel.match_status}</span>
+              </div>
+            )}
+            {parcel.evidence_quality && (
+              <div className="p-2.5 rounded-lg bg-slate-950/40 border border-slate-800">
+                <span className="text-[11px] text-slate-500 uppercase block">EVIDENCE QUALITY</span>
+                <span className="text-sm font-bold text-slate-100">{parcel.evidence_quality}</span>
+              </div>
+            )}
           </div>
+          {parcel.review_required && parcel.review_reasons?.length > 0 && (
+            <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30" role="status">
+              <span className="text-[11px] font-mono text-amber-300 uppercase tracking-wider block font-semibold">
+                Manual review required
+              </span>
+              <ul className="mt-1 space-y-0.5">
+                {parcel.review_reasons.map((reason, i) => (
+                  <li key={i} className="text-[11px] font-mono text-amber-200/90 leading-relaxed">
+                    · {reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* OBSERVED — what imagery can and cannot say. The observation layer
               is a dated mosaic, so wording stays honest: an observed discrepancy
@@ -306,6 +332,11 @@ DetailPanel.propTypes = {
     duplicate_id: PropTypes.bool,
     area_difference: PropTypes.number,
     recommendation: PropTypes.string,
+    match_status: PropTypes.string,
+    reconciliation_score: PropTypes.number,
+    evidence_quality: PropTypes.string,
+    review_required: PropTypes.bool,
+    review_reasons: PropTypes.arrayOf(PropTypes.string),
     attributes: PropTypes.shape({
       cadastral: PropTypes.object,
       drone: PropTypes.object,

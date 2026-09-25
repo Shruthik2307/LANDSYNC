@@ -53,3 +53,8 @@ jobs:
         run: python -m pytest ../tests/test_conflicts.py -q
       - name: Data integrity (uniqueness, geometry, anti-degenerate scoring)
         run: python scripts/check_data_integrity.py
+      - name: ML guardrails (no synthetic training, artifact validity, no fabrication)
+        run: python scripts/check_ml_guardrails.py
+      - name: Hybrid engine tests (metrics, geometry, candidates, fusion, registry)
+        working-directory: backend
+        run: python -m pytest tests/test_hybrid_engine.py tests/test_demo_isolation.py -q

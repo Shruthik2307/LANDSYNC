@@ -260,11 +260,18 @@ def load_data(
     logger.info("[landsync_service] Running engine reconciliation …")
     # Pass the validated (and parcel_id-normalised) frames so the engine
     # never re-reads raw files and bypasses the derived-ID normalisation.
+    # The ML predictor (when a validated artifact exists) supplies the ML
+    # evidence stream per parcel; absent artifact → MODEL_UNAVAILABLE.
+    from services.reconciliation_model import get_predictor
+
+    engine_audit: dict[str, Any] = {}
     engine_results: list[dict] = run_reconciliation(
         cad_path,
         mun_path,
         cadastral_gdf=gdf_cad,
         municipal_gdf=gdf_mun,
+        model_predictor=get_predictor(),
+        audit=engine_audit,
     )
     logger.info(
         "[landsync_service] Engine returned %d reconciliation records.",
@@ -303,9 +310,54 @@ def load_data(
     duplicate_ids = {pid for pid, cnt in seen_ids.items() if cnt > 1}
 
     parcels: list[dict[str, Any]] = []
+    unmatched_municipal_count = 0
     emitted_ids: set[str] = set()
     for rec in engine_results:
         pid = rec["parcel_id"]
+
+        # ---- UNMATCHED records (spec §6.5): surfaced explicitly ------------
+        if rec.get("match_side") == "municipal":
+            # A municipal parcel with no cadastral counterpart cannot render
+            # in the RECORDED-centric UI; counted in provenance instead of
+            # being silently dropped.
+            unmatched_municipal_count += 1
+            continue
+        if rec.get("match_side") == "cadastral":
+            cad_geom = cad_geom_map.get(pid)
+            if cad_geom is None:
+                unmatched_municipal_count += 1
+                continue
+            parcels.append(
+                {
+                    "parcel_id": pid,
+                    "confidence": 0,
+                    "priority": "HIGH",
+                    "area_difference": 0.0,
+                    "geometry_conflict": False,
+                    "attribute_conflict": False,
+                    "recommendation": (
+                        "No municipal counterpart found for this parcel — "
+                        "manual review required."
+                    ),
+                    "duplicate_id": pid in duplicate_ids,
+                    "boundaries": {"cadastral": cad_geom},
+                    "match_status": "UNMATCHED",
+                    "reconciliation_score": None,
+                    "evidence_quality": "INSUFFICIENT",
+                    "review_required": True,
+                    "review_reasons": [
+                        "NO_SPATIAL_MATCH: no municipal parcel overlapped this parcel."
+                    ],
+                    "model_status": "MODEL_UNAVAILABLE",
+                    "nearest_candidate_distance_m": rec.get(
+                        "nearest_candidate_distance_m"
+                    ),
+                    "alternative_candidates": rec.get("alternative_candidates", []),
+                }
+            )
+            emitted_ids.add(pid)
+            continue
+
         if pid in emitted_ids:
             # A parcel ID must map to exactly one record. Later duplicates are
             # dropped so the id→parcel lookup can never be silently overwritten
@@ -381,6 +433,23 @@ def load_data(
             "duplicate_id": pid in duplicate_ids,
             "boundaries": boundaries,
         }
+        # Structured hybrid-engine evidence (spec §18) — pass through when the
+        # engine record carries it; legacy callers ignore the extra keys.
+        for _ev_key in (
+            "match_status",
+            "reconciliation_score",
+            "evidence_quality",
+            "review_required",
+            "review_reasons",
+            "model_status",
+            "candidate_match_id",
+            "spatial_metrics",
+            "attribute_metrics",
+            "imagery",
+            "ml",
+        ):
+            if _ev_key in rec:
+                parcel[_ev_key] = rec[_ev_key]
         parcels.append(parcel)
 
     # ------------------------------------------------------------------
@@ -394,6 +463,7 @@ def load_data(
         "cadastral_feature_count": cad_count,
         "municipal_feature_count": mun_count,
         "reconciled_parcel_count": len(parcels),
+        "unmatched_municipal_count": unmatched_municipal_count,
         # ---- Data provenance (honest source labelling) ----------------
         # sample  = built-in synthetic GeoJSON shipped with the repo
         # upload  = a real file the user uploaded via /api/upload
@@ -410,9 +480,23 @@ def load_data(
         ),
         "cadastral_filename": Path(cad_path).name,
         "municipal_filename": Path(mun_path).name,
+        # ---- Normalisation audit (spec §5): what the engine did to the inputs
+        "normalization": engine_audit.get("normalization", {}),
+        "duplicate_ids_detected": engine_audit.get("duplicate_ids", {}),
+        # ---- Match-status distribution for provenance/reporting (spec §9)
+        "match_status_counts": _match_status_counts(parcels),
     }
     _cache.store(parcels, info)
     return info
+
+
+def _match_status_counts(parcels: list[dict[str, Any]]) -> dict[str, int]:
+    """Tally match_status across the result set (honesty metric for §29)."""
+    counts: dict[str, int] = {}
+    for p in parcels:
+        status = p.get("match_status", "UNMATCHED")
+        counts[status] = counts.get(status, 0) + 1
+    return counts
 
 
 def get_all_parcels() -> list[dict[str, Any]]:
