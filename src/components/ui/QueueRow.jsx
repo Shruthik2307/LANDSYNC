@@ -50,11 +50,11 @@ export default function QueueRow({ parcel, selected, onSelect }) {
         </span>
       </div>
 
-      {/* Row Footer: Confidence Score & Discrepancy Metres */}
+      {/* Row Footer: Reconciliation Score & Discrepancy Metres */}
       <div className="flex items-center justify-between text-slate-400 text-[11px]">
         <div className="flex items-center gap-2 queue-confidence">
           <ConfidenceDial value={Number(parcel.confidence) || 0} compact />
-          <span className="text-[11px] text-slate-400 font-mono">confidence</span>
+          <span className="text-[11px] text-slate-400 font-mono">score</span>
         </div>
 
         <div className="text-right area-delta">
