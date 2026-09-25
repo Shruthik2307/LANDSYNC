@@ -53,8 +53,8 @@ class Parcel(Base):
     """Reconciled parcel data"""
     __tablename__ = "parcels"
 
-    parcel_id = Column(UUID(as_uuid=True), primary_key=True, index=True)
-    dataset_id = Column(UUID(as_uuid=True), ForeignKey('datasets.id'), index=True)
+    parcel_id = Column(String, primary_key=True, index=True)
+    dataset_id = Column(String, ForeignKey('datasets.id'), index=True)
     confidence = Column(Integer, nullable=False)
     priority = Column(String, nullable=False)  # HIGH, MEDIUM, LOW
     area_difference = Column(Float, default=0.0)

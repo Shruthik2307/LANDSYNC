@@ -37,8 +37,14 @@
   Records from the synthetic demo dataset are rejected by the label store.
 </div>
 <div class="bar">
+  <label>Source
+    <select id="sourceSelect">
+      <option value="tgrac" selected>TGRAC Real Harvested (1,933 pairs)</option>
+      <option value="uploaded">Uploaded Engine Dataset</option>
+    </select>
+  </label>
   <label>Reviewer <input id="reviewer" placeholder="your name" size="14"></label>
-  <label>Region <input id="region" placeholder="e.g. mandal-xyz" size="14"></label>
+  <label>Region <input id="region" placeholder="e.g. Sangareddy" size="14"></label>
   <button id="load">Load queue</button>
   <span id="count" class="badge"></span>
 </div>
@@ -142,8 +148,10 @@ function card(pair, region) {
       label: div.querySelector("[data-label]").value,
       review_status: "verified",
       reviewer,
-      evidence_source: "reviewer-ui:" + (pair.engine_match_status || "unknown"),
-      pair_metrics: { spatial_metrics: pair.spatial_metrics || {}, attribute_metrics: pair.attribute_metrics || {} },
+      evidence_source: pair.engine_match_status === "TGRAC_REAL"
+        ? ("TGRAC_TELANGANA: " + ((pair.provenance && pair.provenance.cadastral_layer) || "Cadastral") + " vs " + ((pair.provenance && pair.provenance.municipal_layer) || "Municipal"))
+        : ("reviewer-ui:" + (pair.engine_match_status || "unknown")),
+      pair_metrics: pair.pair_metrics || { spatial_metrics: pair.spatial_metrics || {}, attribute_metrics: pair.attribute_metrics || {} },
       notes: div.querySelector("[data-notes]").value,
     };
     const resp = await fetch("/api/labeling/submit", {
@@ -159,7 +167,9 @@ function card(pair, region) {
 document.getElementById("load").onclick = async () => {
   const status = document.getElementById("status");
   status.textContent = "Loading queue…";
-  const resp = await fetch("/api/labeling/queue");
+  const sourceSel = document.getElementById("sourceSelect");
+  const url = (sourceSel && sourceSel.value === "tgrac") ? "/api/labeling/queue?source=tgrac" : "/api/labeling/queue";
+  const resp = await fetch(url);
   const data = await resp.json();
   const holder = document.getElementById("cards");
   holder.innerHTML = "";

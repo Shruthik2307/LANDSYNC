@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { INITIAL_USERS, INITIAL_COMPANY } from '../data/seedData';
+import { getApiBaseUrl } from '../api';
 
 const AuthContext = createContext();
 
@@ -50,7 +51,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(`${apiBase}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -75,7 +77,8 @@ export const AuthProvider = ({ children }) => {
 
   const verifyMFA = async (email, token) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/mfa-verify`, {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(`${apiBase}/auth/mfa-verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, token })
@@ -95,7 +98,8 @@ export const AuthProvider = ({ children }) => {
 
   const registerCompany = async (compDetails, adminUser) => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register-company`, {
+      const apiBase = getApiBaseUrl();
+      const response = await fetch(`${apiBase}/auth/register-company`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ compDetails, adminUser })

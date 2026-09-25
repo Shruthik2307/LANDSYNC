@@ -52,14 +52,23 @@ export default function SatelliteLayer({
       url={primaryTileUrl}
       opacity={0.8}
       attribution="Esri World Imagery · dated mosaic (not live)"
+      // maxNativeZoom: the highest zoom level the tile provider actually serves.
+      // maxZoom: how far the user can zoom — Leaflet will upscale/stretch
+      // the last available tile rather than requesting non-existent ones.
+      // Without this, tile 404s fire the tileerror handler which hides the layer.
+      maxNativeZoom={19}
+      maxZoom={22}
       eventHandlers={{
-        tileerror: () => {
-          // Configured fallback (clearly identified, not a silent swap)
-          if (cachedAsset) {
-            setTier('offline')
-            if (onStatus) onStatus('Source temporarily unavailable — showing cached fallback imagery')
-          } else {
-            if (onUnavailable) onUnavailable(parcelId)
+        tileerror: (e) => {
+          // Only treat it as unavailable if it's a genuine server error (not
+          // an expected zoom-overflow — those never fire when maxNativeZoom is set).
+          if (e.tile?.src && !e.tile.src.includes('undefined')) {
+            if (cachedAsset) {
+              setTier('offline')
+              if (onStatus) onStatus('Source temporarily unavailable — showing cached fallback imagery')
+            } else {
+              if (onUnavailable) onUnavailable(parcelId)
+            }
           }
         },
       }}

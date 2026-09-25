@@ -111,28 +111,29 @@ def validate_record(record: dict, *, line_no: Optional[int] = None) -> list[str]
     return problems
 
 
-def append_label(record: dict, *, path: Path = LABELS_PATH, strict: bool = True) -> dict:
+def append_label(record: dict, *, path: Optional[Path] = None, strict: bool = True) -> dict:
     """Validate and append one label record.
 
     Returns {"ok": bool, "problems": [...], "duplicate": bool}.
     With strict=True, schema violations raise LabelStoreError.
     """
+    target_path = Path(path) if path is not None else LABELS_PATH
     problems = validate_record(record)
     if problems and strict:
         raise LabelStoreError("; ".join(problems))
 
-    path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
     duplicate = False
-    if path.exists():
+    if target_path.exists():
         key = (str(record.get("cadastral_id")), str(record.get("municipal_id")))
-        for existing in _iter_records(path):
+        for existing in _iter_records(target_path):
             if (str(existing.get("cadastral_id")), str(existing.get("municipal_id"))) == key:
                 duplicate = True
                 break
     if duplicate:
         return {"ok": False, "problems": ["duplicate (cadastral_id, municipal_id) pair"], "duplicate": True}
 
-    with open(path, "a", encoding="utf-8") as f:
+    with open(target_path, "a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
     return {"ok": True, "problems": problems, "duplicate": False}
 
@@ -146,7 +147,7 @@ def _iter_records(path: Path):
 
 
 def load_labels(
-    path: Path = LABELS_PATH,
+    path: Optional[Path] = None,
 ) -> tuple[list[dict], dict]:
     """Load all records plus a validation report.
 
@@ -155,9 +156,10 @@ def load_labels(
     with problems are EXCLUDED from the returned list but described in
     the report (spec §8: dataset quality report before training).
     """
+    target_path = Path(path) if path is not None else LABELS_PATH
     report: dict[str, Any] = {
-        "path": str(path),
-        "exists": path.exists(),
+        "path": str(target_path),
+        "exists": target_path.exists(),
         "total_lines": 0,
         "valid_records": 0,
         "invalid_records": 0,
@@ -169,14 +171,14 @@ def load_labels(
         "regions": [],
         "problems": [],
     }
-    if not path.exists():
+    if not target_path.exists():
         return [], report
 
     records: list[dict] = []
     seen_pairs: set[tuple[str, str]] = set()
     regions: set[str] = set()
 
-    for line_no, raw in enumerate(_iter_records(path), start=1):
+    for line_no, raw in enumerate(_iter_records(target_path), start=1):
         report["total_lines"] += 1
         try:
             record = raw

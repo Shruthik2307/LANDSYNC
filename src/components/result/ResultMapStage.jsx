@@ -166,6 +166,7 @@ export default function ResultMapStage({
       <MapContainer 
         center={[17.388, 78.510]} 
         zoom={16} 
+        maxZoom={22}
         zoomControl={false} 
         className="w-full h-full"
       >

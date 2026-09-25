@@ -117,4 +117,36 @@ describe('DetailPanel Component', () => {
     render(<DetailPanel parcel={consensusParcel} onClose={mockOnClose} />)
     expect(screen.getByText('Consensus')).toBeInTheDocument()
   })
+
+  it('allows minimizing and expanding the panel to view the map', () => {
+    render(<DetailPanel parcel={mockParcel} onClose={mockOnClose} />)
+    // Initially expanded
+    expect(screen.getByText('SELECTED PARCEL INTELLIGENCE')).toBeInTheDocument()
+    const minimizeBtn = screen.getByLabelText('Minimize panel to view map')
+    fireEvent.click(minimizeBtn)
+
+    // Now compact/minimized
+    expect(screen.queryByText('SELECTED PARCEL INTELLIGENCE')).not.toBeInTheDocument()
+    const expandBtn = screen.getByLabelText('Expand parcel details')
+    expect(expandBtn).toBeInTheDocument()
+
+    // Expand again
+    fireEvent.click(expandBtn)
+    expect(screen.getByText('SELECTED PARCEL INTELLIGENCE')).toBeInTheDocument()
+  })
+
+  it('toggles minimize with M key shortcut', () => {
+    render(<DetailPanel parcel={mockParcel} onClose={mockOnClose} />)
+    expect(screen.getByText('SELECTED PARCEL INTELLIGENCE')).toBeInTheDocument()
+
+    // Press 'm'
+    fireEvent.keyDown(window, { key: 'm' })
+    expect(screen.queryByText('SELECTED PARCEL INTELLIGENCE')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Expand parcel details')).toBeInTheDocument()
+
+    // Press 'M' again to re-expand
+    fireEvent.keyDown(window, { key: 'M' })
+    expect(screen.getByText('SELECTED PARCEL INTELLIGENCE')).toBeInTheDocument()
+  })
 })
+

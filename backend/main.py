@@ -190,7 +190,12 @@ if not _SERVE_FRONTEND:
 # /docs and /openapi.json keep precedence.
 # ---------------------------------------------------------------------------
 
-_FRONTEND_DIST = Path(os.getenv("LANDSYNC_FRONTEND_DIST", str(_PROJECT_ROOT / "frontend-dist")))
+_default_dist = (
+    _PROJECT_ROOT / "frontend-dist"
+    if (_PROJECT_ROOT / "frontend-dist").is_dir()
+    else _PROJECT_ROOT / "dist"
+)
+_FRONTEND_DIST = Path(os.getenv("LANDSYNC_FRONTEND_DIST", str(_default_dist)))
 
 if _SERVE_FRONTEND:
     if _FRONTEND_DIST.is_dir():

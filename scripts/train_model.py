@@ -35,6 +35,9 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 from engine.ml_schema import FEATURE_ORDER, FEATURE_SCHEMA_VERSION, features_from_pair_metrics  # noqa: E402
 from backend.services.label_store import load_labels, verified_training_records  # noqa: E402
 
@@ -126,8 +129,8 @@ def main() -> int:
     print(f"Verified training records: {len(records)}  distribution: {dict(label_counts)}")
     if len(records) < MIN_TOTAL or min(label_counts.values()) < MIN_SAMPLES_PER_CLASS:
         print(
-            "INSUFFICIENT_VERIFIED_DATA — training is refused.\n"
-            f"  Need ≥ {MIN_TOTAL} records and ≥ {MIN_SAMPLES_PER_CLASS} per class; "
+            "ML MODEL NOT TRAINED — INSUFFICIENT VERIFIED DATA — training is refused.\n"
+            f"  Need >= {MIN_TOTAL} records and >= {MIN_SAMPLES_PER_CLASS} per class; "
             f"have {len(records)} total, {dict(label_counts)}.\n"
             "No model artifact will be produced and no metrics will be fabricated."
         )

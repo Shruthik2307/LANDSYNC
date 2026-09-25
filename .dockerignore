@@ -19,3 +19,8 @@ backend/tile_cache
 LANDSYNC-main
 skill-observations
 .github
+.agents
+.env
+.env.local
+lh-*.json
+*.md

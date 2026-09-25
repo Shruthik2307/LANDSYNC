@@ -26,8 +26,6 @@ from pathlib import Path
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel
 import geopandas as gpd
-import fiona
-import os
 
 
 logger = logging.getLogger(__name__)

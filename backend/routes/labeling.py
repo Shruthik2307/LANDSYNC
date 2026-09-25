@@ -19,6 +19,7 @@ same validation rules as the API.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -114,11 +115,72 @@ def _region_for_dataset() -> str:
     return f"sample:{name}"
 
 
+_UNREVIEWED_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "unreviewed" / "tgrac_pairs.jsonl"
+_VERIFIED_FILE = Path(__file__).resolve().parent.parent.parent / "data" / "verified" / "labels.jsonl"
+
+
 @router.get("/api/labeling/queue")
-def labeling_queue() -> dict:
+def labeling_queue(source: str | None = None, limit: int = _QUEUE_LIMIT) -> dict:
     """Comparisons awaiting human review, with full evidence."""
     from services.landsync_service import is_loaded
 
+    # Support explicit TGRAC real data queue
+    if source == "tgrac":
+        if not _UNREVIEWED_FILE.exists():
+            return {
+                "status": "NO_TGRAC_DATA",
+                "detail": "No unreviewed TGRAC pairs found. Run `python scripts/collect_real_tgrac_pairs.py` first.",
+                "pairs": [],
+            }
+
+        # Load verified keys to prevent duplicates
+        records, _ = load_labels(_VERIFIED_FILE)
+        already_verified = {f"{r['cadastral_id']}::{r['municipal_id']}" for r in records}
+
+        tgrac_pairs = []
+        with open(_UNREVIEWED_FILE, "r", encoding="utf-8") as f:
+            for line in f:
+                if not line.strip():
+                    continue
+                p = json.loads(line)
+                key = f"{p['cadastral_id']}::{p['municipal_id']}"
+                if key in already_verified:
+                    continue
+                tgrac_pairs.append({
+                    "cadastral_id": p["cadastral_id"],
+                    "municipal_id": p["municipal_id"],
+                    "region": p.get("region", "Telangana_Sangareddy"),
+                    "engine_match_status": "TGRAC_REAL",
+                    "reconciliation_score": None,  # Genuine: never auto-label from GIS score
+                    "spatial_metrics": p.get("spatial_metrics", {}),
+                    "attribute_metrics": p.get("attribute_metrics", {}),
+                    "imagery": {"available": False},
+                    "boundaries": p.get("boundaries", {}),
+                    "provenance": p.get("provenance", {}),
+                })
+                if len(tgrac_pairs) >= limit:
+                    break
+
+        return {
+            "status": "ok",
+            "source": "tgrac_real",
+            "count": len(tgrac_pairs),
+            "total_pairs": len(tgrac_pairs),
+            "dataset_provenance": {
+                "source": "TGRAC_TELANGANA",
+                "cadastral_layer": "Bhunaksha_Cadastral Layer 0 (Cadastral 2.5m)",
+                "municipal_layer": "Bhunaksha_query Layer 1 (ULB Cadastral 30cm)",
+            },
+            "suggested_region": "Telangana_Sangareddy",
+            "label_options": [
+                "MATCH",
+                "MINOR_DISCREPANCY",
+                "MAJOR_DISCREPANCY",
+            ],
+            "pairs": tgrac_pairs,
+        }
+
+    # Default behaviour: check loaded dataset cache
     if not is_loaded():
         return {
             "status": "REAL_DATA_NOT_AVAILABLE",
@@ -150,7 +212,14 @@ def labeling_submit(submission: LabelSubmission) -> dict:
     """Append a human-verified label (validated, dedupe, anti-synthetic)."""
     from services.landsync_service import is_loaded
 
-    if not is_loaded():
+    is_tgrac_submission = (
+        submission.evidence_source.startswith("TGRAC")
+        or "TGRAC" in submission.evidence_source
+        or submission.region.startswith("Telangana")
+        or submission.region.startswith("Sangareddy")
+    )
+
+    if not is_loaded() and not is_tgrac_submission:
         raise HTTPException(
             status_code=503,
             detail="REAL_DATA_NOT_AVAILABLE: load a real dataset before labeling.",

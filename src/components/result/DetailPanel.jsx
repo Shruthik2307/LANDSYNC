@@ -3,7 +3,8 @@ import PropTypes from 'prop-types'
 import ConfidenceDial from '../ui/ConfidenceDial'
 import { priorityOf } from '../../validation'
 import { ImageryProvenancePanel } from './Provenance'
-import { X, FileSearch } from 'lucide-react'
+import { X, FileSearch, ChevronDown, ChevronUp } from 'lucide-react'
+import { getApiBaseUrl } from '../../api'
 
 function AttributeRow({ label, value, differs }) {
   return (
@@ -37,23 +38,29 @@ ParcelImageryMeta.propTypes = {
 }
 
 export default function DetailPanel({ parcel, onClose }) {
-  // Allow closing via Escape key
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [isLabeling, setIsLabeling] = useState(false)
+  const [labelStatus, setLabelStatus] = useState(null)
+
+  // Allow closing via Escape key, toggle minimize via 'm'
   useEffect(() => {
     function handleKeyDown(e) {
-      if (e.key === 'Escape' && onClose) onClose()
+      if (e.key === 'Escape' && onClose) {
+        onClose()
+      } else if ((e.key === 'm' || e.key === 'M') && e.target?.tagName !== 'INPUT' && e.target?.tagName !== 'TEXTAREA') {
+        setIsMinimized((prev) => !prev)
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  const [isLabeling, setIsLabeling] = useState(false)
-  const [labelStatus, setLabelStatus] = useState(null)
-
   async function handleLabel(labelValue) {
     setIsLabeling(true)
     setLabelStatus(null)
     try {
-      const res = await fetch('/api/ml/label', {
+      const apiBase = getApiBaseUrl()
+      const res = await fetch(`${apiBase}/api/ml/label`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -106,13 +113,90 @@ export default function DetailPanel({ parcel, onClose }) {
   const isHigh = priority === 'HIGH'
   const isMed = priority === 'MEDIUM'
 
+  if (isMinimized) {
+    return (
+      <section
+        className="detail-panel detail-panel--minimized absolute bottom-4 left-4 right-4 z-[600] p-2.5 sm:px-4 sm:py-2.5 rounded-xl bg-[#070D1A]/95 backdrop-blur-2xl border border-cyan-500/30 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(0,240,255,0.15)] animate-fadeIn font-sans flex items-center justify-between gap-3 text-xs"
+        aria-label={`Compact details for parcel ${parcel.parcel_id}`}
+      >
+        {/* Left: Mini Dial + ID + Priority + Issue */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2">
+            <ConfidenceDial value={Number(parcel.confidence) || 0} compact />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-wider">CONFIDENCE</span>
+              <span className="text-xs font-mono font-bold text-white">{Number(parcel.confidence) || 0}%</span>
+            </div>
+          </div>
+
+          <div className="h-6 w-px bg-slate-800 hidden sm:block" />
+
+          <div className="flex items-center gap-2 min-w-0">
+            <h2 className="text-sm sm:text-base font-bold font-mono text-white tracking-tight truncate detail-id">
+              {String(parcel.parcel_id)}
+            </h2>
+            <span className={`text-[10px] font-mono font-bold uppercase tracking-wider px-1.5 py-0.5 rounded border priority priority--${priority.toLowerCase()} ${
+              isHigh ? 'bg-red-500/20 text-red-300 border-red-500/40' : isMed ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'
+            }`}>
+              {priority}
+            </span>
+            <span className="text-[11px] font-mono text-slate-300 hidden md:inline truncate">
+              · {issue} {area !== 0 ? `(${area} m²)` : ''}
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Quick Review + Expand / Close */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => handleLabel(0)}
+            disabled={isLabeling}
+            className="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+            title="Verify parcel"
+          >
+            Verify
+          </button>
+          <button
+            onClick={() => handleLabel(1)}
+            disabled={isLabeling}
+            className="px-2.5 py-1 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold uppercase hover:bg-red-500/20 transition-colors disabled:opacity-50"
+            title="Reject / flag conflict"
+          >
+            Reject
+          </button>
+          {labelStatus === 'success' && <span className="text-[10px] text-emerald-400 font-mono hidden sm:inline">✓ Saved</span>}
+
+          <button
+            onClick={() => setIsMinimized(false)}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/25 transition-all font-mono text-[11px] font-semibold shadow-sm"
+            aria-label="Expand parcel details"
+            title="Expand detailed analysis (or press 'M')"
+          >
+            <ChevronUp size={14} />
+            <span className="hidden sm:inline">Expand Analysis</span>
+            <kbd className="hidden lg:inline px-1 py-0.2 bg-cyan-950/60 text-[9px] rounded text-cyan-300 border border-cyan-700/50">M</kbd>
+          </button>
+
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-colors close-button"
+            aria-label="Close parcel details"
+            title="Close inspector (Esc)"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section 
-      className="detail-panel absolute bottom-4 left-4 right-4 z-[600] p-4 sm:p-5 rounded-2xl bg-[#070D1A]/95 backdrop-blur-2xl border border-cyan-500/25 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_20px_rgba(0,240,255,0.1)] animate-fadeIn font-sans"
+      className="detail-panel absolute bottom-4 left-4 right-4 z-[600] p-4 sm:p-5 rounded-2xl bg-[#070D1A]/95 backdrop-blur-2xl border border-cyan-500/25 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_20px_rgba(0,240,255,0.1)] animate-fadeIn font-sans max-h-[46vh] overflow-y-auto"
       aria-label={`Details for parcel ${parcel.parcel_id}`}
     >
       {/* Header Strip */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-4 sticky top-0 bg-[#070D1A]/90 backdrop-blur-md z-10 -mx-1 px-1">
         <div className="flex items-center gap-3">
           <div className="p-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
             <FileSearch size={16} />
@@ -139,15 +223,29 @@ export default function DetailPanel({ parcel, onClose }) {
           </div>
         </div>
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-colors close-button"
-          aria-label="Close parcel details"
-          title="Close inspector (Esc)"
-        >
-          <X size={16} />
-        </button>
+        {/* Actions: Minimize (View Map) + Close */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsMinimized(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/90 border border-slate-700/80 text-cyan-400 hover:text-cyan-300 hover:border-cyan-500/50 hover:bg-slate-800 transition-all font-mono text-[11px] font-medium shadow-sm"
+            aria-label="Minimize panel to view map"
+            title="Minimize panel to view the map (or press 'M')"
+          >
+            <ChevronDown size={14} className="text-cyan-400" />
+            <span className="hidden sm:inline">Minimize (View Map)</span>
+            <kbd className="hidden md:inline px-1 py-0.2 bg-slate-800 text-[9px] rounded text-slate-400 border border-slate-700">M</kbd>
+          </button>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700 transition-colors close-button"
+            aria-label="Close parcel details"
+            title="Close inspector (Esc)"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Main Analytical Grid */}

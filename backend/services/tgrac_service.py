@@ -514,6 +514,7 @@ def fetch_and_reconcile_tgrac(
 
     # 3. Pass through the EXISTING LANDSYNC GIS reconciliation pipeline
     from engine.pipeline import run_reconciliation
+    from services.reconciliation_model import get_predictor
 
     audit: Dict[str, Any] = {}
     engine_results = run_reconciliation(
@@ -521,6 +522,7 @@ def fetch_and_reconcile_tgrac(
         municipal_path=str(_DATA_DIR_PATH_SAMPLE_MUN()),
         cadastral_gdf=gdf_cadastral,
         municipal_gdf=gdf_municipal,
+        model_predictor=get_predictor(),
         audit=audit,
     )
 

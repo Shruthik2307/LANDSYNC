@@ -172,8 +172,16 @@ def fuse(
         if model_status == "MODEL_OUT_OF_DISTRIBUTION":
             review_reasons.append("MODEL_OUT_OF_DISTRIBUTION: input outside training distribution.")
         elif model_status == "OK" and model.get("prediction") is not None and iou is not None:
-            # Disagreement → review, never silent override (spec §14).
-            ml_sees_conflict = bool(model.get("prediction"))
+            pred = model.get("prediction")
+            if isinstance(pred, (int, float)):
+                ml_sees_conflict = (int(pred) != 0)
+            elif isinstance(pred, str):
+                ml_sees_conflict = pred.strip().upper() not in (
+                    "0", "MATCH", "NO_CONFLICT", "NO CONFLICT", "FALSE", "NONE"
+                )
+            else:
+                ml_sees_conflict = bool(pred)
+
             det_sees_conflict = iou < 0.30 or attribute_conflict
             if ml_sees_conflict != det_sees_conflict:
                 review_reasons.append(

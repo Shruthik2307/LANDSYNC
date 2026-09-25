@@ -163,7 +163,8 @@ export function getImageryInfo(lng, lat, source = 'esri_wayback') {
   // "source temporarily unavailable" state with retry.
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 15000)
-  return fetch(`${API_BASE_URL}/api/imagery/info?${qs.toString()}`, { signal: controller.signal })
+  const baseUrl = getApiBaseUrl()
+  return fetch(`${baseUrl}/api/imagery/info?${qs.toString()}`, { signal: controller.signal })
     .then((r) => {
       if (!r.ok) throw Object.assign(new Error(`Imagery metadata request failed (${r.status})`), { status: r.status })
       return r.json()
