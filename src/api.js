@@ -21,9 +21,19 @@ const configuredApiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof window !== 'undefined' && (window.__LANDSYNC_API_BASE_URL__ || localStorage.getItem('LANDSYNC_API_BASE_URL'))) ||
   ''
-export const API_BASE_URL = (configuredApiBaseUrl || '').replace(/\/$/, '')
+
+let dynamicApiBaseUrl = null
+
+export function getApiBaseUrl() {
+  if (dynamicApiBaseUrl !== null) return dynamicApiBaseUrl
+  return (configuredApiBaseUrl || '').replace(/\/$/, '')
+}
+
+export let API_BASE_URL = (configuredApiBaseUrl || '').replace(/\/$/, '')
 
 export function setApiBaseUrl(url) {
+  dynamicApiBaseUrl = (url || '').replace(/\/$/, '')
+  API_BASE_URL = dynamicApiBaseUrl
   if (typeof window !== 'undefined') {
     if (url) {
       localStorage.setItem('LANDSYNC_API_BASE_URL', url)
@@ -93,12 +103,14 @@ async function request(path, options = {}, timeoutMs = 15000) {
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   let response
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, { ...options, signal: controller.signal })
+    const baseUrl = getApiBaseUrl()
+    response = await fetch(`${baseUrl}${path}`, { ...options, signal: controller.signal })
   } catch (error) {
     if (error.name === 'AbortError') {
       throw new Error('This request timed out. Check that the backend is responding, then retry.')
     }
-    throw new Error(`The live backend at ${API_BASE_URL || 'this origin'} could not be reached. Check your connection and retry.`)
+    const baseUrl = getApiBaseUrl()
+    throw new Error(`The live backend at ${baseUrl || 'this origin'} could not be reached. Check your connection and retry.`)
   } finally {
     clearTimeout(timeout)
   }

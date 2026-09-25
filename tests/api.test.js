@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { getConflicts, getParcelById, getParcels, isDemoMode, processDataset, setDemoMode, uploadDataset } from '../src/api.js'
+import { getConflicts, getParcelById, getParcels, isDemoMode, processDataset, setApiBaseUrl, setDemoMode, uploadDataset } from '../src/api.js'
 import { clampConfidence, normalizePriority } from '../src/validation.js'
 
 const server = 'http://127.0.0.1:8000'
@@ -34,6 +34,7 @@ describe('LANDSYNC API contract', () => {
       const res = await fetch(`${server}/api/health`, { signal: AbortSignal.timeout(2500) })
       if (res.ok) {
         liveBackend = true
+        setApiBaseUrl(server)
         setDemoMode(false)
       } else {
         liveBackend = false
@@ -44,7 +45,10 @@ describe('LANDSYNC API contract', () => {
       setDemoMode(true)
     }
   })
-  afterAll(() => setDemoMode(false))
+  afterAll(() => {
+    setDemoMode(false)
+    setApiBaseUrl('')
+  })
 
   it('loads parcels and sorted conflicts over HTTP', async (context) => {
     if (!liveBackend) context.skip()

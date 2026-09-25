@@ -172,7 +172,7 @@ def _resolve_dataset_paths(dataset_id: str | None) -> tuple[Path, Path]:
             raise RuntimeError("REAL_DATA_NOT_AVAILABLE: Synthetic sample data is disabled in production mode.")
         return CADASTRAL_PATH, MUNICIPAL_PATH
     uploads = sorted(
-        _UPLOADS_DIR.glob(f"{dataset_id}_*"),
+        _UPLOADS_DIR.glob(f"{dataset_id}*"),
         key=lambda p: p.stat().st_mtime,
     )
     if not uploads:
