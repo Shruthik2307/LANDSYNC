@@ -82,8 +82,8 @@ export function MixedSourceNotice({ health }) {
       <span>
         Real {uploaded} data loaded ({uploaded === 'cadastral' ? health.cadastral_filename : health.municipal_filename}).
         {' '}A second compatible real source is required for real-to-real reconciliation —
-        the other side is the built-in synthetic sample, so confidence scores are
-        indicative only.
+        the other side is the built-in synthetic sample, so Reconciliation Scores
+        are indicative only — they are not a like-for-like comparison.
       </span>
     </div>
   )
@@ -99,11 +99,14 @@ MixedSourceNotice.propTypes = {
 }
 
 /**
- * ImageryProvenancePanel — LATEST AVAILABLE IMAGERY facts.
+ * ImageryProvenancePanel — IMAGERY PROVENANCE facts.
  *
- * Shows the provider's REAL acquisition metadata from /api/imagery/info.
- * Never says "live" (Esri World Imagery is a dated mosaic). When the
- * acquisition date is unavailable it says exactly that — no invented dates.
+ * Shows the provider's REAL acquisition metadata from /api/imagery/info for
+ * the queried point. Never says "live" (Esri World Imagery is a dated
+ * mosaic). When the acquisition date is unavailable it says exactly that —
+ * no invented dates, and "latest available" is never claimed because the
+ * metadata service does not establish that the capture shown is the most
+ * recent one published for the location.
  */
 export function ImageryProvenancePanel({ lng, lat, source = 'esri_wayback' }) {
   const [state, setState] = useState({ status: 'loading' })
@@ -177,12 +180,12 @@ export function ImageryProvenancePanel({ lng, lat, source = 'esri_wayback' }) {
     >
       <div className="flex items-center gap-1.5 text-sky-300 font-semibold tracking-wider">
         <Satellite size={12} className="text-sky-400" />
-        LATEST AVAILABLE IMAGERY
+        IMAGERY PROVENANCE
       </div>
       <div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
         <span className="text-slate-500">Provider:</span>
         <span className="text-slate-200">{info.provider}</span>
-        <span className="text-slate-500">Acquired:</span>
+        <span className="text-slate-500">Imagery acquisition:</span>
         <span className={info.acquisition_date_available ? 'text-slate-200' : 'text-amber-300'}>
           {acquired}
           {info.sensor ? ` · ${info.sensor}` : ''}
@@ -198,7 +201,7 @@ export function ImageryProvenancePanel({ lng, lat, source = 'esri_wayback' }) {
         </div>
       )}
       <div className="pt-0.5 text-slate-500 text-[11px]">
-        Mosaic of dated captures — not a live view. {info.disclaimer}
+        Basemap is a mosaic of dated captures — not a live view.
       </div>
     </div>
   )

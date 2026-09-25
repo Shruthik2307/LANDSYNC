@@ -117,7 +117,7 @@ export default function ConflictResolutionQueue({
                 <div className="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-700/50 mt-2">
                   <div className="flex items-center gap-3">
                     <div>
-                      <span className="text-slate-500 block text-[11px]">Confidence</span>
+                      <span className="text-slate-500 block text-[11px]">Score</span>
                       <span className={`font-bold ${parcel.confidence < 75 ? 'text-rose-400' : parcel.confidence < 90 ? 'text-amber-400' : 'text-cyan-400'}`}>
                         {parcel.confidence}%
                       </span>
@@ -209,10 +209,10 @@ export default function ConflictResolutionQueue({
                 {/* Confidence Card */}
                 <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/70 flex items-center justify-between">
                   <div>
-                    <div className="text-slate-400 text-xs font-medium">Reconciliation Confidence Score</div>
+                    <div className="text-slate-400 text-xs font-medium">Reconciliation Score</div>
                     <div className="flex items-baseline gap-2 mt-1">
                       <span className="text-3xl font-extrabold text-cyan-400">{selectedParcel.confidence}%</span>
-                      <span className="text-slate-400 text-xs">Overall System Reliability</span>
+                      <span className="text-slate-400 text-xs">LANDSYNC scoring methodology — not a calibrated accuracy</span>
                     </div>
                   </div>
 

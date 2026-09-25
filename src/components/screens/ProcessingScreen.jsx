@@ -8,7 +8,7 @@ const PIPELINE_STEPS = [
   { title: 'Normalizing CRS', detail: 'Aligning coordinate reference systems across source files' },
   { title: 'Matching parcels', detail: 'Linking cadastral, drone, and revenue records' },
   { title: 'Checking geometry & attributes', detail: 'Comparing boundaries and record fields' },
-  { title: 'Scoring confidence', detail: 'Ranking each reconciliation result' },
+  { title: 'Scoring reconciliation results', detail: 'Ranking each reconciliation result' },
 ]
 
 export default function ProcessingScreen({ datasetId, onComplete, demoMode, onToggleDemo, onArchitecture, onNavigateLanding }) {

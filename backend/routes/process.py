@@ -20,11 +20,16 @@ or missing dataset_ids fall back to the two sample GeoJSON files.
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from typing import Literal
+
+# Uploads directory (backend/uploads) — mirrors services.landsync_service._UPLOADS_DIR.
+_BACKEND_UPLOADS_DIR = Path(__file__).resolve().parent.parent / "uploads"
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from config import settings
 from services.landsync_service import (
     DataNotReadyError,
     load_data,
@@ -59,6 +64,30 @@ def process_dataset(request: ProcessRequest) -> ProcessResponse:
         trigger processing; Phase 1 always reconciles the sample dataset.
     """
     logger.info("[process] Received process request for dataset_id=%r", request.dataset_id)
+
+    # Spec §7: production must never silently load data/sample/*. A missing or
+    # unknown dataset_id resolves to the synthetic sample pair, and a single
+    # upload is deliberately reconciled against the sample municipal survey
+    # (REAL + SAMPLE MIXED — warned in the UI). Only the fully-synthetic pair
+    # is blocked in production, with an explicit REAL_DATA_UNAVAILABLE state.
+    _BUILTIN_SAMPLE = ("", "sample")
+    if not settings.DEMO_FIXTURE_MODE:
+        uploads = sorted((_BACKEND_UPLOADS_DIR).glob(f"{request.dataset_id}_*")) if request.dataset_id else []
+        if request.dataset_id in _BUILTIN_SAMPLE or not uploads:
+            logger.error(
+                "[process] Production request would resolve to synthetic sample data "
+                "(dataset_id=%r) — rejected with REAL_DATA_UNAVAILABLE.",
+                request.dataset_id,
+            )
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    "REAL_DATA_UNAVAILABLE: synthetic demo fixtures are disabled in "
+                    "production (DEMO_FIXTURE_MODE=false). Upload real cadastral and "
+                    "municipal datasets via POST /api/upload, then process the "
+                    "returned dataset_id."
+                ),
+            )
 
     try:
         info = load_data(force_reload=True, dataset_id=request.dataset_id)

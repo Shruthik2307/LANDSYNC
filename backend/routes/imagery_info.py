@@ -42,11 +42,12 @@ async def imagery_info(
         "status": "ok",
         "imagery": {
             **info,
-            "label": "LATEST AVAILABLE IMAGERY",
+            "label": "IMAGERY PROVENANCE",
             "real_time": False,
             "disclaimer": (
-                "Mosaic of satellite and aerial images from different dates. "
-                "Not a live or real-time view."
+                "Basemap is a mosaic of captures from different dates. "
+                "Metadata above describes the capture at the queried point "
+                "only — not a live or real-time view."
             ),
         },
         "providers": get_provider_catalog(),

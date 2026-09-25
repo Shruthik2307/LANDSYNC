@@ -23,7 +23,7 @@ vi.mock('../src/api.js', () => ({
       acquired: '2025-01-01',
       acquisition_date_available: true,
       resolution_m_per_px: 0.3,
-      label: 'LATEST AVAILABLE IMAGERY',
+      label: 'IMAGERY PROVENANCE',
       real_time: false,
       disclaimer: 'test',
     },

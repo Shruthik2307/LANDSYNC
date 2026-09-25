@@ -58,7 +58,7 @@ export default function SummaryStrip({
       {/* Source Agreement Telemetry & Process Trigger (Right Side) */}
       <div className="flex items-center gap-4 text-[11px] shrink-0">
         <div className="hidden lg:flex items-center gap-1.5 text-slate-400">
-          <span className="text-slate-500">CONSENSUS SCORE:</span>
+          <span className="text-slate-500">RECONCILIATION SCORE:</span>
           <span className="font-bold text-cyan-400 bg-cyan-950/50 px-1.5 py-0.5 rounded border border-cyan-500/30">
             {avgConfidence}%
           </span>

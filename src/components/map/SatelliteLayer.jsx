@@ -15,8 +15,9 @@ export default function SatelliteLayer({
     if (tier === 'offline') {
       if (onStatus) onStatus('Cached observation view (fallback imagery)')
     } else {
-      // Honest label: this is Esri World Imagery — a dated mosaic, not a live feed.
-      if (onStatus) onStatus('Latest Available Imagery · dated mosaic (not live)')
+      // Honest label: this is Esri World Imagery — a dated mosaic, not a live feed,
+      // and not established as the latest capture available for the location.
+      if (onStatus) onStatus('Satellite imagery · dated mosaic (not live)')
     }
   }, [onStatus, parcelId, tier])
 
@@ -50,7 +51,7 @@ export default function SatelliteLayer({
       key={`${parcelId}-${tier}`}
       url={primaryTileUrl}
       opacity={0.8}
-      attribution="Esri World Imagery · latest available (dated mosaic, not live)"
+      attribution="Esri World Imagery · dated mosaic (not live)"
       eventHandlers={{
         tileerror: () => {
           // Configured fallback (clearly identified, not a silent swap)

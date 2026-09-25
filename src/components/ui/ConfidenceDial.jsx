@@ -13,14 +13,14 @@ export default function ConfidenceDial({ value, compact = false }) {
   const isMed = safeValue >= 50 && safeValue < 80
   const color = isHigh ? '#00F0FF' : isMed ? '#FFB800' : '#FF4C4C'
   const glowColor = isHigh ? 'rgba(0, 240, 255, 0.4)' : isMed ? 'rgba(255, 184, 0, 0.4)' : 'rgba(255, 76, 76, 0.4)'
-  const statusText = isHigh ? 'HIGH CONFIDENCE' : isMed ? 'MODERATE CONSENSUS' : 'CRITICAL SHIFT'
+  const statusText = isHigh ? 'HIGH AGREEMENT' : isMed ? 'MODERATE CONSENSUS' : 'CRITICAL SHIFT'
 
   if (compact) {
     return (
       <div 
         className="relative inline-flex items-center justify-center shrink-0 w-8 h-8 font-mono"
         style={{ '--dash': dash, '--circumference': circumference }}
-        title={`Confidence: ${safeValue}%`}
+        title={`Reconciliation score: ${safeValue}%`}
       >
         <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
           <circle 
@@ -114,7 +114,7 @@ export default function ConfidenceDial({ value, compact = false }) {
             <span className="text-xs font-normal opacity-70 ml-0.5">%</span>
           </span>
           <span className="text-[11px] text-slate-400 font-sans uppercase tracking-widest mt-0.5">
-            MATCH
+            SCORE
           </span>
         </div>
       </div>

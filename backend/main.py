@@ -211,11 +211,27 @@ if _SERVE_FRONTEND:
 # ---------------------------------------------------------------------------
 
 @app.on_event("startup")
+# Startup preload of synthetic fixtures is gated on DEMO_FIXTURE_MODE — see
+# startup_event() below.
 async def startup_event():
-    """Pre-load the sample data on server startup."""
+    """Pre-load the sample data on server startup (demo mode only).
+
+    Synthetic data/sample/* fixtures are auto-loaded ONLY when
+    DEMO_FIXTURE_MODE=true. In production (DEMO_FIXTURE_MODE=false) startup
+    performs NO synthetic preload — the API reports REAL_DATA_UNAVAILABLE
+    until a real dataset is uploaded and processed.
+    """
     logger.info("=" * 60)
     logger.info("LANDSYNC Backend starting up …")
     logger.info("=" * 60)
+    if not settings.DEMO_FIXTURE_MODE:
+        logger.info(
+            "DEMO_FIXTURE_MODE=false (production): skipping synthetic sample "
+            "preload. API reports REAL_DATA_UNAVAILABLE until real data is "
+            "uploaded (POST /api/upload) and processed (POST /api/process)."
+        )
+        logger.info("=" * 60)
+        return
     try:
         info = load_data()
         logger.info(

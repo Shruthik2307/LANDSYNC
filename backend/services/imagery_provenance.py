@@ -195,7 +195,9 @@ async def get_sentinel2_info(lng: float, lat: float) -> dict[str, Any]:
         "provider": "Sentinel-2 (s2cloudless mosaic, EOX)",
         "source_service": f"EOX WMTS s2cloudless-{SENTINEL2_LATEST_YEAR}_3857",
         "status": "ok",
-        "acquired": f"{SENTINEL2_LATEST_YEAR}" + " (annual cloudless mosaic)",
+        "acquired": (
+            f"{SENTINEL2_LATEST_YEAR} (annual mosaic — no single acquisition date)"
+        ),
         "acquisition_date_available": True,
         "resolution_m_per_px": SENTINEL2_RESOLUTION_M,
         "suitability": (
@@ -222,7 +224,7 @@ def get_provider_catalog() -> list[dict[str, Any]]:
             "tile_url": _ESRI_TILE_URL,
             "resolution_note": "mixed, up to ~0.3 m/px in covered areas",
             "real_time": False,
-            "label": "Latest Available Imagery",
+            "label": "Dated mosaic — per-location acquisition metadata",
         },
         {
             "id": "sentinel2",
@@ -232,7 +234,7 @@ def get_provider_catalog() -> list[dict[str, Any]]:
             "tile_url": f"https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-{SENTINEL2_LATEST_YEAR}_3857/default/GoogleMapsCompatible/{{z}}/{{y}}/{{x}}.jpg",
             "resolution_note": "~10 m/px — land-cover scale only",
             "real_time": False,
-            "label": "Latest Available Imagery",
+            "label": "Annual mosaic — year-level date only",
         },
         {
             "id": "tgprac_bhunaksha",
@@ -241,7 +243,7 @@ def get_provider_catalog() -> list[dict[str, Any]]:
             "configured": False,
             "service_url": "https://tgrac.telangana.gov.in/arcgis/rest/services/Bhunaksha_Folder/Bhunaksha_Cadastral/MapServer",
             "real_time": False,
-            "label": "Official Source Data",
+            "label": "Integration not configured",
         },
         {
             "id": "ori",
@@ -249,7 +251,7 @@ def get_provider_catalog() -> list[dict[str, Any]]:
             "kind": "observation imagery",
             "configured": False,
             "real_time": False,
-            "label": "Latest Available Imagery",
+            "label": "Integration not configured",
         },
     ]
     return providers

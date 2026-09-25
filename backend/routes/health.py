@@ -23,6 +23,7 @@ import logging
 
 from fastapi import APIRouter
 
+from config import settings
 from services.landsync_service import (
     get_dataset_info,
     is_loaded,
@@ -56,6 +57,15 @@ def health() -> dict:
             "municipal_source": info.get("municipal_source", "sample"),
             "cadastral_filename": info.get("cadastral_filename"),
             "municipal_filename": info.get("municipal_filename"),
+            # Spec §6/§7: let the UI (and deployment checks) see the fixture
+            # mode and whether the loaded data is synthetic.
+            "demo_fixture_mode": settings.DEMO_FIXTURE_MODE,
+            "data_state": (
+                "SYNTHETIC_DEMO_DATA"
+                if info.get("cadastral_source", "sample") != "upload"
+                or info.get("municipal_source", "sample") != "upload"
+                else "REAL_TO_REAL"
+            ),
         }
 
     # Engine data not yet loaded
@@ -68,4 +78,8 @@ def health() -> dict:
             "Parcel data has not been loaded. "
             "POST /api/process to trigger reconciliation."
         ),
+        "demo_fixture_mode": settings.DEMO_FIXTURE_MODE,
+        # Explicit honest state: in production this is surfaced instead of
+        # silently falling back to synthetic sample fixtures (spec §7).
+        "data_state": "REAL_DATA_UNAVAILABLE",
     }

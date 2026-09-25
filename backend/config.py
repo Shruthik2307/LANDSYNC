@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     CONFIDENCE_THRESHOLD_MEDIUM: int = 75
     AREA_DIFFERENCE_THRESHOLD: float = 5.0  # square meters
 
+    # Demo-fixture isolation (spec §7). The bundled data/sample/* GeoJSON files
+    # are SYNTHETIC demonstration fixtures. They may auto-load only when this
+    # flag is true (development, CI, deterministic UI testing, offline demos).
+    # With DEMO_FIXTURE_MODE=false (production), the backend never silently
+    # loads synthetic sample parcels: if no real dataset has been uploaded,
+    # the API reports a REAL_DATA_UNAVAILABLE state instead. Set
+    # DEMO_FIXTURE_MODE=false in the Railway/production environment.
+    DEMO_FIXTURE_MODE: bool = True
+
     # Satellite tile settings
     SATELLITE_TILE_CACHE_DIR: Path = Path(__file__).resolve().parent / "tile_cache"
     SATELLITE_TILE_PROVIDERS: dict = {

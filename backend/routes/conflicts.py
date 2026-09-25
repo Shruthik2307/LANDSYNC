@@ -23,6 +23,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
+from config import settings
 from services.landsync_service import (
     DataNotReadyError,
     get_conflicts,
@@ -35,27 +36,43 @@ router = APIRouter(tags=["conflicts"])
 
 
 def _ensure_loaded() -> None:
-    """Auto-load sample data if the cache is empty."""
-    if not is_loaded():
-        logger.info("[conflicts] Cache empty — auto-loading sample data.")
-        try:
-            load_data()
-        except FileNotFoundError as exc:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Sample GeoJSON not found: {exc}",
-            )
-        except ValueError as exc:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Invalid GeoJSON data: {exc}",
-            )
-        except Exception as exc:  # pragma: no cover
-            logger.exception("[conflicts] Auto-load failed")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to load conflict data: {exc}",
-            )
+    """Auto-load sample data ONLY in demo mode — never silently in production.
+
+    Mirrors routes/parcels.py: with DEMO_FIXTURE_MODE=false an empty cache
+    surfaces an explicit REAL_DATA_UNAVAILABLE state instead of loading the
+    synthetic sample fixtures.
+    """
+    if is_loaded():
+        return
+    if not settings.DEMO_FIXTURE_MODE:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "REAL_DATA_UNAVAILABLE: no real dataset has been uploaded and "
+                "processed yet. Upload real cadastral and municipal data via "
+                "POST /api/upload, then run POST /api/process. Synthetic demo "
+                "fixtures are disabled in production (DEMO_FIXTURE_MODE=false)."
+            ),
+        )
+    logger.info("[conflicts] Cache empty — DEMO_FIXTURE_MODE: auto-loading synthetic sample data.")
+    try:
+        load_data()
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Sample GeoJSON not found: {exc}",
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Invalid GeoJSON data: {exc}",
+        )
+    except Exception as exc:  # pragma: no cover
+        logger.exception("[conflicts] Auto-load failed")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to load conflict data: {exc}",
+        )
 
 
 @router.get("/api/conflicts")

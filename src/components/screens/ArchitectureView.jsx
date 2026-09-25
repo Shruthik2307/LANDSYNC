@@ -9,7 +9,7 @@ export default function ArchitectureView({ demoMode, onToggleDemo, onClose }) {
     { name: 'CRS Normalization', icon: Compass, desc: 'Reprojection into WGS84 (EPSG:4326)' },
     { name: 'Spatial Matching', icon: MapPin, desc: 'Polygon intersection & Hausdorff distance' },
     { name: 'Conflict Detection', icon: ShieldAlert, desc: 'Boundary shifts, overlaps, duplicate parcel IDs' },
-    { name: 'Confidence Scoring', icon: Cpu, desc: 'Weighted algorithmic consensus calculation' },
+    { name: 'Reconciliation Scoring', icon: Cpu, desc: 'Weighted agreement scoring across matched records' },
     { name: 'Verification Queue', icon: Eye, desc: 'Priority-sorted human inspection stream' },
     { name: 'PostGIS', icon: Database, desc: 'Spatial database index & topological storage' },
     { name: 'FastAPI', icon: Layers, desc: 'High-performance REST API services' },

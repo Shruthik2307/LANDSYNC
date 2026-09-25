@@ -219,7 +219,8 @@ export default function LandingScreen({
               <span>Verified Consensus</span>
             </h2>
             <p className="text-xs text-slate-400 leading-relaxed font-sans">
-              Weighted confidence dial scores agreement between survey documents and real-world ground conditions.
+              Weighted Reconciliation Scores express agreement between survey documents and observed imagery —
+              they are methodology scores, not calibrated accuracy.
             </p>
           </div>
         </div>
