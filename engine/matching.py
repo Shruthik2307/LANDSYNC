@@ -113,8 +113,8 @@ def match_parcels(
         frames.append(spatial_matches)
 
     combined = pd.concat(frames, ignore_index=True)
-    combined = combined.drop_duplicates(subset=[id_col], keep="first")
-
+    # Return all candidates. Deduplication and winner selection
+    # now happen in the pipeline using metrics.
     return _finalise(combined, "geometry_a")
 
 

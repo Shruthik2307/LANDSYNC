@@ -76,5 +76,5 @@ class TestDemoFixtureIsolation:
         data = client.get("/api/health").json()
         assert data["demo_fixture_mode"] is True
         assert data["data_state"] == "SYNTHETIC_DEMO_DATA"
-        assert data["cadastral_source"] == "sample"
-        assert data["municipal_source"] == "sample"
+        assert data["cadastral_source"] == "SYNTHETIC_DEMO"
+        assert data["municipal_source"] == "SYNTHETIC_DEMO"

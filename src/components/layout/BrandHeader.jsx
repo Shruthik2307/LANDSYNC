@@ -198,7 +198,7 @@ export default function BrandHeader({
                     <dd className="text-slate-200">{health?.cadastral_crs || 'EPSG:4326'}</dd>
                     <dt className="text-slate-500">Data source</dt>
                     <dd className="text-slate-200">
-                      {health?.cadastral_source === 'upload'
+                      {health?.cadastral_source === 'USER_UPLOADED_REAL'
                         ? 'Uploaded file'
                         : 'Built-in sample'}
                     </dd>

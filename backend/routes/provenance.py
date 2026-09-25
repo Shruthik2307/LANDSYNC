@@ -36,13 +36,13 @@ def data_provenance() -> dict:
             "datasets": [],
         }
     info = get_dataset_info()
-    cad_src = info.get("cadastral_source", "sample")
-    mun_src = info.get("municipal_source", "sample")
+    cad_src = info.get("cadastral_source", "SYNTHETIC_DEMO")
+    mun_src = info.get("municipal_source", "SYNTHETIC_DEMO")
 
-    if cad_src == "upload" and mun_src == "upload":
+    if cad_src == "USER_UPLOADED_REAL" and mun_src == "USER_UPLOADED_REAL":
         classification = "REAL_DATA"
         reconciliation_mode = "REAL → REAL RECONCILIATION"
-    elif cad_src == "upload" or mun_src == "upload":
+    elif cad_src == "USER_UPLOADED_REAL" or mun_src == "USER_UPLOADED_REAL":
         classification = "REAL + SAMPLE MIXED"
         reconciliation_mode = "REAL vs SYNTHETIC (warning: not like-for-like)"
     else:
@@ -53,10 +53,10 @@ def data_provenance() -> dict:
         return {
             "side": side,
             "source": src,
-            "real": src == "upload",
+            "real": src == "USER_UPLOADED_REAL",
             "dataset_name": filename,
             "crs": crs,
-            "provider": "user upload" if src == "upload" else "bundled synthetic sample",
+            "provider": "user upload" if src == "USER_UPLOADED_REAL" else "bundled synthetic sample",
             "license": None,  # unknown for uploads; never invented
             "retrieval_time": None,  # not tracked at ingest in Phase 1; absent ≠ fabricated
         }

@@ -47,6 +47,7 @@ for _p in (_PROJECT_ROOT, _BACKEND_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
+from config import settings
 import geopandas as gpd
 
 from engine.pipeline import run_reconciliation
@@ -166,18 +167,29 @@ def _resolve_dataset_paths(dataset_id: str | None) -> tuple[Path, Path]:
       source, the next is the municipal source.
     """
     if not dataset_id or dataset_id == "sample":
+        if not settings.DEMO_FIXTURE_MODE:
+            logger.error("[landsync_service] Attempted to load sample data while DEMO_FIXTURE_MODE=false")
+            raise RuntimeError("REAL_DATA_NOT_AVAILABLE: Synthetic sample data is disabled in production mode.")
         return CADASTRAL_PATH, MUNICIPAL_PATH
     uploads = sorted(
         _UPLOADS_DIR.glob(f"{dataset_id}_*"),
         key=lambda p: p.stat().st_mtime,
     )
     if not uploads:
+        if not settings.DEMO_FIXTURE_MODE:
+            logger.error("[landsync_service] dataset %r has no uploaded files and DEMO_FIXTURE_MODE=false", dataset_id)
+            raise RuntimeError("REAL_DATA_NOT_AVAILABLE: No uploaded datasets found for this ID in production mode.")
         logger.warning(
             "[landsync_service] dataset %r has no uploaded files — using sample data.",
             dataset_id,
         )
         return CADASTRAL_PATH, MUNICIPAL_PATH
     if len(uploads) == 1:
+        if not settings.DEMO_FIXTURE_MODE:
+            # In production, we must have both sources for reconciliation.
+            # If municipal is missing, we cannot fallback to synthetic.
+            logger.error("[landsync_service] dataset %r has single upload; municipal source missing and DEMO_FIXTURE_MODE=false", dataset_id)
+            raise RuntimeError("REAL_DATA_NOT_AVAILABLE: Municipal source missing. Synthetic fallback disabled in production.")
         logger.info(
             "[landsync_service] dataset %r: single upload %s vs sample municipal survey.",
             dataset_id,
@@ -465,18 +477,24 @@ def load_data(
         "reconciled_parcel_count": len(parcels),
         "unmatched_municipal_count": unmatched_municipal_count,
         # ---- Data provenance (honest source labelling) ----------------
-        # sample  = built-in synthetic GeoJSON shipped with the repo
-        # upload  = a real file the user uploaded via /api/upload
+        # SYNTHETIC_DEMO = built-in synthetic GeoJSON shipped with the repo
+        # USER_UPLOADED_REAL = a real file the user uploaded via /api/upload
         # The frontend must NEVER call synthetic data "real".
         "cadastral_source": (
-            "upload"
+            "USER_UPLOADED_REAL"
             if _is_upload_path(cad_path)
-            else "sample"
+            else "SYNTHETIC_DEMO"
         ),
         "municipal_source": (
-            "upload"
+            "USER_UPLOADED_REAL"
             if _is_upload_path(mun_path)
-            else "sample"
+            else "SYNTHETIC_DEMO"
+        ),
+        "reconciliation_type": (
+            "REAL_TO_REAL"
+            if _is_upload_path(cad_path) and _is_upload_path(mun_path)
+            else "MIXED" if _is_upload_path(cad_path) or _is_upload_path(mun_path)
+            else "SYNTHETIC_DEMO"
         ),
         "cadastral_filename": Path(cad_path).name,
         "municipal_filename": Path(mun_path).name,

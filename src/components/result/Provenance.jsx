@@ -18,7 +18,7 @@ export function SourceBadge({ health }) {
   const cad = health.cadastral_source
   const mun = health.municipal_source
 
-  if (cad === 'upload' && mun === 'upload') {
+  if (cad === 'USER_UPLOADED_REAL' && mun === 'USER_UPLOADED_REAL') {
     return (
       <span
         data-testid="source-badge"
@@ -29,7 +29,7 @@ export function SourceBadge({ health }) {
       </span>
     )
   }
-  if (cad === 'upload' || mun === 'upload') {
+  if (cad === 'USER_UPLOADED_REAL' || mun === 'USER_UPLOADED_REAL') {
     return (
       <span
         data-testid="source-badge"
@@ -69,9 +69,9 @@ SourceBadge.propTypes = {
 export function MixedSourceNotice({ health }) {
   const mixed =
     health &&
-    (health.cadastral_source === 'upload') !== (health.municipal_source === 'upload')
+    (health.cadastral_source === 'USER_UPLOADED_REAL') !== (health.municipal_source === 'USER_UPLOADED_REAL')
   if (!mixed) return null
-  const uploaded = health.cadastral_source === 'upload' ? 'cadastral' : 'municipal'
+  const uploaded = health.cadastral_source === 'USER_UPLOADED_REAL' ? 'cadastral' : 'municipal'
   return (
     <div
       data-testid="mixed-source-notice"
@@ -202,6 +202,9 @@ export function ImageryProvenancePanel({ lng, lat, source = 'esri_wayback' }) {
       )}
       <div className="pt-0.5 text-slate-500 text-[11px]">
         Basemap is a mosaic of dated captures — not a live view.
+      </div>
+      <div className="pt-1 text-amber-400/70 text-[10px] font-bold uppercase tracking-tighter">
+        Imagery alignment not configured
       </div>
     </div>
   )

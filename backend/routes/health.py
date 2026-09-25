@@ -52,9 +52,9 @@ def health() -> dict:
             "engine_crs": info.get("engine_crs", "EPSG:3857"),
             "cadastral_features": info.get("cadastral_feature_count", 0),
             "municipal_features": info.get("municipal_feature_count", 0),
-            # Provenance: "sample" (synthetic) vs "upload" (user's real file)
-            "cadastral_source": info.get("cadastral_source", "sample"),
-            "municipal_source": info.get("municipal_source", "sample"),
+            # Provenance: "SYNTHETIC_DEMO" vs "USER_UPLOADED_REAL"
+            "cadastral_source": info.get("cadastral_source", "SYNTHETIC_DEMO"),
+            "municipal_source": info.get("municipal_source", "SYNTHETIC_DEMO"),
             "cadastral_filename": info.get("cadastral_filename"),
             "municipal_filename": info.get("municipal_filename"),
             # Spec §6/§7: let the UI (and deployment checks) see the fixture
@@ -62,8 +62,8 @@ def health() -> dict:
             "demo_fixture_mode": settings.DEMO_FIXTURE_MODE,
             "data_state": (
                 "SYNTHETIC_DEMO_DATA"
-                if info.get("cadastral_source", "sample") != "upload"
-                or info.get("municipal_source", "sample") != "upload"
+                if info.get("cadastral_source", "SYNTHETIC_DEMO") != "USER_UPLOADED_REAL"
+                or info.get("municipal_source", "SYNTHETIC_DEMO") != "USER_UPLOADED_REAL"
                 else "REAL_TO_REAL"
             ),
         }

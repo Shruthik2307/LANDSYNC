@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import ConfidenceDial from '../ui/ConfidenceDial'
 import { priorityOf } from '../../validation'
@@ -38,6 +38,14 @@ ParcelImageryMeta.propTypes = {
 
 export default function DetailPanel({ parcel, onClose }) {
   // Allow closing via Escape key
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === 'Escape' && onClose) onClose()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   const [isLabeling, setIsLabeling] = useState(false)
   const [labelStatus, setLabelStatus] = useState(null)
 
@@ -57,7 +65,7 @@ export default function DetailPanel({ parcel, onClose }) {
       if (!res.ok) throw new Error('Label update failed')
       setLabelStatus('success')
       // Ideally trigger a refresh of the parcel data here
-    } catch (err) {
+    } catch {
       setLabelStatus('error')
     } finally {
       setIsLabeling(false)
@@ -172,7 +180,7 @@ export default function DetailPanel({ parcel, onClose }) {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed font-sans pt-1">
-              {reasoning}
+              {reason}
             </p>
           </div>
 

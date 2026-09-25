@@ -121,7 +121,7 @@ export default function ResultView({
       getHealth().then((h) => { if (!cancelled) setHealth(h) }).catch(() => {})
     } else {
       Promise.resolve().then(() => {
-        if (!cancelled) setHealth({ cadastral_source: 'sample', municipal_source: 'sample' })
+        if (!cancelled) setHealth({ cadastral_source: 'SYNTHETIC_DEMO', municipal_source: 'SYNTHETIC_DEMO' })
       })
     }
 
