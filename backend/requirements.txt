@@ -39,3 +39,4 @@ alembic>=1.13.0            # Database migrations
 # ── Testing ────────────────────────────────────────────────────────────────
 pytest>=7.4.0
 httpx>=0.25.0              # ASGI test client for FastAPI
+\nbcrypt\npython-jose[cryptography]\nslowapi

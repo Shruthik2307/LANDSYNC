@@ -72,7 +72,7 @@ async def upload_dataset(file: UploadFile = File(...)) -> UploadResponse:
     # ── Read and Save content ────────────────────────────────────────────────
     dataset_id = f"ds_{uuid.uuid4().hex[:12]}"
     safe_filename = os.path.basename(filename)
-    save_path = _UPLOAD_DIR / f"{dataset_id}_{safe_filename}"
+    save_path = _UPLOAD_DIR / f"{dataset_id}.geojson"
 
     try:
         # Stream directly to disk to avoid loading massive files into memory (prevent 413)
