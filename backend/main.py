@@ -113,6 +113,7 @@ app.include_router(ml_router)
 app.include_router(model_info_router)
 app.include_router(provenance_router)
 app.include_router(labeling_router)
+app.include_router(export_router)
 
 # ── Satellite proxy (kept from original backend) ──────────────────────────
 try:

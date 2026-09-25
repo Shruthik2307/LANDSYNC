@@ -38,13 +38,32 @@ ParcelImageryMeta.propTypes = {
 
 export default function DetailPanel({ parcel, onClose }) {
   // Allow closing via Escape key
-  useEffect(() => {
-    function handleKeyDown(e) {
-      if (e.key === 'Escape' && onClose) onClose()
+  const [isLabeling, setIsLabeling] = useState(false)
+  const [labelStatus, setLabelStatus] = useState(null)
+
+  async function handleLabel(labelValue) {
+    setIsLabeling(true)
+    setLabelStatus(null)
+    try {
+      const res = await fetch('/api/ml/label', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parcel_id: parcel.parcel_id,
+          label: labelValue,
+          notes: 'Manual override via DetailPanel'
+        })
+      })
+      if (!res.ok) throw new Error('Label update failed')
+      setLabelStatus('success')
+      // Ideally trigger a refresh of the parcel data here
+    } catch (err) {
+      setLabelStatus('error')
+    } finally {
+      setIsLabeling(false)
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  }
+
 
   if (!parcel) {
     return (
@@ -153,7 +172,7 @@ export default function DetailPanel({ parcel, onClose }) {
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed font-sans pt-1">
-              {reason}
+              {reasoning}
             </p>
           </div>
 
@@ -311,10 +330,28 @@ export default function DetailPanel({ parcel, onClose }) {
             </p>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-2 flex flex-col gap-2">
             <div className="text-[11px] font-mono text-slate-500 uppercase">
-              AUTHORITY: Human Verification Required
+              AUTHORITY: Human Verification
             </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleLabel(0)}
+                disabled={isLabeling}
+                className="flex-1 px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase hover:bg-emerald-500/20 transition-colors disabled:opacity-50"
+              >
+                Verify
+              </button>
+              <button
+                onClick={() => handleLabel(1)}
+                disabled={isLabeling}
+                className="flex-1 px-2 py-1 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-[10px] font-bold uppercase hover:bg-red-500/20 transition-colors disabled:opacity-50"
+              >
+                Reject
+              </button>
+            </div>
+            {labelStatus === 'success' && <span className="text-[10px] text-emerald-400 font-mono animate-pulse">✓ Label saved</span>}
+            {labelStatus === 'error' && <span className="text-[10px] text-red-400 font-mono animate-pulse">✗ Update failed</span>}
           </div>
         </div>
       </div>

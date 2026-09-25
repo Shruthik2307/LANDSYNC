@@ -7,6 +7,7 @@ import QueuePanel from '../result/QueuePanel'
 import DetailPanel from '../result/DetailPanel'
 import ExecutiveDashboard from '../analytics/ExecutiveDashboard'
 import { MixedSourceNotice } from '../result/Provenance'
+import ToastSystem from '../ui/ToastSystem'
 import { priorityOf } from '../../validation'
 import { AlertCircle, RefreshCw, Loader2 } from 'lucide-react'
 
@@ -36,6 +37,17 @@ export default function ResultView({
   const [processStatus, setProcessStatus] = useState('idle')
   const [processError, setProcessError] = useState('')
   const [viewMode, setViewMode] = useState('map')
+  const [toasts, setToasts] = useState([])
+
+  function addToast(message, type = 'success') {
+    const id = Date.now()
+    setToasts(prev => [...prev, { id, message, type }])
+    setTimeout(() => removeToast(id), 5000)
+  }
+
+  function removeToast(id) {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }
 
   async function handleRunProcess() {
     if (processStatus === 'processing') return
@@ -58,14 +70,17 @@ export default function ResultView({
           setSelected(allParcels[0])
         }
         setProcessStatus('complete')
+        addToast('Reconciliation successful', 'success')
         setTimeout(() => setProcessStatus('idle'), 2500)
       } else {
         setProcessStatus('error')
         setProcessError(`Reconciliation status: ${res.job_status}`)
+        addToast('Processing error occurred', 'error')
       }
     } catch (err) {
       setProcessStatus('error')
       setProcessError(err.message || 'Processing failed.')
+      addToast('System failure during process', 'error')
     }
   }
 
@@ -214,14 +229,16 @@ export default function ResultView({
       <MixedSourceNotice health={health} />
 
       {viewMode === 'dashboard' ? (
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#030712]">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#030712] fade-in">
           <ExecutiveDashboard parcels={parcels} />
         </div>
       ) : (
         /* Main Analytical Workspace Layout */
-        <main className="flex-1 min-h-0 flex flex-col lg:flex-row relative overflow-hidden">
+        <main className="flex-1 min-h-0 flex flex-col lg:flex-row relative overflow-hidden bg-tactical-grid">
+          <ToastSystem toasts={toasts} removeToast={removeToast} />
           {/* Hero Map Container */}
           <div className="flex-1 min-h-0 h-full relative overflow-hidden">
+            <div className="absolute inset-0 bg-radial-vignette pointer-events-none z-[500]" />
             <ResultMapStage
               selected={selected}
               setSelected={setSelected}
@@ -238,9 +255,9 @@ export default function ResultView({
               invalidParcels={invalidParcels}
               satelliteEnabled={import.meta.env.VITE_ENABLE_SATELLITE_OVERLAY !== 'false'}
               sentinelHubInstanceId={import.meta.env.VITE_SENTINELHUB_INSTANCE_ID}
-              cachedSatelliteUrl={(parcel) => 
-                new Set(['1042', '1078', '1250']).has(String(parcel?.parcel_id)) 
-                  ? '/satellite/demo-parcel-1042.svg' 
+              cachedSatelliteUrl={(parcel) =>
+                new Set(['1042', '1078', '1250']).has(String(parcel?.parcel_id))
+                  ? '/satellite/demo-parcel-1042.svg'
                   : null
               }
             />
@@ -253,7 +270,7 @@ export default function ResultView({
           </div>
 
           {/* Conflict & Reconciliation Queue (Right Side) */}
-          <div className="w-full lg:w-[360px] xl:w-[380px] h-[45vh] lg:h-full shrink-0 border-t lg:border-t-0 border-slate-800">
+          <div className="w-full lg:w-[360px] xl:w-[380px] h-[45vh] lg:h-full shrink-0 border-t lg:border-t-0 border-slate-800 hud-glass fade-in">
             <QueuePanel
               datasetId={datasetId}
               parcels={parcels}
@@ -270,6 +287,7 @@ export default function ResultView({
               processStatus={processStatus}
             />
           </div>
+
         </main>
       )}
     </div>

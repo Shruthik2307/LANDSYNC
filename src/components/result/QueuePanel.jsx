@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Search, RefreshCw, X, AlertOctagon, Layers, AlertTriangle } from 'lucide-react'
+import React, { useState, useMemo } from 'react'
+import { Search, RefreshCw, X, AlertOctagon, Layers, AlertTriangle, Filter } from 'lucide-react'
 import QueueRow from '../ui/QueueRow'
 
 export default function QueuePanel({
@@ -18,28 +18,43 @@ export default function QueuePanel({
   processStatus = 'idle'
 }) {
   const [activeTab, setActiveTab] = useState('conflicts')
+  const [confidenceRange, setConfidenceRange] = useState([0, 100])
+
   const sourceList = activeTab === 'conflicts' ? conflicts : parcels
-  const filteredList = sourceList.filter(matchesFilter)
+
+  const filteredList = useMemo(() => {
+    return sourceList.filter(parcel => {
+      const matchesBasic = matchesFilter(parcel)
+      const conf = Number(parcel.confidence) || 0
+      const matchesConfidence = conf >= confidenceRange[0] && conf <= confidenceRange[1]
+      return matchesBasic && matchesConfidence
+    })
+  }, [sourceList, matchesFilter, confidenceRange])
 
   return (
-    <aside 
+    <aside
       className="w-full h-full flex flex-col bg-[#070D1A]/90 backdrop-blur-xl border-l border-cyan-500/15 overflow-hidden"
       aria-label="Parcel and conflict queue"
     >
       {/* Panel Header */}
       <div className="p-3.5 sm:p-4 border-b border-slate-800/80 shrink-0">
         <div className="flex items-center justify-between mb-2.5">
-          <div>
-            <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest block font-semibold">
-              RECONCILIATION MONITOR
-            </span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <h2 className="text-base font-bold text-slate-100 tracking-tight flex items-center gap-2">
-                <span>{activeTab === 'conflicts' ? 'Conflict Queue' : 'Parcel Dashboard'}</span>
-                <span className="px-2 py-0.5 text-xs font-mono font-bold rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-                  {filteredList.length}
-                </span>
-              </h2>
+          <div className="flex items-center gap-2">
+            <div className="p-1 rounded bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+              <Filter size={12} />
+            </div>
+            <div>
+              <span className="text-[11px] font-mono text-cyan-400 uppercase tracking-widest block font-semibold">
+                RECONCILIATION MONITOR
+              </span>
+              <div className="flex items-center gap-2 mt-0.5">
+                <h2 className="text-base font-bold text-slate-100 tracking-tight flex items-center gap-2">
+                  <span>{activeTab === 'conflicts' ? 'Conflict Queue' : 'Parcel Dashboard'}</span>
+                  <span className="px-2 py-0.5 text-xs font-mono font-bold rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                    {filteredList.length}
+                  </span>
+                </h2>
+              </div>
             </div>
           </div>
 
@@ -50,8 +65,8 @@ export default function QueuePanel({
           )}
         </div>
 
-        {/* Tab Switcher: All 25 Parcels vs Conflicts */}
-        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-950/80 border border-slate-800 mb-2.5 font-mono text-xs">
+        {/* Tab Switcher */}
+        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-950/80 border border-slate-800 mb-3 font-mono text-xs">
           <button
             onClick={() => setActiveTab('all')}
             className={`flex-1 py-1 px-2 rounded text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 ${
@@ -82,8 +97,8 @@ export default function QueuePanel({
           </button>
         </div>
 
-        {/* Filter & Search Bar */}
-        <div className="space-y-2">
+        {/* Advanced Filtering HUD */}
+        <div className="space-y-3">
           {/* Search Box */}
           <div className="relative">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
@@ -96,14 +111,37 @@ export default function QueuePanel({
               className="w-full pl-8 pr-7 py-1.5 bg-slate-950/80 border border-slate-800 rounded text-xs text-slate-200 placeholder-slate-500 font-mono focus:border-cyan-400 focus:outline-none transition-colors"
             />
             {search && (
-              <button 
+              <button
                 onClick={() => setSearch('')}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                title="Clear search"
               >
                 <X size={13} />
               </button>
             )}
+          </div>
+
+          {/* Confidence Range Slider */}
+          <div className="p-2 rounded-lg bg-slate-950/50 border border-slate-800 space-y-2">
+            <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 uppercase">
+              <span>Confidence Range</span>
+              <span className="text-cyan-400">{confidenceRange[0]}% - {confidenceRange[1]}%</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min="0" max="100"
+                value={confidenceRange[0]}
+                onChange={(e) => setConfidenceRange([parseInt(e.target.value), confidenceRange[1]])}
+                className="flex-1 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              />
+              <input
+                type="range"
+                min="0" max="100"
+                value={confidenceRange[1]}
+                onChange={(e) => setConfidenceRange([confidenceRange[0], parseInt(e.target.value)])}
+                className="flex-1 h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+              />
+            </div>
           </div>
 
           {/* Priority Select */}
@@ -139,7 +177,7 @@ export default function QueuePanel({
             <AlertOctagon size={24} className="mb-2 text-slate-600" />
             <p className="text-slate-400">No parcels match this filter.</p>
             <button
-              onClick={() => { setPriorityFilter('ALL'); setSearch(''); }}
+              onClick={() => { setPriorityFilter('ALL'); setSearch(''); setConfidenceRange([0, 100]); }}
               className="mt-3 px-3 py-1.5 rounded bg-slate-900 border border-slate-800 text-cyan-400 hover:bg-slate-800 text-xs font-sans transition-colors"
             >
               Clear filters
@@ -148,7 +186,7 @@ export default function QueuePanel({
         )}
       </div>
 
-      {/* Footer System Status & Reconcile / Restart Actions */}
+      {/* Footer System Status */}
       <div className="p-3 border-t border-slate-800/80 bg-[#050A14] flex items-center justify-between text-xs font-mono shrink-0">
         <span className="text-slate-400 text-[11px]">
           {parcels.length} parcels surveyed
@@ -171,9 +209,9 @@ export default function QueuePanel({
           >
             <RefreshCw size={12} />
             <span>New run</span>
-          </button>
+            </button>
+          </div>
         </div>
-      </div>
-    </aside>
+      </aside>
   )
 }
