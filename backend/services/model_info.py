@@ -108,13 +108,18 @@ class ModelRegistry:
             "training_date": a.get("training_date"),
             "training_sample_count": a.get("training_sample_count"),
             "verified_label_count": a.get("verified_label_count"),
+            "verified_sample_count": a.get("verified_sample_count"),
+            "class_distribution": a.get("class_distribution"),
             "feature_schema_version": a.get("feature_schema_version"),
             "feature_order": a.get("feature_order"),
             "validation_metrics": a.get("validation_metrics"),
             "test_metrics": a.get("test_metrics"),
+            "final_test_metrics": a.get("test_metrics"),
             "geographic_holdout_metrics": a.get("geographic_holdout_metrics"),
             "calibration_status": a.get("calibration_status", "uncalibrated"),
+            "calibration_metrics": a.get("calibration_metrics"),
             "training_class_distribution": a.get("training_class_distribution"),
+            "training_data_version": a.get("training_data_version"),
             "production_status": a.get("production_status", "active"),
         }
 

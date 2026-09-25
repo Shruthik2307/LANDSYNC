@@ -111,6 +111,38 @@ def check_artifact() -> list[str]:
     return failures
 
 
+def check_label_store() -> list[str]:
+    """Validate data/verified/labels.jsonl: schema, synthetic markers, dupes."""
+    failures = []
+    labels_path = ROOT / "data" / "verified" / "labels.jsonl"
+    if not labels_path.exists():
+        print("  label store: absent (INSUFFICIENT_VERIFIED_DATA is honest) — OK")
+        return failures
+    sys.path.insert(0, str(ROOT))
+    from scripts.label_store import load_labels
+
+    records, rep = load_labels()
+    if rep["invalid_records"]:
+        failures.append(
+            f"labels.jsonl: {rep['invalid_records']} invalid record(s) — "
+            + "; ".join(rep["problems"][:5])
+        )
+    if rep["duplicate_pairs"]:
+        failures.append(f"labels.jsonl: {rep['duplicate_pairs']} duplicate pair(s)")
+    # Verified records must carry genuine provenance (a reviewer + source).
+    for r in records:
+        if r["review_status"] == "verified" and not str(r.get("evidence_source", "")).strip():
+            failures.append(
+                f"labels.jsonl: verified record {r.get('cadastral_id')!r} lacks evidence_source"
+            )
+            break
+    print(
+        f"  label store: {rep['verified_count']} verified "
+        f"({rep.get('label_distribution', {})})"
+    )
+    return failures
+
+
 def check_training_provenance() -> list[str]:
     failures = []
     meta_path = ROOT / "models" / "training_metadata.json"
@@ -149,6 +181,7 @@ def main() -> int:
     failures: list[str] = []
     failures += check_runtime_fixture_references()
     failures += check_artifact()
+    failures += check_label_store()
     failures += check_training_provenance()
     failures += check_fabrication_patterns()
 

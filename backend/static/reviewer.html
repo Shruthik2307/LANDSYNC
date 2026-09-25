@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LANDSYNC — Parcel Label Review</title>
+<style>
+  :root { color-scheme: dark; }
+  body { background:#070D1A; color:#cbd5e1; font: 13px/1.5 ui-monospace, monospace; margin:0; padding:24px; }
+  h1 { font-size:16px; color:#67e8f9; letter-spacing:1px; margin:0 0 4px; }
+  .sub { color:#64748b; font-size:11px; margin-bottom:18px; }
+  .bar { display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  input, select, button {
+    background:#0b1220; color:#e2e8f0; border:1px solid #1e293b; border-radius:6px;
+    padding:6px 10px; font:inherit;
+  }
+  button { cursor:pointer; border-color:#155e75; color:#67e8f9; }
+  button:hover { background:#0e749022; }
+  .card { background:#0b1220; border:1px solid #1e293b; border-radius:10px; padding:14px; margin-bottom:14px; }
+  .grid { display:grid; grid-template-columns: 1fr 260px; gap:14px; }
+  table { border-collapse:collapse; width:100%; font-size:12px; }
+  td, th { border-bottom:1px solid #1e293b; padding:3px 6px; text-align:left; }
+  th { color:#64748b; font-weight:normal; }
+  .val { color:#e2e8f0; }
+  .warn { color:#fbbf24; }
+  .good { color:#22d3ee; }
+  svg.overlay { width:100%; height:220px; background:#0f172a; border-radius:6px; }
+  .legend span { margin-right:14px; font-size:11px; }
+  .status { font-size:11px; color:#64748b; margin-top:8px; min-height:14px; }
+  .badge { font-size:10px; border:1px solid #334155; border-radius:4px; padding:1px 6px; color:#94a3b8; }
+  footer { margin-top:24px; color:#475569; font-size:11px; }
+</style>
+</head>
+<body>
+<h1>PARCEL LABEL REVIEW</h1>
+<div class="sub">
+  Human verification of REAL parcel comparisons. Your label — not the engine's — becomes training data.
+  Records from the synthetic demo dataset are rejected by the label store.
+</div>
+<div class="bar">
+  <label>Reviewer <input id="reviewer" placeholder="your name" size="14"></label>
+  <label>Region <input id="region" placeholder="e.g. mandal-xyz" size="14"></label>
+  <button id="load">Load queue</button>
+  <span id="count" class="badge"></span>
+</div>
+<div id="cards"></div>
+<div class="status" id="status"></div>
+<footer>
+  Labels are appended to data/verified/labels.jsonl after schema, duplicate, and
+  synthetic-provenance validation. The reconciliation score shown is evidence agreement,
+  not accuracy. Engine match_status is context only.
+</footer>
+
+<script>
+const LABELS = ["MATCH","MINOR_DISCREPANCY","MAJOR_DISCREPANCY","UNMATCHED","REVIEW"];
+
+function fmt(v, unit="", digits=3) {
+  if (v === null || v === undefined) return '<span class="warn">n/a</span>';
+  if (typeof v === "number") return `<span class="val">${v.toFixed(digits)}${unit}</span>`;
+  return `<span class="val">${v}</span>`;
+}
+
+function metricsTable(sm, am, im) {
+  const rows = [
+    ["IoU", fmt(sm.iou, "", 4)],
+    ["Area ratio", fmt(sm.area_ratio, "", 4)],
+    ["Area difference", fmt(sm.area_difference_m2, " m²", 2)],
+    ["Centroid distance", fmt(sm.centroid_distance_m, " m", 2)],
+    ["Hausdorff distance", fmt(sm.hausdorff_distance_m, " m", 2)],
+    ["Boundary displacement", fmt(sm.boundary_displacement_m, " m", 2)],
+    ["Shape similarity", fmt(sm.shape_similarity, "", 4)],
+    ["Overlap of cadastral", fmt(sm.overlap_pct_of_cadastral, " %", 2)],
+    ["Perimeter difference", fmt(sm.perimeter_difference_m, " m", 2)],
+    ["Survey no. match", am.survey_number_match === null || am.survey_number_match === undefined ? '<span class="warn">unknown</span>' : `<span class="${am.survey_number_match ? "good" : "warn"}">${am.survey_number_match}</span>`],
+    ["Land-use match", am.land_use_match === null || am.land_use_match === undefined ? '<span class="warn">unknown</span>' : `<span class="${am.land_use_match ? "good" : "warn"}">${am.land_use_match}</span>`],
+    ["Imagery", im.available ? `<span class="good">${im.provider || "available"} · ${im.acquisition_date || "date n/a"} · ${im.resolution_m_per_px ?? "?"} m/px</span>` : '<span class="warn">unavailable</span>'],
+  ];
+  return `<table>${rows.map(([k,v]) => `<tr><th>${k}</th><td>${v}</td></tr>`).join("")}</table>`;
+}
+
+function drawOverlay(boundaries, el) {
+  const a = boundaries.cadastral, b = boundaries.drone_ori || boundaries.municipal;
+  const coords = [];
+  const collect = (g) => {
+    if (!g) return;
+    if (g.type === "Polygon") coords.push(...g.coordinates[0]);
+    if (g.type === "MultiPolygon") g.coordinates.forEach(p => coords.push(...p[0]));
+  };
+  collect(a); collect(b);
+  if (!coords.length) { el.innerHTML = "<em>no geometry</em>"; return; }
+  const xs = coords.map(c => c[0]), ys = coords.map(c => c[1]);
+  const minx = Math.min(...xs), maxx = Math.max(...xs);
+  const miny = Math.min(...ys), maxy = Math.max(...ys);
+  const w = (maxx - minx) || 1, h = (maxy - miny) || 1;
+  const path = (g) => {
+    if (!g) return "";
+    const polys = g.type === "Polygon" ? [g.coordinates] : (g.type === "MultiPolygon" ? g.coordinates : []);
+    return polys.map(p =>
+      `<path d="${p[0].map((c,i) =>
+        `${i ? "L" : "M"}${((c[0]-minx)/w*240+10).toFixed(1)},${(210 - (c[1]-miny)/h*200).toFixed(1)}`
+      ).join(" ")} Z" fill="none" />`
+    ).join("");
+  };
+  el.innerHTML = `<svg class="overlay" viewBox="0 0 260 220">
+    ${path(a).replace("<path", '<path stroke="#22d3ee" stroke-width="1.5"')}
+    ${path(b).replace("<path", '<path stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4 3"')}
+  </svg>
+  <div class="legend"><span style="color:#22d3ee">— cadastral</span><span style="color:#fbbf24">-- municipal</span></div>`;
+}
+
+function card(pair, region) {
+  const div = document.createElement("div");
+  div.className = "card";
+  div.innerHTML = `
+    <div class="bar" style="margin-bottom:8px">
+      <strong class="good">${pair.cadastral_id}</strong> vs
+      <strong style="color:#fbbf24">${pair.municipal_id || "(none)"}</strong>
+      <span class="badge">engine: ${pair.engine_match_status || "n/a"}</span>
+      <span class="badge">score: ${pair.reconciliation_score ?? "n/a"}</span>
+    </div>
+    <div class="grid">
+      <div>${metricsTable(pair.spatial_metrics || {}, pair.attribute_metrics || {}, pair.imagery || {})}</div>
+      <div id="ov-${pair.cadastral_id}"></div>
+    </div>
+    <div class="bar" style="margin-top:10px">
+      <select data-label>
+        ${LABELS.map(l => `<option>${l}</option>`).join("")}
+      </select>
+      <input data-notes placeholder="notes (optional)" size="30">
+      <button data-submit>Submit verified label</button>
+      <span class="status" data-msg></span>
+    </div>`;
+  drawOverlay(pair.boundaries || {}, div.querySelector(`#ov-${CSS.escape(pair.cadastral_id)}`) || div.querySelector("[id^=ov-]"));
+  div.querySelector("[data-submit]").onclick = async () => {
+    const msg = div.querySelector("[data-msg]");
+    const reviewer = document.getElementById("reviewer").value.trim();
+    const regionVal = document.getElementById("region").value.trim() || region || "unknown";
+    if (!reviewer) { msg.textContent = "Reviewer name required."; msg.style.color = "#f87171"; return; }
+    const body = {
+      cadastral_id: pair.cadastral_id,
+      municipal_id: pair.municipal_id || "",
+      region: regionVal,
+      label: div.querySelector("[data-label]").value,
+      review_status: "verified",
+      reviewer,
+      evidence_source: "reviewer-ui:" + (pair.engine_match_status || "unknown"),
+      pair_metrics: { spatial_metrics: pair.spatial_metrics || {}, attribute_metrics: pair.attribute_metrics || {} },
+      notes: div.querySelector("[data-notes]").value,
+    };
+    const resp = await fetch("/api/labeling/submit", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok) { msg.textContent = "✓ stored"; msg.style.color = "#22d3ee"; }
+    else { msg.textContent = "rejected: " + (data.detail || resp.status); msg.style.color = "#f87171"; }
+  };
+  return div;
+}
+
+document.getElementById("load").onclick = async () => {
+  const status = document.getElementById("status");
+  status.textContent = "Loading queue…";
+  const resp = await fetch("/api/labeling/queue");
+  const data = await resp.json();
+  const holder = document.getElementById("cards");
+  holder.innerHTML = "";
+  if (data.status !== "ok") {
+    status.textContent = data.detail || data.status;
+    return;
+  }
+  document.getElementById("count").textContent = `${data.count} / ${data.total_pairs} pairs`;
+  if (!data.suggested_region) data.suggested_region = "";
+  for (const pair of data.pairs) holder.appendChild(card(pair, data.suggested_region));
+  status.textContent = data.dataset_provenance && data.dataset_provenance.cadastral_source === "sample"
+    ? "WARNING: loaded dataset is the synthetic demo sample — the store will reject these labels."
+    : "";
+};
+</script>
+</body>
+</html>

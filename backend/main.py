@@ -60,6 +60,7 @@ from routes.auth import router as auth_router
 from routes.ml import router as ml_router
 from routes.model_info import router as model_info_router
 from routes.provenance import router as provenance_router
+from routes.labeling import router as labeling_router
 
 
 
@@ -111,6 +112,7 @@ app.include_router(auth_router)
 app.include_router(ml_router)
 app.include_router(model_info_router)
 app.include_router(provenance_router)
+app.include_router(labeling_router)
 
 # ── Satellite proxy (kept from original backend) ──────────────────────────
 try:

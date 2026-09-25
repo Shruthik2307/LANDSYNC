@@ -35,51 +35,57 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(_PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(_PROJECT_ROOT))
 
-from engine.ml_schema import FEATURE_ORDER, FEATURE_SCHEMA_VERSION, features_from_pair_metrics
+from engine.ml_schema import FEATURE_ORDER, FEATURE_SCHEMA_VERSION, features_from_pair_metrics  # noqa: E402
+from scripts.label_store import load_labels, verified_training_records  # noqa: E402
 
 VERIFIED_DIR = _PROJECT_ROOT / "data" / "verified"
 LABELS_PATH = VERIFIED_DIR / "labels.jsonl"
 MODELS_DIR = _PROJECT_ROOT / "models"
 ARTIFACT_PATH = MODELS_DIR / "reconciliation_model.json"
 METADATA_PATH = MODELS_DIR / "training_metadata.json"
+ESTIMATOR_PATH = MODELS_DIR / "reconciliation_model.joblib"
 
 # Minimum labeled samples per class before training is allowed. Below this
-# the honest answer is "not enough verified data", not a tiny model.
+# the honest answer is INSUFFICIENT_VERIFIED_DATA, not a tiny model.
 MIN_SAMPLES_PER_CLASS = 10
+MIN_TOTAL = 40
 
-FORBIDDEN_PATH_MARKERS = ("sample", "mock", "fixture", "synthetic")
+FORBIDDEN_PATH_MARKERS = ("sample", "mock", "fixture", "synthetic", "hyd-rev")
+
+
+def _data_version() -> str:
+    """Stable hash of the label store contents (dataset versioning, §17)."""
+    import hashlib
+
+    if not LABELS_PATH.exists():
+        return "no-labels"
+    return hashlib.sha256(LABELS_PATH.read_bytes()).hexdigest()[:16]
 
 
 def load_verified_labels() -> list[dict]:
-    """Load human-verified labeled records; reject anything suspicious."""
-    if not LABELS_PATH.exists():
-        return []
-    records = []
-    with open(LABELS_PATH, "r", encoding="utf-8") as f:
-        for line_no, line in enumerate(f, start=1):
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            try:
-                rec = json.loads(line)
-            except json.JSONDecodeError:
-                print(f"  line {line_no}: invalid JSON — skipped")
-                continue
-            if "pair_metrics" not in rec or "verified_label" not in rec:
-                print(f"  line {line_no}: missing pair_metrics/verified_label — skipped")
-                continue
-            records.append(rec)
-    return records
+    """Load verified, usable labels via the shared validated store."""
+    records, rep = load_labels()
+    if rep.get("invalid_records") or rep.get("duplicate_pairs"):
+        print(
+            f"Label store problems: {rep['invalid_records']} invalid, "
+            f"{rep['duplicate_pairs']} duplicate — fix data/verified/labels.jsonl."
+        )
+    return verified_training_records(records)
 
 
 def assert_not_synthetic(records: list[dict]) -> None:
     """Guardrail: reject records that carry synthetic/provenance markers."""
     for i, rec in enumerate(records):
-        src = str(rec.get("source", "")) + str(rec.get("dataset", ""))
+        src = (
+            str(rec.get("evidence_source", ""))
+            + str(rec.get("cadastral_id", ""))
+            + str(rec.get("municipal_id", ""))
+            + str(rec.get("notes", ""))
+        )
         if any(marker in src.lower() for marker in FORBIDDEN_PATH_MARKERS):
             raise SystemExit(
                 f"REFUSING TO TRAIN: record {i} carries a synthetic-data marker "
-                f"({src!r}). Training on synthetic fixtures is prohibited (spec §10)."
+                f"({src!r}). Training on synthetic fixtures is prohibited (spec §2)."
             )
 
 
@@ -91,7 +97,7 @@ def build_matrix(records: list[dict]):
         if any(v is None for v in feats.values()):
             continue
         X.append([float(feats[k]) for k in FEATURE_ORDER])
-        y.append(str(rec["verified_label"]))
+        y.append(str(rec["label"]))
         regions.append(str(rec.get("region", "unknown")))
     return X, y, regions
 
@@ -99,31 +105,33 @@ def build_matrix(records: list[dict]):
 def main() -> int:
     print("=== LANDSYNC production model training (honest mode) ===")
     records = load_verified_labels()
+    from collections import Counter
+
     if not records:
         print(
-            f"REFUSING TO TRAIN: no human-verified labeled records found at\n"
-            f"  {LABELS_PATH}\n"
+            f"ML MODEL NOT TRAINED — INSUFFICIENT VERIFIED DATA.\n"
+            f"No human-verified training labels found at\n  {LABELS_PATH}\n"
             "Labels must be produced by human review of REAL parcel pairs —\n"
             "never from the rule-based score, never from synthetic fixtures.\n"
+            "Use the labeling workflow: backend /api/labeling/queue + submit,\n"
+            "or scripts/export_review_queue.py + scripts/import_verified_labels.py.\n"
             "The system continues to run on deterministic GIS evidence alone,\n"
             "and /api/model/info reports MODEL_UNAVAILABLE honestly."
         )
-        return 2
+        return 3
 
     assert_not_synthetic(records)
 
-    from collections import Counter
-
-    label_counts = Counter(str(r["verified_label"]) for r in records)
-    print(f"Labeled records: {len(records)}  distribution: {dict(label_counts)}")
-    if min(label_counts.values()) < MIN_SAMPLES_PER_CLASS:
+    label_counts = Counter(str(r["label"]) for r in records)
+    print(f"Verified training records: {len(records)}  distribution: {dict(label_counts)}")
+    if len(records) < MIN_TOTAL or min(label_counts.values()) < MIN_SAMPLES_PER_CLASS:
         print(
-            "REFUSING TO TRAIN: fewer than "
-            f"{MIN_SAMPLES_PER_CLASS} verified samples per class. "
-            "Gather more human-verified labels — no model will be published, "
-            "and no accuracy will be fabricated from insufficient data."
+            "INSUFFICIENT_VERIFIED_DATA — training is refused.\n"
+            f"  Need ≥ {MIN_TOTAL} records and ≥ {MIN_SAMPLES_PER_CLASS} per class; "
+            f"have {len(records)} total, {dict(label_counts)}.\n"
+            "No model artifact will be produced and no metrics will be fabricated."
         )
-        return 2
+        return 3
 
     X, y, regions = build_matrix(records)
     if not X:
@@ -240,21 +248,72 @@ def main() -> int:
             "max": float(col.max()),
         }
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    joblib.dump(best_model, MODELS_DIR / "reconciliation_model.joblib")
+    joblib.dump(best_model, ESTIMATOR_PATH)
 
     test_pred = best_model.predict(X_arr[test_idx])
     acc = float(accuracy_score(y_arr[test_idx], test_pred))
     precision, recall, f1, _ = precision_recall_fscore_support(
         y_arr[test_idx], test_pred, average="macro", zero_division=0
     )
+    _, _, f1_w, _ = precision_recall_fscore_support(
+        y_arr[test_idx], test_pred, average="weighted", zero_division=0
+    )
+    from sklearn.metrics import balanced_accuracy_score
+
+    balanced_acc = float(balanced_accuracy_score(y_arr[test_idx], test_pred))
     labels_order = sorted(set(y_arr.tolist()))
     cm = confusion_matrix(y_arr[test_idx], test_pred, labels=labels_order)
 
+    # ---- Discrepancy recall (spec §12): recall on discrepancy classes -----
+    from sklearn.metrics import recall_score
+
+    discrepancy_mask = np.isin(
+        y_arr[test_idx], ["MINOR_DISCREPANCY", "MAJOR_DISCREPANCY"]
+    )
+    if discrepancy_mask.any():
+        y_true_bin = np.where(discrepancy_mask, "DISCREPANCY", "OTHER")
+        y_pred_bin = np.where(
+            np.isin(test_pred, ["MINOR_DISCREPANCY", "MAJOR_DISCREPANCY"]),
+            "DISCREPANCY",
+            "OTHER",
+        )
+        discrepancy_recall = float(
+            recall_score(y_true_bin, y_pred_bin, pos_label="DISCREPANCY", zero_division=0)
+        )
+    else:
+        discrepancy_recall = None
+
+    # ---- Probability calibration (spec §13): fit on validation split -----
+    calibration_status = "not_applicable"
+    calibrated_metrics = None
+    try:
+        from sklearn.calibration import CalibratedClassifierCV
+
+        if hasattr(best_model, "predict_proba") and len(va_idx) >= 10:
+            calibrated = CalibratedClassifierCV(best_model, method="sigmoid", cv="prefit")
+            calibrated.fit(X_arr[va_idx], y_arr[va_idx])
+            cal_proba = calibrated.predict_proba(X_arr[va_idx])
+            cal_pred = calibrated.classes_[np.argmax(cal_proba, axis=1)]
+            calibration_f1 = float(
+                f1_score(y_arr[va_idx], cal_pred, average="macro", zero_division=0)
+            )
+            calibration_status = "sigmoid_on_validation_split"
+            calibrated_metrics = {
+                "method": "sigmoid (Platt), fit on validation split",
+                "validation_f1_macro_after_calibration": calibration_f1,
+            }
+            joblib.dump(calibrated, ESTIMATOR_PATH)  # serve calibrated pipeline
+    except Exception as exc:
+        calibration_status = f"failed: {exc}"
+
     print("\n=== FINAL geographic-holdout test (untouched) ===")
-    print(f"Accuracy   : {acc:.4f}")
-    print(f"Precision  : {precision:.4f} (macro)")
-    print(f"Recall     : {recall:.4f} (macro)")
-    print(f"F1 (macro) : {f1:.4f}")
+    print(f"Accuracy              : {acc:.4f}")
+    print(f"Balanced accuracy     : {balanced_acc:.4f}")
+    print(f"Precision (macro)     : {precision:.4f}")
+    print(f"Recall (macro)        : {recall:.4f}")
+    print(f"F1 (macro)            : {f1:.4f}")
+    if discrepancy_recall is not None:
+        print(f"Discrepancy recall    : {discrepancy_recall:.4f}")
     print("Confusion matrix (rows=true, cols=pred):")
     print(classification_report(y_arr[test_idx], test_pred, zero_division=0))
 
@@ -264,6 +323,8 @@ def main() -> int:
         "training_date": datetime.now(timezone.utc).isoformat(),
         "training_sample_count": int(len(tr_idx)),
         "verified_label_count": int(len(records)),
+        "verified_sample_count": int(len(records)),
+        "class_distribution": dict(label_counts),
         "feature_schema_version": FEATURE_SCHEMA_VERSION,
         "feature_order": list(FEATURE_ORDER),
         "validation_metrics": comparison[best_name],
@@ -271,15 +332,18 @@ def main() -> int:
         "cv_f1_macro_folds": cv_f1,
         "test_metrics": {
             "accuracy": acc,
+            "balanced_accuracy": float(balanced_acc),
             "precision_macro": float(precision),
             "recall_macro": float(recall),
             "f1_macro": float(f1),
+            "f1_weighted": float(f1_weighted),
+            "discrepancy_recall": discrepancy_recall,
             "support": int(len(test_idx)),
             "labels": labels_order,
             "confusion_matrix": cm.tolist(),
         },
         "geographic_holdout_metrics": {
-            "method": "GroupKFold by region",
+            "method": "GroupKFold by region (train/val/test disjoint)",
             "regions": sorted(set(groups.tolist())),
             "test_region_support": int(len(test_idx)),
             "accuracy": acc,
@@ -287,7 +351,9 @@ def main() -> int:
         },
         "feature_stats": feature_stats,
         "training_class_distribution": dict(label_counts),
-        "calibration_status": "uncalibrated",
+        "calibration_status": calibration_status,
+        "calibration_metrics": calibrated_metrics,
+        "training_data_version": _data_version(),
         "production_status": "active",
     }
 
@@ -298,6 +364,7 @@ def main() -> int:
         json.dump(
             {
                 "labels_path": str(LABELS_PATH),
+                "labels_sha256_16": _data_version(),
                 "trained_at": artifact["training_date"],
                 "model_version": artifact["model_version"],
             },
