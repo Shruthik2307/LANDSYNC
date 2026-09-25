@@ -227,4 +227,31 @@ class TestModelRegistry:
         assert "single class" in registry.reason
 
 
+class TestConflictDetectionModelContract:
+    def test_raw_estimator_artifact_handled_safely(self, tmp_path):
+        """Incompatible or raw estimators must not crash startup."""
+        import pickle
+        from sklearn.ensemble import RandomForestClassifier
+        from backend.services.ml_service import ConflictDetectionModel
+
+        fake_model_path = tmp_path / "raw_estimator.pkl"
+        with open(fake_model_path, "wb") as f:
+            pickle.dump(RandomForestClassifier(), f)
+
+        model = ConflictDetectionModel(model_path=fake_model_path)
+        assert model.is_loaded is False
+        has_conflict, confidence = model.predict_conflict({"area_difference": 1.0})
+        assert has_conflict is False
+        assert confidence == 0.0
+
+    def test_missing_model_path_handled_safely(self, tmp_path):
+        from backend.services.ml_service import ConflictDetectionModel
+
+        model = ConflictDetectionModel(model_path=tmp_path / "nonexistent.pkl")
+        assert model.is_loaded is False
+        has_conflict, confidence = model.predict_conflict({})
+        assert has_conflict is False
+        assert confidence == 0.0
+
+
 import json  # noqa: E402  (kept at bottom to not disturb the imports above)

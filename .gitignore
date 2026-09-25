@@ -20,6 +20,7 @@ __pycache__/
 # Runtime data
 backend/tile_cache/
 backend/uploads/
+*.db
 backend/*.db
 backend/backend_log.txt
 .vercel/

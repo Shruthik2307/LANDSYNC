@@ -390,3 +390,20 @@ class TestUpload:
             files={"file": ("pt.geojson", io.BytesIO(bad), "application/geo+json")},
         )
         assert resp.status_code == 400
+
+
+class TestExportEndpoints:
+    def test_export_geojson_success(self, client):
+        """GET /api/export?dataset_id=sample returns FeatureCollection with parcels (G1/G3)."""
+        resp = client.get("/api/export?dataset_id=sample")
+        assert resp.status_code == 200
+        assert "application/geo+json" in resp.headers.get("content-type", "")
+        data = resp.json()
+        assert data.get("type") == "FeatureCollection"
+        features = data.get("features", [])
+        assert len(features) == 25
+        first = features[0]
+        assert first["type"] == "Feature"
+        assert "geometry" in first
+        assert "properties" in first
+        assert "parcel_id" in first["properties"]

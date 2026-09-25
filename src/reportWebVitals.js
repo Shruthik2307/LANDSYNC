@@ -12,10 +12,5 @@ export function reportWebVitals(onPerfEntry) {
 
 // Log performance metrics in development
 export function logWebVitals() {
-  if (import.meta.env.DEV) {
-    reportWebVitals((metric) => {
-      // eslint-disable-next-line no-console
-      console.log(`[Web Vitals] ${metric.name}: ${metric.value.toFixed(2)}ms`)
-    })
-  }
+  // Web Vitals logging disabled
 }

@@ -23,6 +23,7 @@ class ConflictDetectionModel:
         self.confidence_model = GradientBoostingRegressor(n_estimators=100, random_state=42)
         self.scaler = StandardScaler()
         self.model_path = model_path or Path("models/conflict_detector.pkl")
+        self.is_loaded: bool = False
 
         if self.model_path.exists():
             self.load_model()
@@ -100,6 +101,7 @@ class ConflictDetectionModel:
         self.confidence_model.fit(X_train_scaled, confidence_labels[:len(X_train)])
 
         self.save_model()
+        self.is_loaded = True
 
     def predict_conflict(self, parcel_data: Dict) -> Tuple[bool, float]:
         """
@@ -111,16 +113,23 @@ class ConflictDetectionModel:
         Returns:
             (has_conflict, confidence_score)
         """
+        if not self.is_loaded or not hasattr(self.scaler, "mean_"):
+            return False, 0.0
+
         features = self.extract_features(parcel_data)
         features_scaled = self.scaler.transform(features)
 
         # Predict conflict
-        conflict_prob = self.classifier.predict_proba(features_scaled)[0]
         has_conflict = bool(self.classifier.predict(features_scaled)[0] == 1)
 
         # Predict confidence
-        confidence = float(self.confidence_model.predict(features_scaled)[0])
-        confidence = float(np.clip(confidence, 0, 100))
+        confidence = 50.0
+        if self.confidence_model is not None and hasattr(self.confidence_model, "predict"):
+            try:
+                confidence = float(self.confidence_model.predict(features_scaled)[0])
+                confidence = float(np.clip(confidence, 0, 100))
+            except Exception:
+                confidence = 50.0
 
         return has_conflict, confidence
 
@@ -140,21 +149,33 @@ class ConflictDetectionModel:
         try:
             with open(self.model_path, 'rb') as f:
                 data = pickle.load(f)
+
+            if isinstance(data, dict) and 'classifier' in data and 'scaler' in data:
                 self.classifier = data['classifier']
-                self.confidence_model = data['confidence_model']
+                self.confidence_model = data.get('confidence_model')
                 self.scaler = data['scaler']
 
-            if not self._verify_model_variance():
-                logger.warning(f"Model at {self.model_path} is a constant predictor. Excluding from scoring.")
-                # We don't raise here to allow the system to fall back to engine scoring
+                if not self._verify_model_variance():
+                    logger.warning(f"Model at {self.model_path} is a constant predictor. Excluding from scoring.")
+                    self.is_loaded = False
+                else:
+                    logger.info(f"Model loaded and verified from {self.model_path}")
+                    self.is_loaded = True
             else:
-                logger.info(f"Model loaded and verified from {self.model_path}")
+                logger.info(
+                    f"Artifact at {self.model_path} does not match ConflictDetectionModel dictionary schema; "
+                    "leaving model in MODEL_UNAVAILABLE state."
+                )
+                self.is_loaded = False
         except Exception as e:
-            logger.warning(f"Failed to load model: {e}")
+            logger.warning(f"Failed to load model from {self.model_path}: {e}")
+            self.is_loaded = False
 
     def _verify_model_variance(self, sample_size: int = 10) -> bool:
         """Verify model doesn't return identical output for distinct inputs."""
         try:
+            if not hasattr(self.scaler, "n_features_in_") or not hasattr(self.classifier, "predict"):
+                return False
             # Create distinct synthetic feature vectors
             test_inputs = np.array([np.random.rand(self.scaler.n_features_in_) for _ in range(sample_size)])
             test_inputs_scaled = self.scaler.transform(test_inputs)

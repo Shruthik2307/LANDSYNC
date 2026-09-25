@@ -27,6 +27,7 @@ with match_status UNMATCHED and review_required=True (spec §6.5).
 from __future__ import annotations
 
 import json
+import logging
 import sys
 from pathlib import Path
 from typing import Any
@@ -50,6 +51,8 @@ from engine.candidates import MatchingThresholds, classify_status
 from engine.metrics import compute_pair_metrics
 from engine.ml_schema import FEATURE_ORDER, features_from_pair_metrics
 from engine.fusion import fuse
+
+logger = logging.getLogger(__name__)
 
 # Module-level default thresholds (documented in MatchingThresholds).
 THRESHOLDS = MatchingThresholds()
@@ -170,10 +173,9 @@ def run_reconciliation(
             ) or (
                 hasattr(geom_b, "is_empty") and geom_b.is_empty
             ):
-                print(
+                logger.warning(
                     f"[pipeline] WARNING: Parcel {pid!r} has a null/empty geometry — "
-                    "returned as REVIEW_REQUIRED with INSUFFICIENT evidence.",
-                    file=sys.stderr,
+                    "returned as REVIEW_REQUIRED with INSUFFICIENT evidence."
                 )
                 results.append(_insufficient_record(pid))
                 matched_cadastral_ids.add(pid)
@@ -212,9 +214,8 @@ def run_reconciliation(
                         vector = [float(feats[k]) for k in FEATURE_ORDER]
                         ml_stream = model_predictor.predict(vector)
                 except Exception as exc:  # never let ML break determinism
-                    print(
-                        f"[pipeline] WARNING: ML predictor failed for {pid!r}: {exc}",
-                        file=sys.stderr,
+                    logger.warning(
+                        f"[pipeline] WARNING: ML predictor failed for {pid!r}: {exc}"
                     )
                     ml_stream = {"model_status": "MODEL_UNAVAILABLE"}
 
@@ -256,10 +257,9 @@ def run_reconciliation(
                     json.dumps(shapely.geometry.mapping(geom_b_4326))
                 )
             except Exception as exc:  # geometry transport is best-effort
-                print(
+                logger.warning(
                     f"[pipeline] WARNING: Could not attach municipal geometry for "
-                    f"parcel {pid!r}: {exc}",
-                    file=sys.stderr,
+                    f"parcel {pid!r}: {exc}"
                 )
 
             results.append(record)
@@ -372,6 +372,7 @@ def _assert_file_exists(path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     if len(sys.argv) == 3:
         _cadastral = sys.argv[1]
         _municipal = sys.argv[2]
@@ -380,11 +381,11 @@ if __name__ == "__main__":
         _cadastral = _project_root / "data" / "sample" / "cadastral.geojson"
         _municipal = _project_root / "data" / "sample" / "municipal.geojson"
 
-    print(f"[pipeline] Cadastral : {_cadastral}")
-    print(f"[pipeline] Municipal : {_municipal}")
-    print()
+    logger.info(f"[pipeline] Cadastral : {_cadastral}")
+    logger.info(f"[pipeline] Municipal : {_municipal}")
+    logger.info("")
 
     _results = run_reconciliation(_cadastral, _municipal)
 
-    print(f"[pipeline] {len(_results)} reconciliation record(s) produced.\n")
-    print(json.dumps(_results, indent=2))
+    logger.info(f"[pipeline] {len(_results)} reconciliation record(s) produced.\n")
+    logger.info(json.dumps(_results, indent=2))
