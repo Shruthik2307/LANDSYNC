@@ -27,7 +27,18 @@ from engine.ml_schema import FEATURE_ORDER
 
 logger = logging.getLogger(__name__)
 
-_MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
+def _find_models_dir() -> Path:
+    candidates = [
+        Path(__file__).resolve().parent.parent.parent / "models",
+        Path(__file__).resolve().parent.parent / "models",
+        Path("/app/models"),
+    ]
+    for c in candidates:
+        if (c / "reconciliation_model.joblib").exists():
+            return c
+    return candidates[0]
+
+_MODELS_DIR = _find_models_dir()
 ESTIMATOR_PATH = _MODELS_DIR / "reconciliation_model.joblib"
 ARTIFACT_PATH = _MODELS_DIR / "reconciliation_model.json"
 
@@ -63,6 +74,10 @@ def _is_out_of_distribution(vector: list[float], stats: dict) -> bool:
         s = stats.get(name)
         if not s:
             continue
+        if name in ("survey_number_match", "land_use_match", "classification_match"):
+            if value in (0.0, 1.0, 0, 1, True, False):
+                continue
+
         mean, std = s.get("mean"), s.get("std")
         if std is None or std == 0:
             # Degenerate feature (constant in training): any deviation is OOD.

@@ -196,13 +196,27 @@ def _resolve_dataset_paths(dataset_id: str | None) -> tuple[Path, Path]:
             uploads[0].name,
         )
         return uploads[0], MUNICIPAL_PATH
+
+    file_a, file_b = uploads[0], uploads[1]
+    name_a = file_a.name.lower()
+    name_b = file_b.name.lower()
+    cadastral_clues = ("cadastr", "revenue", "ror", "khasra", "deed", "land_record", "rev")
+    municipal_clues = ("municip", "survey", "ulb", "drone", "town", "ghmc", "mun")
+
+    if any(c in name_b for c in cadastral_clues) and not any(c in name_a for c in cadastral_clues):
+        logger.info("[landsync_service] dataset %r: smart paired %s (cadastral) vs %s (municipal).", dataset_id, file_b.name, file_a.name)
+        return file_b, file_a
+    if any(m in name_a for m in municipal_clues) and not any(m in name_b for m in municipal_clues):
+        logger.info("[landsync_service] dataset %r: smart paired %s (cadastral) vs %s (municipal).", dataset_id, file_b.name, file_a.name)
+        return file_b, file_a
+
     logger.info(
         "[landsync_service] dataset %r: %s vs %s.",
         dataset_id,
-        uploads[0].name,
-        uploads[1].name,
+        file_a.name,
+        file_b.name,
     )
-    return uploads[0], uploads[1]
+    return file_a, file_b
 
 
 def load_data(
@@ -1010,6 +1024,12 @@ def _build_geometry_map(
     # are actually needed.
     if only_ids is not None and "parcel_id" in gdf.columns:
         gdf = gdf[gdf["parcel_id"].astype(str).isin(only_ids)]
+
+    if gdf.crs is not None and gdf.crs.to_epsg() != 4326:
+        try:
+            gdf = gdf.to_crs(epsg=4326)
+        except Exception as exc:
+            logger.warning("[landsync_service] Could not reproject to EPSG:4326 for map: %s", exc)
 
     geom_map: dict[str, dict] = {}
     for _, row in gdf.iterrows():

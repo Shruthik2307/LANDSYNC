@@ -57,14 +57,18 @@ def health() -> dict:
             "municipal_source": info.get("municipal_source", "SYNTHETIC_DEMO"),
             "cadastral_filename": info.get("cadastral_filename"),
             "municipal_filename": info.get("municipal_filename"),
+            "reconciliation_type": info.get("reconciliation_type", "SYNTHETIC_DEMO"),
             # Spec §6/§7: let the UI (and deployment checks) see the fixture
             # mode and whether the loaded data is synthetic.
             "demo_fixture_mode": settings.DEMO_FIXTURE_MODE,
             "data_state": (
-                "SYNTHETIC_DEMO_DATA"
-                if info.get("cadastral_source", "SYNTHETIC_DEMO") not in ("USER_UPLOADED_REAL", "TGRAC_TELANGANA")
-                or info.get("municipal_source", "SYNTHETIC_DEMO") not in ("USER_UPLOADED_REAL", "TGRAC_TELANGANA", "TGRAC_TELANGANA_ULB")
-                else "REAL_TO_REAL"
+                "REAL_TO_REAL"
+                if info.get("cadastral_source") in ("USER_UPLOADED_REAL", "TGRAC_TELANGANA")
+                and info.get("municipal_source") in ("USER_UPLOADED_REAL", "TGRAC_TELANGANA", "TGRAC_TELANGANA_ULB")
+                else "REAL_TO_SAMPLE_MIXED"
+                if info.get("cadastral_source") in ("USER_UPLOADED_REAL", "TGRAC_TELANGANA")
+                or info.get("municipal_source") in ("USER_UPLOADED_REAL", "TGRAC_TELANGANA", "TGRAC_TELANGANA_ULB")
+                else "SYNTHETIC_DEMO_DATA"
             ),
         }
 

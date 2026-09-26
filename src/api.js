@@ -204,12 +204,16 @@ export function uploadDataset(files) {
   if (!isDemoMode()) {
     const body = new FormData()
     if (files && files.length > 0) {
-      // Pick the GeoJSON or JSON file first if present
-      const geoFile = files.find(f => {
+      const geoFiles = files.filter(f => {
         const name = (f.name || '').toLowerCase()
         return name.endsWith('.geojson') || name.endsWith('.json')
-      }) || files[0]
-      body.append('file', geoFile, geoFile?.name || 'source.geojson')
+      })
+      const targetFiles = geoFiles.length > 0 ? geoFiles : [files[0]]
+      for (const f of targetFiles) {
+        body.append('files', f, f.name)
+      }
+      // Also append first file as 'file' for single-file API compatibility
+      body.append('file', targetFiles[0], targetFiles[0].name)
     }
     // Give uploads up to 10 minutes (600,000 ms) for large datasets (e.g. 200MB)
     return request('/api/upload', { method: 'POST', body }, 600000)

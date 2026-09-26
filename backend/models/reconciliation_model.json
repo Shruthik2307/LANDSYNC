@@ -1,0 +1,209 @@
+{
+  "model_type": "RandomForestClassifier",
+  "model_version": "rf-tgrac-v1.0.0-b1f6d178",
+  "model_hash_sha256": "329207143f5161fca07fba50c9dfdeaae2e97dcefcf1871683e271d9b173aec8",
+  "dataset_hash_sha256": "b1f6d17827b2a27b5d6d4818753e7facd8c1a9be9ac424ca57ed083c58d26985",
+  "trained_at": "2026-09-25T19:57:02.523837+00:00",
+  "feature_schema_version": "1.0.0",
+  "feature_order": [
+    "iou",
+    "area_ratio",
+    "area_difference_m2",
+    "centroid_distance_m",
+    "hausdorff_distance_m",
+    "boundary_displacement_m",
+    "shape_similarity",
+    "overlap_pct_of_cadastral",
+    "compactness_difference",
+    "perimeter_difference_m",
+    "vertex_count_diff",
+    "survey_number_match",
+    "land_use_match",
+    "classification_match"
+  ],
+  "feature_stats": {
+    "iou": {
+      "mean": 0.6810674987861098,
+      "std": 0.4414505264801096,
+      "min": 1.328012710527847e-12,
+      "max": 0.9999999999008998
+    },
+    "area_ratio": {
+      "mean": 0.6817065242422562,
+      "std": 0.4404775187381413,
+      "min": 0.00048369155439710474,
+      "max": 0.9999999999875216
+    },
+    "area_difference_m2": {
+      "mean": 15706.320257424215,
+      "std": 31849.81292360847,
+      "min": 1.30141756926605e-07,
+      "max": 145535.86893616067
+    },
+    "centroid_distance_m": {
+      "mean": 45.19185673763285,
+      "std": 101.88667455288201,
+      "min": 5.6650140604919e-09,
+      "max": 528.5747862800008
+    },
+    "hausdorff_distance_m": {
+      "mean": 93.68188149673091,
+      "std": 198.9424032050472,
+      "min": 1.3431725187092979e-08,
+      "max": 1000.4006083459578
+    },
+    "boundary_displacement_m": {
+      "mean": 58.02775472687162,
+      "std": 123.32720581160464,
+      "min": 4.526882106475503e-09,
+      "max": 550.6150168414964
+    },
+    "shape_similarity": {
+      "mean": 0.6973651512829866,
+      "std": 0.42409514275787946,
+      "min": 0.00014130697110913438,
+      "max": 0.9999999999126459
+    },
+    "overlap_pct_of_cadastral": {
+      "mean": 68.10675163999754,
+      "std": 44.14505355232263,
+      "min": 6.8370563268308944e-09,
+      "max": 99.99999999380516
+    },
+    "compactness_difference": {
+      "mean": 0.11674364386271766,
+      "std": 0.2183318339064062,
+      "min": 1.1178002967682232e-11,
+      "max": 0.7176573729011271
+    },
+    "perimeter_difference_m": {
+      "mean": 217.33743064388997,
+      "std": 486.14471520477196,
+      "min": 2.7367832444724627e-09,
+      "max": 2401.5536443073056
+    },
+    "vertex_count_diff": {
+      "mean": 4.483870967741935,
+      "std": 7.47844630983984,
+      "min": 0.0,
+      "max": 28.0
+    },
+    "survey_number_match": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "land_use_match": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "classification_match": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    }
+  },
+  "classes": [
+    0,
+    1,
+    2
+  ],
+  "class_names": [
+    "No Conflict (MATCH)",
+    "Minor Conflict",
+    "Critical Conflict"
+  ],
+  "training_samples": 24,
+  "test_samples": 7,
+  "total_samples": 31,
+  "training_class_distribution": {
+    "0": 8,
+    "1": 8,
+    "2": 8
+  },
+  "test_class_distribution": {
+    "0": 3,
+    "1": 2,
+    "2": 2
+  },
+  "cross_validation": {
+    "accuracy_mean": 0.95,
+    "accuracy_std": 0.09999999999999999,
+    "balanced_accuracy_mean": 0.9333333333333333,
+    "balanced_accuracy_std": 0.13333333333333336,
+    "precision_macro_mean": 0.9111111111111111,
+    "precision_macro_std": 0.1777777777777778,
+    "recall_macro_mean": 0.9333333333333333,
+    "recall_macro_std": 0.13333333333333336,
+    "f1_macro_mean": 0.9199999999999999,
+    "f1_macro_std": 0.16
+  },
+  "test_metrics": {
+    "accuracy": 0.8571428571428571,
+    "balanced_accuracy": 0.8333333333333334,
+    "precision_macro": 0.9166666666666666,
+    "recall_macro": 0.8333333333333334,
+    "f1_macro": 0.8412698412698413,
+    "confusion_matrix": [
+      [
+        3,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        2
+      ]
+    ],
+    "classification_report": {
+      "0": {
+        "precision": 0.75,
+        "recall": 1.0,
+        "f1-score": 0.8571428571428571,
+        "support": 3.0
+      },
+      "1": {
+        "precision": 1.0,
+        "recall": 0.5,
+        "f1-score": 0.6666666666666666,
+        "support": 2.0
+      },
+      "2": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 2.0
+      },
+      "accuracy": 0.8571428571428571,
+      "macro avg": {
+        "precision": 0.9166666666666666,
+        "recall": 0.8333333333333334,
+        "f1-score": 0.8412698412698413,
+        "support": 7.0
+      },
+      "weighted avg": {
+        "precision": 0.8928571428571429,
+        "recall": 0.8571428571428571,
+        "f1-score": 0.8435374149659863,
+        "support": 7.0
+      }
+    }
+  },
+  "provenance": {
+    "data_source": "TGRAC_TELANGANA: Bhunaksha_Cadastral Layer 0 vs Bhunaksha_query Layer 1",
+    "evaluator": "scripts/train_real_model.py (Held-Out Test Set)",
+    "synthetic_fixtures_used": false,
+    "data_leakage": false,
+    "independently_verified": true
+  }
+}

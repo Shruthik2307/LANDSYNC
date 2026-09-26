@@ -240,6 +240,7 @@ export default function ResultView({
           <div className="flex-1 min-h-0 h-full relative overflow-hidden">
             <div className="absolute inset-0 bg-radial-vignette pointer-events-none z-[500]" />
             <ResultMapStage
+              health={health}
               selected={selected}
               setSelected={setSelected}
               boundaryMode={boundaryMode}

@@ -34,6 +34,7 @@ function CustomZoomControls() {
 }
 
 export default function ResultMapStage({
+  health,
   selected,
   setSelected,
   boundaryMode,
@@ -205,25 +206,58 @@ export default function ResultMapStage({
         ))}
       </MapContainer>
 
-      {/* Bottom-Left Tactical Legend */}
+      {/* Bottom-Left Tactical Legend & Map Provenance */}
       <div 
-        className="absolute bottom-4 left-3 z-[490] p-2.5 sm:p-3 rounded-xl bg-[#070D1A]/90 backdrop-blur-xl border border-cyan-500/20 text-[11px] font-mono shadow-xl space-y-1.5 text-slate-300"
-        aria-label="Map legend"
+        className="absolute bottom-4 left-3 z-[490] max-w-sm p-3 rounded-xl bg-[#070D1A]/95 backdrop-blur-xl border border-cyan-500/25 text-[11px] font-mono shadow-2xl space-y-2 text-slate-300"
+        aria-label="Map legend and sources"
       >
-        <div className="text-[11px] text-cyan-400/80 uppercase tracking-widest font-bold pb-1 border-b border-slate-800">
-          GIS OVERLAY LEGEND
+        <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+          <span className="text-[11px] text-cyan-400 font-bold uppercase tracking-wider">
+            Map Provenance & Sources
+          </span>
+          <span className="text-[10px] text-slate-400 bg-slate-800/80 px-1.5 py-0.5 rounded">
+            {satelliteMode ? 'Satellite' : 'Basemap'}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-0.5 bg-cyan-400 inline-block shadow-[0_0_6px_rgba(0,240,255,0.8)]" />
-          <span>Cadastral RoR (Source A)</span>
+
+        {/* Boundary Legend */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-0.5 bg-cyan-400 inline-block shadow-[0_0_6px_rgba(0,240,255,0.8)]" />
+            <span className="truncate">
+              Source A: {health?.cadastral_filename || (health?.cadastral_source === 'USER_UPLOADED_REAL' ? 'Real Cadastral Document' : 'Cadastral RoR (2.5m)')}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-0.5 bg-amber-400 inline-block border-t border-dashed border-amber-400 shadow-[0_0_6px_rgba(255,184,0,0.8)]" />
+            <span className="truncate">
+              Source B: {health?.municipal_filename || (health?.municipal_source === 'USER_UPLOADED_REAL' ? 'Real Municipal Survey' : 'Municipal Survey / ULB (30cm)')}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-400 inline-block shadow-[0_0_6px_rgba(248,113,113,0.8)]" />
+            <span>Disputed Area / Discrepancy</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-0.5 bg-amber-400 inline-block border-t border-dashed border-amber-400 shadow-[0_0_6px_rgba(255,184,0,0.8)]" />
-          <span>Municipal Survey (Source B)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
-          <span>High Priority Conflict</span>
+
+        {/* Map Date & Provider Facts */}
+        <div className="pt-1.5 border-t border-slate-800/80 space-y-0.5 text-[10px] text-slate-400">
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">Map Date:</span>
+            <span className="text-slate-200 font-semibold">
+              {satelliteMode ? 'Observation Mosaic (2024–2026)' : 'Cadastral Vintage (2025–2026)'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">Basemap Provider:</span>
+            <span className="text-cyan-300">
+              {satelliteMode ? 'Esri World Imagery (Max 19z)' : 'CARTO Dark Matter (Vector)'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-slate-500">CRS Alignment:</span>
+            <span className="text-slate-300">EPSG:3857 (Metric) · WGS84 Display</span>
+          </div>
         </div>
       </div>
     </section>

@@ -27,6 +27,7 @@ router = APIRouter(tags=["provenance"])
 
 
 @router.get("/api/data/provenance")
+@router.get("/api/provenance")
 def data_provenance() -> dict:
     """Provenance for every dataset currently loaded in the engine."""
     if not is_loaded():
@@ -65,6 +66,7 @@ def data_provenance() -> dict:
         "status": "ok",
         "classification": classification,
         "reconciliation_mode": reconciliation_mode,
+        "reconciliation_type": info.get("reconciliation_type", "REAL_TO_REAL" if cad_src == "USER_UPLOADED_REAL" and mun_src == "USER_UPLOADED_REAL" else "MIXED" if cad_src == "USER_UPLOADED_REAL" or mun_src == "USER_UPLOADED_REAL" else "SYNTHETIC_DEMO"),
         "demo_fixture_mode": info.get("demo_fixture_mode"),
         "reconciled_parcel_count": info.get("reconciled_parcel_count"),
         "unmatched_municipal_count": info.get("unmatched_municipal_count", 0),

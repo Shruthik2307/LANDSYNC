@@ -51,6 +51,15 @@ class CRSManager:
             If *gdf* has no CRS defined (``gdf.crs is None``).
         """
         CRSManager._validate_type(gdf)
+
+        if gdf.crs is None and not gdf.empty:
+            try:
+                b = gdf.total_bounds
+                if len(b) == 4 and -180 <= b[0] <= 180 and -180 <= b[2] <= 180 and -90 <= b[1] <= 90 and -90 <= b[3] <= 90:
+                    gdf = gdf.set_crs(epsg=4326)
+            except Exception:
+                pass
+
         CRSManager._validate_crs_defined(gdf)
 
         if CRSManager._is_target_crs(gdf):
