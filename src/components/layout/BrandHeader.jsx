@@ -89,16 +89,16 @@ export default function BrandHeader({
           />
           <div className="text-left min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[15px] font-bold tracking-[0.14em] text-slate-100 group-hover:text-cyan-300 transition-colors">
-                LANDSYNC
+              <span className="text-[15px] font-bold tracking-[0.14em] text-white group-hover:text-cyan-300 transition-colors">
+                LAND<span className="text-cyan-400">SYNC</span>
               </span>
               <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono uppercase px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                 <Info size={10} className="text-cyan-400" aria-hidden="true" />
                 GIS
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 hidden md:block tracking-wide whitespace-nowrap">
-              Land Records Reconciliation
+            <p className="text-[11px] text-slate-400 hidden md:block tracking-wide whitespace-nowrap font-mono uppercase text-[10px]">
+              Precision Geospatial Intelligence
             </p>
           </div>
         </button>

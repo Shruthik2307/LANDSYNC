@@ -83,19 +83,25 @@ export default function LandingScreen({
           {...heroRise(0.08)}
           src="/brand/landsync-mark@512.png"
           alt="LANDSYNC GIS"
-          width={96}
-          height={96}
-          className="h-20 w-20 sm:h-24 sm:w-24 mb-6 object-contain drop-shadow-[0_0_20px_rgba(0,240,255,0.2)]"
+          width={112}
+          height={112}
+          className="h-24 w-24 sm:h-28 sm:w-28 mb-4 object-contain drop-shadow-[0_4px_25px_rgba(0,180,255,0.25)]"
           draggable={false}
         />
         <motion.h1
           {...heroRise(0.16)}
-          className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-4 leading-[1.08]"
+          className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-2 leading-[1.08]"
         >
-          <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-slate-100 to-slate-400">
-            LANDSYNC
-          </span>
+          <span className="text-white">LAND</span>
+          <span className="text-cyan-400">SYNC</span>
         </motion.h1>
+
+        <motion.p
+          {...heroRise(0.2)}
+          className="text-xs sm:text-sm font-mono uppercase tracking-[0.28em] text-slate-400 mb-6 font-semibold"
+        >
+          Precision Geospatial Intelligence
+        </motion.p>
 
         <motion.p
           {...heroRise(0.24)}
