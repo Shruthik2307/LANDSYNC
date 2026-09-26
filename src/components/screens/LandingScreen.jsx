@@ -133,7 +133,7 @@ export default function LandingScreen({
           alt="LANDSYNC GIS"
           width={96}
           height={96}
-          className="h-20 w-20 sm:h-24 sm:w-24 mb-6 object-contain drop-shadow-[0_0_35px_rgba(0,240,255,0.4)]"
+          className="h-20 w-20 sm:h-24 sm:w-24 mb-6 object-contain drop-shadow-[0_0_24px_rgba(0,240,255,0.22)]"
           draggable={false}
         />
         <motion.h1
