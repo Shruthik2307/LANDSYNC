@@ -35,23 +35,49 @@ export default function ParcelShape({ parcel, selected, dimmed, onSelect, bounda
     ? droneRing.map(([lng, lat]) => [lat, lng])
     : null
 
+  const isDroneOnly = boundaryMode === 'drone'
+  const isBoth = boundaryMode === 'both'
+  const primaryPoints = isDroneOnly && dronePoints ? dronePoints : points
+  const primaryStroke = selected ? '#FFFFFF' : isDroneOnly ? '#FFB800' : fill
+  const primaryFill = isDroneOnly ? '#FFB800' : fill
+
   return (
     <>
-      {/* Primary Cadastral Polygon */}
+      {/* Primary Boundary Polygon (Cadastral in Cadastral/Both mode; Municipal in Drone mode) */}
       <Polygon
-        positions={points}
+        positions={primaryPoints}
         pathOptions={{
-          color: strokeColor,
-          fillColor: fill,
+          color: primaryStroke,
+          fillColor: primaryFill,
           fillOpacity: opacity,
           opacity: dimmed ? 0.2 : 0.95,
           weight: selected ? 3.5 : 1.8,
+          dashArray: isDroneOnly ? '6 4' : undefined,
           className: `cursor-pointer transition-all duration-200 ${selected ? 'parcel-selected' : ''}`,
         }}
         eventHandlers={{ 
           click: () => onSelect(parcel),
         }}
       />
+
+      {/* Overlay Municipal Survey Boundary in 'both' (Consensus) mode when not selected */}
+      {!selected && isBoth && dronePoints && (
+        <Polygon
+          positions={dronePoints}
+          pathOptions={{
+            color: '#FFB800',
+            fillColor: '#FFB800',
+            fillOpacity: opacity * 0.6,
+            opacity: dimmed ? 0.2 : 0.9,
+            weight: 1.8,
+            dashArray: '6 4',
+            className: 'cursor-pointer transition-all duration-200',
+          }}
+          eventHandlers={{
+            click: () => onSelect(parcel),
+          }}
+        />
+      )}
 
       {/* Discrepancy Comparison Overlays when Selected */}
       {selected && parcel.geometry_conflict && (
@@ -64,7 +90,7 @@ export default function ParcelShape({ parcel, selected, dimmed, onSelect, bounda
               pathOptions={{
                 color: '#FF4C4C',
                 fillColor: '#FF4C4C',
-                fillOpacity: 0.4,
+                fillOpacity: 0.45,
                 opacity: 0,
                 weight: 0
               }}

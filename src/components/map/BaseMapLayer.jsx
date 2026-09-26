@@ -8,9 +8,25 @@ const CARTO_TILE_URL = `https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{
 const CARTO_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
 
-export default function BaseMapLayer() {
+const SATELLITE_TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+const SATELLITE_ATTRIBUTION =
+  'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+
+export default function BaseMapLayer({ mode = 'dark' }) {
   const [source, setSource] = useState('carto')
   const failCount = useRef(0)
+
+  if (mode === 'satellite') {
+    return (
+      <TileLayer
+        url={SATELLITE_TILE_URL}
+        maxNativeZoom={19}
+        maxZoom={22}
+        attribution={SATELLITE_ATTRIBUTION}
+        opacity={0.92}
+      />
+    )
+  }
 
   if (source === 'osm') {
     return (

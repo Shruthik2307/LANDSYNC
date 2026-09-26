@@ -13,10 +13,21 @@ import { Satellite, AlertTriangle, RefreshCw, ShieldQuestion } from 'lucide-reac
  * Never claims "government verified" or "live" — those words are reserved
  * for evidence the system does not have.
  */
-export function SourceBadge({ health }) {
-  if (!health) return null
-  const cad = health.cadastral_source
-  const mun = health.municipal_source
+export function SourceBadge({ health, demoMode = false }) {
+  if (demoMode) {
+    return (
+      <span
+        data-testid="source-badge"
+        className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/40"
+        title="Built-in synthetic sample parcels — for demonstration, not real land records."
+      >
+        SYNTHETIC DEMO DATA
+      </span>
+    )
+  }
+
+  const cad = health?.cadastral_source
+  const mun = health?.municipal_source
 
   if (cad === 'USER_UPLOADED_REAL' && mun === 'USER_UPLOADED_REAL') {
     return (
@@ -44,10 +55,10 @@ export function SourceBadge({ health }) {
   return (
     <span
       data-testid="source-badge"
-      className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-slate-500/15 text-slate-300 border border-slate-500/40"
-      title="Built-in synthetic sample parcels — for demonstration, not real land records."
+      className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/40"
+      title="Live upload mode — waiting for user land records."
     >
-      SYNTHETIC DEMO DATA
+      LIVE UPLOAD MODE
     </span>
   )
 }

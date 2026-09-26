@@ -115,7 +115,11 @@ export default function App() {
           demoMode={demoMode}
           onToggleDemo={toggleDemoMode}
           onArchitecture={openArchitecture}
-          onInitiate={() => setFlow('upload')}
+          onInitiate={() => {
+            setDemoMode(false)
+            setDemoModeState(false)
+            setFlow('upload')
+          }}
           onExploreDemo={() => {
             setDemoMode(true)
             setDemoModeState(true)

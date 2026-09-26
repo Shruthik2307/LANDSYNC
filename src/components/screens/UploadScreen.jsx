@@ -15,7 +15,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
   const [customBackendUrl, setCustomBackendUrl] = useState(API_BASE_URL || '')
   const fileInputRef = useRef(null)
 
-  function addFiles(nextFiles) {
+  function addFiles(nextFiles, isSample = false) {
     if (!nextFiles || !nextFiles.length) return
     const incoming = Array.from(nextFiles)
     setFiles((current) => {
@@ -25,6 +25,9 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
     })
     setError('')
     setUploadSuccess(null)
+    if (!isSample && demoMode && onToggleDemo) {
+      onToggleDemo()
+    }
   }
 
   function removeFile(indexToRemove) {
@@ -39,7 +42,10 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
       const data = await resp.json()
       const blob = new Blob([JSON.stringify(data)], { type: 'application/geo+json' })
       const sampleFile = new File([blob], 'hyd_cadastral.geojson', { type: 'application/geo+json' })
-      addFiles([sampleFile])
+      if (!demoMode && onToggleDemo) {
+        onToggleDemo()
+      }
+      addFiles([sampleFile], true)
     } catch (e) {
       console.error('Failed to load sample dataset', e)
       setError('Could not load sample dataset. Try uploading your own .geojson file.')

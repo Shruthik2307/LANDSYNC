@@ -106,8 +106,8 @@ export default function BrandHeader({
         </button>
 
         {/* Source provenance badge — what is actually loaded (sample/upload) */}
-        <span className="hidden xl:inline-flex">
-          <SourceBadge health={health} />
+        <span className="inline-flex">
+          <SourceBadge health={health} demoMode={demoMode} />
         </span>
       </div>
 

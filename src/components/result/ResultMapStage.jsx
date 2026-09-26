@@ -107,7 +107,7 @@ export default function ResultMapStage({
             ].map((mode) => (
               <button
                 key={mode.id}
-                onClick={() => { setBoundaryMode(mode.id); setSatelliteMode(false); }}
+                onClick={() => setBoundaryMode(mode.id)}
                 className={`px-2.5 py-1 rounded text-[11px] transition-all duration-150 ${
                   boundaryMode === mode.id
                     ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30 shadow-[0_0_10px_rgba(0,240,255,0.15)]'
@@ -119,7 +119,7 @@ export default function ResultMapStage({
             ))}
 
             {/* Satellite Overlay Toggle */}
-            {satelliteEnabled && canShowSatellite && (
+            {satelliteEnabled && (
               <button
                 onClick={() => { 
                   setSatelliteMode((prev) => !prev)
@@ -131,9 +131,10 @@ export default function ResultMapStage({
                     : 'text-slate-400 border-transparent hover:text-sky-300 hover:bg-sky-950/40'
                 }`}
                 aria-pressed={satelliteMode}
+                title="Toggle Satellite Basemap"
               >
                 <Satellite size={12} className={satelliteMode ? 'text-sky-400 animate-pulse' : ''} />
-                <span>+ Satellite</span>
+                <span>{satelliteMode ? 'Satellite ON' : '+ Satellite'}</span>
               </button>
             )}
           </div>
@@ -166,11 +167,11 @@ export default function ResultMapStage({
       <MapContainer 
         center={[17.388, 78.510]} 
         zoom={16} 
-        maxZoom={22}
+        maxZoom={22} 
         zoomControl={false} 
         className="w-full h-full"
       >
-        <BaseMapLayer />
+        <BaseMapLayer mode={satelliteMode ? 'satellite' : 'dark'} />
         <MapViewport selectedParcel={selected} />
         <CustomZoomControls />
 
