@@ -2,9 +2,10 @@
 scripts/e2e_api_test.py — Live API integration test.
 Run after starting: cd backend && python -m uvicorn main:app --port 8000
 """
-import urllib.request, urllib.error, json, sys
+import urllib.request, urllib.error, json, sys, os
 
-BASE = 'http://127.0.0.1:8000'
+BASE = sys.argv[1].rstrip('/') if len(sys.argv) > 1 else os.getenv('API_BASE_URL', 'http://127.0.0.1:8000').rstrip('/')
+print(f'Testing LANDSYNC API at: {BASE}')
 passed = 0
 failed = 0
 

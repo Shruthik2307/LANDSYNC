@@ -29,7 +29,6 @@ export default function ParcelShape({ parcel, selected, dimmed, onSelect, bounda
   // Dynamic color coding: HIGH=Crimson, MEDIUM=Amber, LOW=Cyan
   const fill = priority === 'HIGH' ? '#FF4C4C' : priority === 'MEDIUM' ? '#FFB800' : '#00F0FF'
   const opacity = dimmed ? 0.05 : selected ? 0.55 : 0.25
-  const strokeColor = selected ? '#FFFFFF' : fill
 
   const dronePoints = Array.isArray(droneRing) && droneRing.length >= 4
     ? droneRing.map(([lng, lat]) => [lat, lng])
