@@ -129,11 +129,11 @@ export default function LandingScreen({
         {/* Primary Typography Hierarchy */}
         <motion.img
           {...heroRise(0.08)}
-          src="/brand/landsync-mark@256.png"
+          src="/brand/landsync-mark@512.png"
           alt="LANDSYNC GIS"
           width={96}
           height={96}
-          className="h-20 w-20 sm:h-24 sm:w-24 mb-6"
+          className="h-20 w-20 sm:h-24 sm:w-24 mb-6 object-contain drop-shadow-[0_0_35px_rgba(0,240,255,0.4)]"
           draggable={false}
         />
         <motion.h1

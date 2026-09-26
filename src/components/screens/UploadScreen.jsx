@@ -5,13 +5,15 @@ import BrandHeader from '../layout/BrandHeader'
 
 export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArchitecture, onNavigateLanding }) {
   const [files, setFiles] = useState([])
+  const [crsHint, setCrsHint] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(null)
+  const [parsingSummaries, setParsingSummaries] = useState(null)
+  const [uploadNotice, setUploadNotice] = useState(null)
   const [error, setError] = useState('')
   const [showConfig, setShowConfig] = useState(false)
-  // Empty = same origin (the single-service deployment). Never default to a
-  // hardcoded external backend — that is how the stale split-deploy bug began.
+  const [showCrsInput, setShowCrsInput] = useState(false)
   const [customBackendUrl, setCustomBackendUrl] = useState(API_BASE_URL || '')
   const fileInputRef = useRef(null)
 
@@ -25,6 +27,8 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
     })
     setError('')
     setUploadSuccess(null)
+    setParsingSummaries(null)
+    setUploadNotice(null)
     if (!isSample && demoMode && onToggleDemo) {
       onToggleDemo()
     }
@@ -33,6 +37,8 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
   function removeFile(indexToRemove) {
     setFiles(current => current.filter((_, idx) => idx !== indexToRemove))
     setUploadSuccess(null)
+    setParsingSummaries(null)
+    setUploadNotice(null)
   }
 
   async function loadSampleData() {
@@ -63,23 +69,32 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
     if (!files.length || submitting) return
     setSubmitting(true)
     setError('')
+    setUploadNotice(null)
 
-    // Validate that at least one file is a GeoJSON or JSON file
-    const hasGeoJson = files.some(f => {
+    const supportedExts = ['.geojson', '.json', '.pdf', '.png', '.jpg', '.jpeg', '.tif', '.tiff', '.dxf', '.dwg', '.zip', '.shp', '.kml', '.kmz', '.gpkg']
+    const hasValidFile = files.some(f => {
       const name = (f.name || '').toLowerCase()
-      return name.endsWith('.geojson') || name.endsWith('.json')
+      return supportedExts.some(ext => name.endsWith(ext))
     })
 
-    if (!hasGeoJson && !demoMode) {
+    if (!hasValidFile && !demoMode) {
       setSubmitting(false)
-      setError('Please upload a valid GeoJSON dataset (.geojson or .json). The LANDSYNC engine reconciles cadastral and municipal boundary FeatureCollections.')
+      setError('Please upload a supported land document or geospatial file (GeoJSON, Shapefile ZIP, CAD DXF, KML, GeoPackage, PDF, or scanned deed image).')
       return
     }
 
-    uploadDataset(files)
-      .then(({ dataset_id }) => {
+    uploadDataset(files, crsHint)
+      .then((res) => {
         setSubmitting(false)
-        onComplete(dataset_id)
+        if (res?.parsing_summaries?.length) {
+          setParsingSummaries(res.parsing_summaries)
+        }
+        if (res?.notice) {
+          setUploadNotice(res.notice)
+        }
+        if (res?.ready_for_reconciliation !== false && res?.dataset_id) {
+          onComplete(res.dataset_id)
+        }
       })
       .catch((requestError) => {
         setSubmitting(false)
@@ -99,14 +114,27 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
       case 'json':
         return 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
       case 'shp':
-      case 'shx':
+      case 'zip':
         return 'bg-blue-500/15 text-blue-300 border-blue-500/30'
-      case 'csv':
-        return 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30'
+      case 'kml':
+      case 'kmz':
+        return 'bg-teal-500/15 text-teal-300 border-teal-500/30'
+      case 'gpkg':
+        return 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+      case 'dxf':
+      case 'dwg':
+        return 'bg-purple-500/15 text-purple-300 border-purple-500/30'
       case 'pdf':
         return 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+        return 'bg-orange-500/15 text-orange-300 border-orange-500/30'
+      case 'tif':
+      case 'tiff':
+        return 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30'
       default:
-        return 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+        return 'bg-slate-500/15 text-slate-300 border-slate-500/30'
     }
   }
 
@@ -245,6 +273,7 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                   ref={fileInputRef}
                   type="file"
                   multiple
+                  accept=".geojson,.json,.pdf,.png,.jpg,.jpeg,.tif,.tiff,.dxf,.dwg,.zip,.shp,.kml,.kmz,.gpkg"
                   className="hidden"
                   onChange={(e) => addFiles(e.target.files)}
                 />
@@ -259,13 +288,38 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                   <p className="text-sm sm:text-base font-bold text-slate-100 tracking-wide">
                     {isDragging ? 'Drop files to upload' : 'Drag & drop files here'}
                   </p>
-                  <p className="text-xs text-slate-400 font-mono">
-                    GeoJSON • JSON (FeatureCollection)
+                  <p className="text-xs text-slate-300 font-mono">
+                    GeoJSON • SHP ZIP • CAD DXF • KML • GPKG • PDF • Images
                   </p>
                   <p className="text-[11px] text-cyan-400/80 pt-1">
                     or <span className="underline underline-offset-2 font-medium">Browse Files</span> from your computer
                   </p>
                 </div>
+              </div>
+
+              {/* Custom CRS / Projection setting (for CAD DXF & Projected Shapefiles) */}
+              <div className="mt-2.5">
+                <button
+                  type="button"
+                  onClick={() => setShowCrsInput(!showCrsInput)}
+                  className="text-[11px] text-slate-400 hover:text-cyan-400 flex items-center gap-1 font-mono transition-colors"
+                >
+                  <span>{showCrsInput ? '▾ Hide Coordinate System (CRS)' : '▸ Custom CRS (CAD DXF & Projected Layers)'}</span>
+                </button>
+                {showCrsInput && (
+                  <div className="mt-1.5 p-2.5 rounded bg-slate-950/80 border border-slate-800 space-y-1">
+                    <label className="text-[10px] text-slate-400 block font-mono">
+                      Source CRS (e.g. EPSG:32644 for Telangana UTM 44N, EPSG:4326):
+                    </label>
+                    <input
+                      type="text"
+                      value={crsHint}
+                      onChange={(e) => setCrsHint(e.target.value)}
+                      placeholder="e.g. EPSG:32644"
+                      className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-cyan-300 font-mono focus:outline-none focus:border-cyan-400"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Instant Load Sample Data Button */}
@@ -277,6 +331,65 @@ export default function UploadScreen({ onComplete, demoMode, onToggleDemo, onArc
                 <Sparkles size={13} className="text-cyan-400 shrink-0" />
                 <span>Quick-Load Sample Hyderabad Dataset (cadastral.geojson)</span>
               </button>
+
+              {/* Upload Notice (e.g. non-spatial deed parsed) */}
+              {uploadNotice && (
+                <div className="mt-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle size={16} className="text-amber-400 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-amber-300">Document Metadata Ingested</p>
+                      <p className="text-[11px] text-amber-200/90 mt-0.5 leading-relaxed">{uploadNotice}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Parsing Summaries Cards (Phase 11) */}
+              {parsingSummaries && parsingSummaries.length > 0 && (
+                <div className="mt-4 space-y-2.5">
+                  <span className="text-[11px] font-mono text-slate-400 block uppercase tracking-wider">
+                    Document Parsing & Extraction Analysis
+                  </span>
+                  {parsingSummaries.map((summary, sIdx) => (
+                    <div
+                      key={`summary-${sIdx}`}
+                      className="p-3 rounded-lg bg-slate-950/80 border border-slate-800 text-xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-200 truncate">{summary.filename}</span>
+                        <span className="px-1.5 py-0.5 rounded font-mono text-[10px] font-bold border uppercase bg-cyan-500/15 text-cyan-300 border-cyan-500/30">
+                          {summary.format}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[11px]">
+                        <div className="p-1.5 rounded bg-slate-900 border border-slate-800/80">
+                          <span className="text-[9px] text-slate-500 block uppercase">Parsing</span>
+                          <span className={summary.parsing_status === 'SUCCESS' ? 'text-emerald-400' : 'text-amber-400'}>
+                            {summary.parsing_status}
+                          </span>
+                        </div>
+                        <div className="p-1.5 rounded bg-slate-900 border border-slate-800/80">
+                          <span className="text-[9px] text-slate-500 block uppercase">Geometry</span>
+                          <span className={summary.has_spatial_geometry ? 'text-cyan-400' : 'text-slate-400'}>
+                            {summary.geometry_status}
+                          </span>
+                        </div>
+                        <div className="p-1.5 rounded bg-slate-900 border border-slate-800/80">
+                          <span className="text-[9px] text-slate-500 block uppercase">OCR</span>
+                          <span className="text-slate-300">{summary.ocr_status}</span>
+                        </div>
+                        <div className="p-1.5 rounded bg-slate-900 border border-slate-800/80">
+                          <span className="text-[9px] text-slate-500 block uppercase">Confidence</span>
+                          <span className="text-cyan-300 font-bold">
+                            {Math.round((summary.extraction_confidence || 1.0) * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Uploaded File List */}
               {files.length > 0 && (

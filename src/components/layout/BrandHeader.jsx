@@ -78,15 +78,13 @@ export default function BrandHeader({
           className="group flex items-center gap-2.5 min-w-0 focus:outline-none"
           title="LANDSYNC — back to overview"
         >
-          {/* LANDSYNC GIS brand mark (public/brand/landsync-mark.png) —
-              replaces the former 'LS' placeholder square. 32px, aspect
-              locked, vertically aligned with the wordmark. */}
+          {/* LANDSYNC GIS brand mark — high-definition supersampled mark */}
           <img
-            src="/brand/landsync-mark.png"
+            src="/brand/landsync-mark@256.png"
             alt="LANDSYNC GIS"
             width={32}
             height={32}
-            className="h-8 w-8 shrink-0"
+            className="h-8 w-8 shrink-0 object-contain drop-shadow-[0_2px_10px_rgba(0,240,255,0.25)]"
             draggable={false}
           />
           <div className="text-left min-w-0">

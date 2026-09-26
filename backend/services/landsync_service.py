@@ -171,10 +171,20 @@ def _resolve_dataset_paths(dataset_id: str | None) -> tuple[Path, Path]:
             logger.error("[landsync_service] Attempted to load sample data while DEMO_FIXTURE_MODE=false")
             raise RuntimeError("REAL_DATA_NOT_AVAILABLE: Synthetic sample data is disabled in production mode.")
         return CADASTRAL_PATH, MUNICIPAL_PATH
-    uploads = sorted(
-        _UPLOADS_DIR.glob(f"{dataset_id}*"),
+
+    # Prefer generated/uploaded GeoJSON files with spatial features
+    geojsons = sorted(
+        [p for p in _UPLOADS_DIR.glob(f"{dataset_id}*.geojson") if not p.name.endswith("_manifest.json")],
         key=lambda p: p.stat().st_mtime,
     )
+    if geojsons:
+        uploads = geojsons
+    else:
+        uploads = sorted(
+            [p for p in _UPLOADS_DIR.glob(f"{dataset_id}*") if not p.name.endswith("_manifest.json")],
+            key=lambda p: p.stat().st_mtime,
+        )
+
     if not uploads:
         if not settings.DEMO_FIXTURE_MODE:
             logger.error("[landsync_service] dataset %r has no uploaded files and DEMO_FIXTURE_MODE=false", dataset_id)

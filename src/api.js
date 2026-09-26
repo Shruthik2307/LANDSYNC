@@ -199,21 +199,19 @@ export function getParcelById(id) {
     })
 }
 
-/** @param {File[]} files @returns {Promise<{dataset_id: string}>} */
-export function uploadDataset(files) {
+/** @param {File[]} files @param {string} [crsHint] @returns {Promise<{dataset_id: string, parsing_summaries?: any[], ready_for_reconciliation?: boolean, notice?: string}>} */
+export function uploadDataset(files, crsHint = '') {
   if (!isDemoMode()) {
     const body = new FormData()
     if (files && files.length > 0) {
-      const geoFiles = files.filter(f => {
-        const name = (f.name || '').toLowerCase()
-        return name.endsWith('.geojson') || name.endsWith('.json')
-      })
-      const targetFiles = geoFiles.length > 0 ? geoFiles : [files[0]]
-      for (const f of targetFiles) {
+      for (const f of files) {
         body.append('files', f, f.name)
       }
       // Also append first file as 'file' for single-file API compatibility
-      body.append('file', targetFiles[0], targetFiles[0].name)
+      body.append('file', files[0], files[0].name)
+    }
+    if (crsHint) {
+      body.append('crs_hint', crsHint)
     }
     // Give uploads up to 10 minutes (600,000 ms) for large datasets (e.g. 200MB)
     return request('/api/upload', { method: 'POST', body }, 600000)

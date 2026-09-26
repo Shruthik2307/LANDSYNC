@@ -29,12 +29,21 @@ if str(backend_path) not in sys.path:
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
+import httpx
 from fastapi.testclient import TestClient
 from backend.main import app
 from backend.services.ml_service import conflict_detector
 from engine.ml_schema import FEATURE_ORDER
 
-client = TestClient(app)
+FIXTURES_DIR = ROOT / "tests" / "fixtures" / "documents"
+
+LIVE_URL = sys.argv[1].rstrip("/") if len(sys.argv) > 1 and sys.argv[1].startswith("http") else None
+if LIVE_URL:
+    print(f"--> Target: LIVE SERVER at {LIVE_URL}")
+    client = httpx.Client(base_url=LIVE_URL, timeout=30.0)
+else:
+    print("--> Target: LOCAL IN-PROCESS TestClient(app)")
+    client = TestClient(app)
 
 passed = 0
 failed = 0
@@ -62,11 +71,21 @@ def run_tests():
     # -----------------------------------------------------------------------
     print("\n[SECTION 1] FILE VALIDATION & ERROR HANDLING")
 
-    # 1.1 Upload PDF document
-    fake_pdf = io.BytesIO(b"%PDF-1.4\n1 0 obj\n<< /Title (Land Deed) >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF")
-    res = client.post("/api/upload", files={"file": ("deed_record.pdf", fake_pdf, "application/pdf")})
-    check("Reject PDF upload with HTTP 400", res.status_code == 400, f"Got {res.status_code}: {res.text}")
-    check("Useful error message for PDF", "Unsupported file type: '.pdf'" in res.json().get("detail", ""))
+    # 1.1 Upload unsupported file format (.exe / .csv)
+    fake_exe = io.BytesIO(b"MZ\x90\x00\x03\x00\x00\x00")
+    res = client.post("/api/upload", files={"file": ("malware.exe", fake_exe, "application/octet-stream")})
+    check("Reject unsupported binary with HTTP 400", res.status_code == 400, f"Got {res.status_code}: {res.text}")
+    check("Useful error message for unsupported format", "Unsupported file type" in res.json().get("detail", ""))
+
+    # 1.1b Ingest real PDF deed record
+    pdf_path = FIXTURES_DIR / "sample.pdf"
+    if pdf_path.exists():
+        with open(pdf_path, "rb") as pf:
+            pdf_res = client.post("/api/upload", files={"file": ("sample.pdf", pf, "application/pdf")})
+        check("Accept PDF deed document with HTTP 200", pdf_res.status_code == 200, pdf_res.text)
+        pdf_data = pdf_res.json()
+        check("PDF identified as METADATA_ONLY without fake coordinates", pdf_data.get("ready_for_reconciliation") is False)
+        check("PDF notice indicates metadata extracted", "Spatial boundaries were not found" in (pdf_data.get("notice") or ""))
 
     # 1.2 Upload CSV document
     fake_csv = io.BytesIO(b"parcel_id,survey_number,owner\nP1,101,Ramesh\n")

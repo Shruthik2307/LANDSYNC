@@ -20,7 +20,10 @@ shapely>=2.0.2             # Geometry operations (IoU, area)
 pyproj>=3.6.0              # CRS definitions & transformations
 fiona>=1.9.5               # GeoJSON I/O backend for geopandas
 rasterio>=1.3.9            # Raster data processing (drone/aerial imagery)
-# GDAL>=3.8.0              # Optional: Install manually via wheel from https://github.com/cgohlke/geospatial-wheels/releases
+# ── Multi-Format Ingestion (PDF, CAD, Scanned OCR) ─────────────────────────
+pypdf>=6.0.0               # PDF text extraction
+ezdxf>=1.4.0               # DXF CAD vector extraction
+pytesseract>=0.3.10        # Tesseract OCR wrapper for scanned deeds
 
 # ── AI/ML (conflict detection & computer vision) ──────────────────────────
 scikit-learn>=1.3.2        # ML models for confidence scoring

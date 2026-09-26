@@ -36,9 +36,9 @@ ENV PYTHONUNBUFFERED=1 \
     LANDSYNC_SERVE_FRONTEND=1 \
     DEMO_FIXTURE_MODE=true
 
-# System libraries: libGL (OpenCV), libglib2.0 (OpenCV), libgomp1 (scikit-learn)
+# System libraries: libGL (OpenCV), libglib2.0 (OpenCV), libgomp1 (scikit-learn), tesseract-ocr
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        libgl1 libglib2.0-0 libgomp1 \
+        libgl1 libglib2.0-0 libgomp1 tesseract-ocr tesseract-ocr-eng \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python deps first (better layer caching)

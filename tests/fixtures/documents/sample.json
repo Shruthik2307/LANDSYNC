@@ -1,0 +1,48 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:4326"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              78.085,
+              17.615
+            ],
+            [
+              78.087,
+              17.615
+            ],
+            [
+              78.087,
+              17.617
+            ],
+            [
+              78.085,
+              17.617
+            ],
+            [
+              78.085,
+              17.615
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "parcel_id": "CAD-TEST-101",
+        "survey_number": "101/A",
+        "land_use": "Agricultural",
+        "classification": "Patta",
+        "area": 4046.86
+      }
+    }
+  ]
+}
